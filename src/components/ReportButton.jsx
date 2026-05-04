@@ -1,4 +1,4 @@
-export function ReportButton() {
+export default function ReportButton() {
   const BASE = "https://report.masto84.workers.dev";
 
   const report = async () => {
