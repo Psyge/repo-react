@@ -41,7 +41,7 @@ export default function MapPage() {
       const data = await res.json();
 
       setKp(data.kp ?? 0);
-      setProbability("🔒");
+      
     } catch (e) {
       console.error(e);
     }
