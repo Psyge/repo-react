@@ -9,7 +9,7 @@ import Header from "./components/Header";
 export default function MapPage() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
-
+  
  
   
 
@@ -35,18 +35,7 @@ export default function MapPage() {
     }
   };
 
-  const fetchSolar = async () => {
-    try {
-      const res = await fetch(`${BASE}/api/solar`);
-      const data = await res.json();
-
-      setKp(data.kp ?? 0);
-      
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
+ 
   // ===== INIT MAP =====
   useEffect(() => {
     if (mapInstance.current) return;
