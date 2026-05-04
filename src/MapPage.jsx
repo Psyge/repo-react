@@ -1,17 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { createRoot } from "react-dom/client";
 import AuroraPopup from "./components/AuroraPopup";
 import Header from "./components/Header";
 
-
 export default function MapPage() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
-  
- 
-  
 
   const BASE = "https://report.masto84.workers.dev";
 
@@ -35,7 +31,6 @@ export default function MapPage() {
     }
   };
 
- 
   // ===== INIT MAP =====
   useEffect(() => {
     if (mapInstance.current) return;
@@ -46,28 +41,24 @@ export default function MapPage() {
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     ).addTo(map);
 
-    // click anywhere
     map.on("click", async (e) => {
       const { lat, lng } = e.latlng;
 
-      // 🔥 luo popup + container
       const popup = L.popup().setLatLng(e.latlng);
 
       const container = document.createElement("div");
       popup.setContent(container);
-
       popup.openOn(map);
 
-      // 🔥 render React popup (loading state)
       const root = createRoot(container);
+
+      // loading state
       root.render(
         <AuroraPopup lat={lat} lng={lng} prob={0} />
       );
 
-      // 🔁 hae data
       const data = await fetchAuroraData(lat, lng);
 
-      // 🔥 päivitä popup Reactilla
       root.render(
         <AuroraPopup
           lat={lat}
@@ -78,24 +69,19 @@ export default function MapPage() {
     });
 
     mapInstance.current = map;
-
-    
-
-    return () => clearInterval(interval);
   }, []);
 
   return (
-  <div>
-    <Header />
-    
+    <div>
+      <Header />
 
-    <div
-      ref={mapRef}
-      style={{
-      height: "100vh",
-      width: "100%",
-    }}
-    />
-  </div>
-);
+      <div
+        ref={mapRef}
+        style={{
+          height: "100vh",
+          width: "100%",
+        }}
+      />
+    </div>
+  );
 }
