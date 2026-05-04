@@ -79,7 +79,7 @@ export default function HomePage() {
 
         {/* SIGHTINGS */}
         <section className="container">
-  <h2>Latest sightings</h2>
+  
 
   <ReportButton />
   <Sightings />

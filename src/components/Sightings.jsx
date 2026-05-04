@@ -12,7 +12,6 @@ export default function Sightings() {
       });
 
       const data = await res.json();
-
       setClusters(data.clusters || []);
     } catch (e) {
       console.error(e);
@@ -27,22 +26,24 @@ export default function Sightings() {
   }, []);
 
   return (
-    <section className="container">
-      <h2>Latest sightings</h2>
+    <div className="sightings">
+      {clusters.length === 0 ? (
+        <div className="sightings-empty">
+          No active sightings right now
+        </div>
+      ) : (
+        clusters.map((c, i) => (
+          <div key={i} className="sighting-row">
+            <span className="sighting-region">
+              📍 {c.region}
+            </span>
 
-      <div className="sightings">
-        {clusters.length === 0 ? (
-          <div className="sighting-card">
-            No active sightings right now
+            <span className="sighting-meta">
+              {c.count} reports · {c.minutesAgo} min
+            </span>
           </div>
-        ) : (
-          clusters.map((c, i) => (
-            <div key={i} className="sighting-card">
-              📍 {c.region} — {c.count} reports · {c.minutesAgo} min
-            </div>
-          ))
-        )}
-      </div>
-    </section>
+        ))
+      )}
+    </div>
   );
 }
