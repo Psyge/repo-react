@@ -4,13 +4,13 @@ import "leaflet/dist/leaflet.css";
 import { createRoot } from "react-dom/client";
 import AuroraPopup from "./components/AuroraPopup";
 import Header from "./components/Header";
-import Hero from "./components/Hero";
+
 
 export default function MapPage() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
-  const [kp, setKp] = useState(0);
+ 
   
 
   const BASE = "https://report.masto84.workers.dev";
