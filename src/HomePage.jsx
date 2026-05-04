@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "./components/Header";
+import Sightings from "./components/Sightings";
+import ReportButton from "./components/ReportButton";
 
 export default function HomePage() {
   const [kp, setKp] = useState(null);
@@ -77,14 +79,11 @@ export default function HomePage() {
 
         {/* SIGHTINGS */}
         <section className="container">
-          <h2>Latest sightings</h2>
+  <h2>Latest sightings</h2>
 
-          <div className="sightings">
-            <div className="sighting-card">
-              Coming soon (live data next step)
-            </div>
-          </div>
-        </section>
+  <ReportButton />
+  <Sightings />
+</section>
 
         {/* LOCATIONS */}
         <section className="container">
