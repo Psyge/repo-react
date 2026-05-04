@@ -1,0 +1,76 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+.leaflet-popup-content-wrapper {
+  background: #0f172a;
+  color: #e5e7eb;
+  border-radius: 12px;
+}
+
+.leaflet-popup-tip {
+  background: #0f172a;
+}
+
+.leaflet-popup-content {
+  margin: 10px 14px;
+  font-family: system-ui;
+}
+.aurora-popup {
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  padding: 10px 14px;
+  color: #e5e7eb;
+  font-family: system-ui;
+  min-width: 120px;
+}
+
+.ap-coords {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.ap-prob {
+  font-size: 18px;
+  font-weight: 600;
+}
+body {
+  margin: 0;
+  background: #020617;
+}
+
+.app {
+  color: white;
+  font-family: system-ui;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+}
+
+.kp-box {
+  background: rgba(255,255,255,0.05);
+  padding: 6px 12px;
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+}
+
+.map {
+  height: 85vh;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 0 12px 12px;
+}
