@@ -1,4 +1,8 @@
-export default function Hero({ kp }) {
+import { useNavigate } from "react-router-dom";
+
+export default function Hero({ kp, wind, bz }) {
+  const navigate = useNavigate();
+
   return (
     <section className="hero-split container">
       <div className="hero-text">
@@ -14,18 +18,22 @@ export default function Hero({ kp }) {
           <div className="kp-label">Aurora probability</div>
 
           <div className="kp-big">
-            <span>--</span>
+            <span>{kp ?? "--"}</span>
           </div>
 
           <div className="kp-meta">
-            <span>Kp: <strong>{kp}</strong></span>
-            <span>Wind: <strong>--</strong></span>
-            <span>Bz: <strong>--</strong></span>
+            <span>Kp: <strong>{kp ?? "--"}</strong></span>
+            <span>Wind: <strong>{wind ?? "--"}</strong></span>
+            <span>Bz: <strong>{bz ?? "--"}</strong></span>
           </div>
         </div>
 
         {/* MAP PREVIEW */}
-        <div className="map-preview">
+        <div
+          className="map-preview"
+          onClick={() => navigate("/map")}
+          style={{ cursor: "pointer" }}
+        >
           <div className="map-preview-cta">
             Open live map →
           </div>

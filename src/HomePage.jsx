@@ -1,6 +1,37 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 
 export default function HomePage() {
+  const [kp, setKp] = useState(null);
+  const [wind, setWind] = useState(null);
+  const [bz, setBz] = useState(null);
+
+  const navigate = useNavigate();
+
+  const BASE = "https://report.masto84.workers.dev";
+
+  // 🔥 hae solar data
+  useEffect(() => {
+    const fetchSolar = async () => {
+      try {
+        const res = await fetch(`${BASE}/api/solar`);
+        const data = await res.json();
+
+        setKp(data.kp ?? 0);
+        setWind(data.speed ?? 0);
+        setBz(data.bz ?? 0);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchSolar();
+    const interval = setInterval(fetchSolar, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div>
       <Header />
@@ -21,18 +52,22 @@ export default function HomePage() {
               <div className="kp-label">Aurora probability</div>
 
               <div className="kp-big">
-                <span>--</span>
+                <span>{kp ?? "--"}</span>
               </div>
 
               <div className="kp-meta">
-                <span>Kp: <strong>--</strong></span>
-                <span>Wind: <strong>--</strong></span>
-                <span>Bz: <strong>--</strong></span>
+                <span>Kp: <strong>{kp ?? "--"}</strong></span>
+                <span>Wind: <strong>{wind ?? "--"}</strong></span>
+                <span>Bz: <strong>{bz ?? "--"}</strong></span>
               </div>
             </div>
 
             {/* MAP PREVIEW */}
-            <div className="map-preview">
+            <div
+              className="map-preview"
+              onClick={() => navigate("/map")}
+              style={{ cursor: "pointer" }}
+            >
               <div className="map-preview-cta">
                 Open live map →
               </div>
@@ -45,7 +80,9 @@ export default function HomePage() {
           <h2>Latest sightings</h2>
 
           <div className="sightings">
-            <div className="sighting-card">No data yet</div>
+            <div className="sighting-card">
+              Coming soon (live data next step)
+            </div>
           </div>
         </section>
 
