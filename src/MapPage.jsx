@@ -3,6 +3,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { createRoot } from "react-dom/client";
 import AuroraPopup from "./components/AuroraPopup";
+import Header from "./components/Header";
+import Hero from "./components/Hero";
 
 export default function MapPage() {
   const mapRef = useRef(null);
@@ -95,15 +97,19 @@ export default function MapPage() {
   }, []);
 
   return (
-    <div>
-      {/* HEADER */}
-      <div style={{ padding: "16px", color: "white" }}>
-        <h2>Live Aurora Map</h2>
-        <p>
-          Kp: <strong>{kp}</strong> · Probability:{" "}
-          <strong>{probability}</strong>
-        </p>
-      </div>
+   <div>
+    <Header />
+    <Hero kp={kp} />
+
+    <div
+      ref={mapRef}
+      style={{
+        height: "80vh",
+        borderRadius: "12px",
+        overflow: "hidden",
+      }}
+    />
+  </div>
 
       {/* MAP */}
       <div
