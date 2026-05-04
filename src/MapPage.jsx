@@ -79,8 +79,7 @@ export default function MapPage() {
 
     mapInstance.current = map;
 
-    fetchSolar();
-    const interval = setInterval(fetchSolar, 60000);
+    
 
     return () => clearInterval(interval);
   }, []);
