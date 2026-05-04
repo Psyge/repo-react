@@ -23,7 +23,7 @@ export default function ReportButton() {
   };
 
   return (
-    <button onClick={report} className="report-btn">
+    <button onClick={report} className="btn-primary">
       Report sighting
     </button>
   );
