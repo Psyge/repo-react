@@ -11,7 +11,7 @@ export default function MapPage() {
   const mapInstance = useRef(null);
 
   const [kp, setKp] = useState(0);
-  const [probability, setProbability] = useState("🔒");
+  
 
   const BASE = "https://report.masto84.workers.dev";
 
