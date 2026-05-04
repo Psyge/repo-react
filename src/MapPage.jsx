@@ -97,7 +97,7 @@ export default function MapPage() {
   }, []);
 
   return (
-   <div>
+  <div>
     <Header />
     <Hero kp={kp} />
 
@@ -110,16 +110,5 @@ export default function MapPage() {
       }}
     />
   </div>
-
-      {/* MAP */}
-      <div
-        ref={mapRef}
-        style={{
-          height: "80vh",
-          borderRadius: "12px",
-          overflow: "hidden",
-        }}
-      />
-    </div>
-  );
+);
 }
