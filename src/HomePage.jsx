@@ -12,9 +12,9 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { t } = useTranslation();
+
   const BASE = "https://report.masto84.workers.dev";
 
-  // 🔥 hae solar data
   useEffect(() => {
     const fetchSolar = async () => {
       try {
@@ -30,6 +30,7 @@ export default function HomePage() {
     };
 
     fetchSolar();
+
     const interval = setInterval(fetchSolar, 60000);
 
     return () => clearInterval(interval);
@@ -44,35 +45,44 @@ export default function HomePage() {
         <section className="hero-split container">
           <div className="hero-text">
             <h1>{t("hero.title")}</h1>
+
             <p className="tagline">
-              Live Kp index, solar wind speed and Bz orientation
+              {t("hero.sub")}
             </p>
           </div>
 
           <div className="hero-grid">
-            {/* KP BOX */}
             <div className="kp-display">
-              <div className="kp-label">Aurora probability</div>
+              <div className="kp-label">
+                {t("probability.label")}
+              </div>
 
               <div className="kp-big">
                 <span>{kp ?? "--"}</span>
               </div>
 
               <div className="kp-meta">
-                <span>Kp: <strong>{kp ?? "--"}</strong></span>
-                <span>Wind: <strong>{wind ?? "--"}</strong></span>
-                <span>Bz: <strong>{bz ?? "--"}</strong></span>
+                <span>
+                  {t("kp.label")}: <strong>{kp ?? "--"}</strong>
+                </span>
+
+                <span>
+                  {t("wind.speed")}: <strong>{wind ?? "--"}</strong>
+                </span>
+
+                <span>
+                  {t("bz.label")}: <strong>{bz ?? "--"}</strong>
+                </span>
               </div>
             </div>
 
-            {/* MAP PREVIEW */}
             <div
               className="map-preview"
               onClick={() => navigate("/map")}
               style={{ cursor: "pointer" }}
             >
               <div className="map-preview-cta">
-                Open live map →
+                {t("map.open")}
               </div>
             </div>
           </div>
@@ -80,15 +90,17 @@ export default function HomePage() {
 
         {/* SIGHTINGS */}
         <section className="container">
-  
+          <h2>{t("sightings.title")}</h2>
+          <p>{t("sightings.sub")}</p>
 
-  <ReportButton />
-  <Sightings />
-</section>
+          <ReportButton />
+          <Sightings />
+        </section>
 
         {/* LOCATIONS */}
         <section className="container">
-          <h2>Top viewing locations</h2>
+          <h2>{t("locations.title")}</h2>
+          <p>{t("locations.sub")}</p>
 
           <div className="locations">
             <div className="location-card">Rovaniemi</div>
@@ -99,19 +111,19 @@ export default function HomePage() {
 
         {/* ARTICLES */}
         <section className="container">
-          <h2>Guides & articles</h2>
+          <h2>{t("home.articles.title")}</h2>
+          <p>{t("home.articles.sub")}</p>
 
           <div className="articles">
             <div className="article-card">
-              Best time to see aurora
+              {t("blog.post1.title")}
             </div>
           </div>
         </section>
       </main>
 
-      {/* FOOTER */}
       <footer className="footer">
-        <p>© Aurora Tracker</p>
+        <p>© RepoTracker</p>
       </footer>
     </div>
   );

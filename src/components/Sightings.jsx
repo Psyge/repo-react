@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import useTranslation from "../hooks/useTranslation";
 
 export default function Sightings() {
   const [clusters, setClusters] = useState([]);
+  const { t } = useTranslation();
 
   const BASE = "https://report.masto84.workers.dev";
 
@@ -22,14 +24,21 @@ export default function Sightings() {
     loadClusters();
 
     const interval = setInterval(loadClusters, 120000);
-    return () => clearInterval(interval);
+
+    // 🔥 mahdollistaa report-napin refreshin
+    window.__refreshSightings = loadClusters;
+
+    return () => {
+      clearInterval(interval);
+      delete window.__refreshSightings;
+    };
   }, []);
 
   return (
     <div className="sightings">
       {clusters.length === 0 ? (
         <div className="sightings-empty">
-          No active sightings right now
+          {t("sightings.empty")}
         </div>
       ) : (
         clusters.map((c, i) => (
@@ -39,7 +48,7 @@ export default function Sightings() {
             </span>
 
             <span className="sighting-meta">
-              {c.count} reports · {c.minutesAgo} min
+              {c.count} {t("sightings.reports")} · {c.minutesAgo} min
             </span>
           </div>
         ))

@@ -1,15 +1,17 @@
 import useTranslation from "../hooks/useTranslation";
 
 export default function AuroraPopup({ lat, lng, prob, intensity }) {
+  const { t } = useTranslation();
+
   const getColor = () => {
     if (prob == null) return "#888";
-    if (prob > 70) return "#ff3b7f";   // red
-    if (prob > 40) return "#ffe600";   // yellow
-    return "#00ffcc";                  // green
+    if (prob > 70) return "#ff3b7f";
+    if (prob > 40) return "#ffe600";
+    return "#00ffcc";
   };
 
   const color = getColor();
-  const { t } = useTranslation();
+
   return (
     <div style={{ minWidth: "200px", color: "#fff" }}>
       {/* LOCATION */}
@@ -26,12 +28,12 @@ export default function AuroraPopup({ lat, lng, prob, intensity }) {
           marginTop: "6px",
         }}
       >
-        {prob == null ? "Loading..." : `${prob}%`}
+        {prob == null ? t("loading") : `${prob}%`}
       </div>
 
       {/* LABEL */}
       <div style={{ fontSize: "12px", opacity: 0.8 }}>
-        <div>{t("probability.label")}</div>
+        {t("probability.label")}
       </div>
 
       {/* PROGRESS BAR */}
@@ -62,7 +64,7 @@ export default function AuroraPopup({ lat, lng, prob, intensity }) {
           opacity: 0.7,
         }}
       >
-        🌌 Strength: {intensity == null ? "..." : intensity}
+        🌌 {t("map.strength")}: {intensity == null ? "..." : intensity}
       </div>
     </div>
   );

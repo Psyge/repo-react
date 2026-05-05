@@ -1,10 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { createRoot } from "react-dom/client";
 
 import AuroraPopup from "./components/AuroraPopup";
 import Header from "./components/Header";
+import useTranslation from "./hooks/useTranslation";
+import SearchBox from "./components/SearchBox";
 
 import {
   createAuroraOverlay,
@@ -15,10 +17,12 @@ import {
 export default function MapPage() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
+  const markerRef = useRef(null);
+  const { t } = useTranslation();
 
   const BASE = "https://report.masto84.workers.dev";
 
-  // ===== API (popup varten) =====
+  // ===== API =====
   const fetchAuroraPoint = async (lat, lon) => {
     try {
       const res = await fetch(`${BASE}/api/aurora/calc`, {
@@ -38,6 +42,53 @@ export default function MapPage() {
     }
   };
 
+  // ===== 🔥 POPUP (yksi source of truth)
+  const openPopup = useCallback(async (map, lat, lng) => {
+    if (!map) return;
+
+    const popup = L.popup().setLatLng([lat, lng]);
+
+    const container = document.createElement("div");
+    popup.setContent(container);
+    popup.openOn(map);
+
+    const root = createRoot(container);
+
+    // loading
+    root.render(
+      <AuroraPopup lat={lat} lng={lng} prob={null} intensity={null} />
+    );
+
+    try {
+      const data = await fetchAuroraPoint(lat, lng);
+
+      const apiProb = data?.probability ?? 0;
+      const intensity = getAuroraIntensity(lat, lng);
+      const finalProb = Math.max(apiProb, intensity);
+
+      root.render(
+        <AuroraPopup
+          lat={lat}
+          lng={lng}
+          prob={finalProb}
+          intensity={intensity}
+        />
+      );
+    } catch (err) {
+      console.error(err);
+
+      root.render(
+        <AuroraPopup
+          lat={lat}
+          lng={lng}
+          prob={0}
+          intensity={0}
+        />
+      );
+    }
+  }, []);
+
+  // ===== INIT MAP
   useEffect(() => {
     if (mapInstance.current) return;
 
@@ -47,7 +98,7 @@ export default function MapPage() {
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     ).addTo(map);
 
-    // ===== AURORA OVERLAY =====
+    // ===== AURORA OVERLAY
     const overlay = createAuroraOverlay();
     overlay.addTo(map);
 
@@ -60,61 +111,12 @@ export default function MapPage() {
       }
     };
 
-    // initial load
     loadAurora();
-
-    // refresh loop
     const interval = setInterval(loadAurora, 60000);
 
-    // ===== CLICK POPUP =====
-    map.on("click", async (e) => {
-      const { lat, lng } = e.latlng;
-
-      const popup = L.popup().setLatLng(e.latlng);
-
-      const container = document.createElement("div");
-      popup.setContent(container);
-      popup.openOn(map);
-
-      const root = createRoot(container);
-
-      // 🔄 loading state
-      root.render(
-        <AuroraPopup lat={lat} lng={lng} prob={null} intensity={null} />
-      );
-
-      try {
-        // 🔥 hae molemmat
-        const [data] = await Promise.all([
-          fetchAuroraPoint(lat, lng),
-        ]);
-
-        const apiProb = data?.probability ?? 0;
-        const intensity = getAuroraIntensity(lat, lng);
-
-        // 🔥 yhdistetty paras arvo
-        const finalProb = Math.max(apiProb, intensity);
-
-        root.render(
-          <AuroraPopup
-            lat={lat}
-            lng={lng}
-            prob={finalProb}
-            intensity={intensity}
-          />
-        );
-      } catch (err) {
-        console.error(err);
-
-        root.render(
-          <AuroraPopup
-            lat={lat}
-            lng={lng}
-            prob={0}
-            intensity={0}
-          />
-        );
-      }
+    // CLICK
+    map.on("click", (e) => {
+      openPopup(map, e.latlng.lat, e.latlng.lng);
     });
 
     mapInstance.current = map;
@@ -122,11 +124,70 @@ export default function MapPage() {
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [openPopup]);
+  
+  const auroraIcon = L.divIcon({
+  className: "",
+  html: `<div class="map-marker"></div>`,
+  iconSize: [14, 14],
+});
+  // ===== 🔍 SEARCH HANDLER
+  const handleSearchSelect = (place) => {
+  const map = mapInstance.current;
+  if (!map) return;
+
+  const { lat, lon } = place;
+
+  // 🔥 smooth zoom
+  map.flyTo([lat, lon], 7, {
+    duration: 1.5,
+  });
+
+  // ❌ poista vanha marker
+  if (markerRef.current) {
+    markerRef.current.remove();
+  }
+
+  // 🔥 uusi marker (CSS-pohjainen)
+  const marker = L.marker([lat, lon], {
+    icon: auroraIcon,
+  }).addTo(map);
+
+  markerRef.current = marker;
+
+  // 🔥 highlight efekti (CSS)
+  setTimeout(() => {
+    const el = marker.getElement();
+    if (el && el.firstChild) {
+      el.firstChild.classList.add("map-marker-active");
+    }
+  }, 0);
+
+  // 🔥 popup
+  openPopup(map, lat, lon);
+};
 
   return (
     <div>
       <Header />
+
+      {/* 🔍 SEARCH */}
+      <div
+        style={{
+          position: "absolute",
+          top: "80px",
+          left: "20px",
+          zIndex: 1000,
+          width: "300px",
+        }}
+      >
+        <SearchBox onSelect={handleSearchSelect} />
+      </div>
+
+      {/* UX hint */}
+      <div className="map-hint">
+        {t("map.click_hint")}
+      </div>
 
       <div
         ref={mapRef}
