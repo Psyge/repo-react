@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 import Sightings from "./components/Sightings";
 import ReportButton from "./components/ReportButton";
+import useTranslation from "./hooks/useTranslation";
 
 export default function HomePage() {
   const [kp, setKp] = useState(null);
@@ -10,7 +11,7 @@ export default function HomePage() {
   const [bz, setBz] = useState(null);
 
   const navigate = useNavigate();
-
+  const { t } = useTranslation();
   const BASE = "https://report.masto84.workers.dev";
 
   // 🔥 hae solar data
@@ -42,7 +43,7 @@ export default function HomePage() {
         {/* HERO */}
         <section className="hero-split container">
           <div className="hero-text">
-            <h1>Real-time Northern Lights visibility for Lapland</h1>
+            <h1>{t("hero.title")}</h1>
             <p className="tagline">
               Live Kp index, solar wind speed and Bz orientation
             </p>

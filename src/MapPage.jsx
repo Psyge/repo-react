@@ -9,6 +9,7 @@ import Header from "./components/Header";
 import {
   createAuroraOverlay,
   fetchAuroraData,
+  getAuroraIntensity,
 } from "./utils/auroraOverlay";
 
 export default function MapPage() {
@@ -37,37 +38,31 @@ export default function MapPage() {
     }
   };
 
-  // ===== INIT MAP =====
   useEffect(() => {
     if (mapInstance.current) return;
 
     const map = L.map(mapRef.current).setView([67.5, 26], 5);
 
-    // 🔥 taustakartta
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     ).addTo(map);
 
-    // 🔥 AURORA OVERLAY
+    // ===== AURORA OVERLAY =====
     const overlay = createAuroraOverlay();
     overlay.addTo(map);
 
-    // 🔥 hae aurora data heti
-    fetchAuroraData()
-      .then((data) => {
-        overlay.setData(data);
-      })
-      .catch(console.error);
-
-    // 🔁 päivitä 60s välein
-    const interval = setInterval(async () => {
+    const loadAurora = async () => {
       try {
         const data = await fetchAuroraData();
         overlay.setData(data);
       } catch (e) {
         console.error(e);
       }
-    }, 60000);
+    };
+
+    loadAurora();
+
+    const interval = setInterval(loadAurora, 60000);
 
     // ===== CLICK POPUP =====
     map.on("click", async (e) => {
@@ -81,11 +76,15 @@ export default function MapPage() {
 
       const root = createRoot(container);
 
-      // loading
+      // 🔄 loading state
       root.render(
-        <AuroraPopup lat={lat} lng={lng} prob={0} />
+        <AuroraPopup lat={lat} lng={lng} prob={null} intensity={null} />
       );
 
+      // 🔥 overlay intensity heti (nopea)
+      const intensity = getAuroraIntensity(lat, lng);
+
+      // 🔥 backend probability
       const data = await fetchAuroraPoint(lat, lng);
 
       root.render(
@@ -93,6 +92,7 @@ export default function MapPage() {
           lat={lat}
           lng={lng}
           prob={data?.probability ?? 0}
+          intensity={intensity}
         />
       );
     });

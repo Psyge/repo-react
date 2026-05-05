@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-
+import { setLang } from "../utils/i18n";
 export default function Header() {
   return (
     <header className="header">
@@ -14,8 +14,8 @@ export default function Header() {
         </nav>
 
         <div className="lang-switcher">
-          <button>EN</button>
-          <button>FI</button>
+          <button onClick={() => setLang("en")}>EN</button>
+<button onClick={() => setLang("fi")}>FI</button>
         </div>
       </div>
     </header>
