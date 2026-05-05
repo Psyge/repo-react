@@ -1,8 +1,9 @@
 import en from "../lang/en.json";
+import fi from "../lang/fi.json";
 
 const translations = {
   en,
-  fi: en, // 🔥 vaihdetaan myöhemmin oikeaan
+  fi,
 };
 
 let currentLang = localStorage.getItem("lang") || "en";
