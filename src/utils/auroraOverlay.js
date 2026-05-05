@@ -208,3 +208,30 @@ export async function fetchAuroraData() {
 export function createAuroraOverlay() {
   return createLayer();
 }
+export function getAuroraIntensity(lat, lon) {
+  if (!latestData || !Array.isArray(latestData.coordinates)) return 0;
+
+  let best = 0;
+  let minD = Infinity;
+
+  const targetLon = lon < 0 ? lon + 360 : lon;
+
+  for (const p of latestData.coordinates) {
+    const pLon = p[0];
+    const pLat = p[1];
+
+    const d = Math.hypot(
+      pLat - lat,
+      Math.abs(pLon - targetLon)
+    );
+
+    if (d < minD) {
+      minD = d;
+      best = p[2];
+
+      if (d < 0.5) break; // nopeutus
+    }
+  }
+
+  return best || 0;
+}

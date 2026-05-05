@@ -60,8 +60,10 @@ export default function MapPage() {
       }
     };
 
+    // initial load
     loadAurora();
 
+    // refresh loop
     const interval = setInterval(loadAurora, 60000);
 
     // ===== CLICK POPUP =====
@@ -81,20 +83,38 @@ export default function MapPage() {
         <AuroraPopup lat={lat} lng={lng} prob={null} intensity={null} />
       );
 
-      // 🔥 overlay intensity heti (nopea)
-      const intensity = getAuroraIntensity(lat, lng);
+      try {
+        // 🔥 hae molemmat
+        const [data] = await Promise.all([
+          fetchAuroraPoint(lat, lng),
+        ]);
 
-      // 🔥 backend probability
-      const data = await fetchAuroraPoint(lat, lng);
+        const apiProb = data?.probability ?? 0;
+        const intensity = getAuroraIntensity(lat, lng);
 
-      root.render(
-        <AuroraPopup
-          lat={lat}
-          lng={lng}
-          prob={data?.probability ?? 0}
-          intensity={intensity}
-        />
-      );
+        // 🔥 yhdistetty paras arvo
+        const finalProb = Math.max(apiProb, intensity);
+
+        root.render(
+          <AuroraPopup
+            lat={lat}
+            lng={lng}
+            prob={finalProb}
+            intensity={intensity}
+          />
+        );
+      } catch (err) {
+        console.error(err);
+
+        root.render(
+          <AuroraPopup
+            lat={lat}
+            lng={lng}
+            prob={0}
+            intensity={0}
+          />
+        );
+      }
     });
 
     mapInstance.current = map;
