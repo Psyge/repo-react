@@ -47,10 +47,7 @@ export default function HomePage() {
 
  useEffect(() => {
   // 🔥 helper
-  const getCurrentSlot = (slots = []) => {
-    const now = Date.now();
-    return slots.find(s => new Date(s.tsUtc).getTime() >= now) || slots[0];
-  };
+ 
 
   // 🔥 FORECAST + HERO
   const fetchForecast = async () => {
