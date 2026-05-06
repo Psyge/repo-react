@@ -45,86 +45,104 @@ export default function HomePage() {
     latitude: 67.5,
   });
 
-  useEffect(() => {
-    // 🔥 FORECAST + HERO
-    const fetchForecast = async () => {
-      try {
-        const res = await fetch(`${BASE}/api/aurora/forecast`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lat: 67.5,
-            lon: 26,
-          }),
-        });
+ useEffect(() => {
+  // 🔥 helper
+  const getCurrentSlot = (slots = []) => {
+    const now = Date.now();
+    return slots.find(s => new Date(s.tsUtc).getTime() >= now) || slots[0];
+  };
 
-        const data = await res.json();
-        console.log("FORECAST DATA:", data);
+  // 🔥 FORECAST + HERO
+  const fetchForecast = async () => {
+    try {
+      const res = await fetch(`${BASE}/api/aurora/forecast`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lat: 67.5,
+          lon: 26,
+        }),
+      });
 
-        setForecast(data.slots || []);
+      const data = await res.json();
+      console.log("FORECAST DATA:", data);
 
-        const currentSlot = getCurrentSlot(data.slots);
+      setForecast(data.slots || []);
 
-        setKp(currentSlot?.kp ?? 0);
-        setWind(data.current?.speed ?? null);
-        setBz(data.current?.bz ?? null);
+      const currentSlot = getCurrentSlot(data.slots);
 
-      } catch (e) {
-        console.error(e);
-        setForecast([]);
-      }
-    };
+      // HERO (HUOM: current vain premium)
+      setKp(currentSlot?.kp ?? 0);
+      setWind(data.current?.speed ?? null);
+      setBz(data.current?.bz ?? null);
 
-    // 🔥 PLACES DATA
-    const fetchPlaces = async () => {
-      try {
-        const results = await Promise.all(
-          places.slice(0, 3).map(async (place) => {
-            const res = await fetch(`${BASE}/api/aurora/forecast`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                lat: place.lat,
-                lon: place.lon,
-              }),
-            });
+    } catch (e) {
+      console.error(e);
+      setForecast([]);
+    }
+  };
 
-            const data = await res.json();
-            const slot = getCurrentSlot(data.slots);
+  // 🔥 PLACES DATA (nyt mukana clouds + temp)
+  const fetchPlaces = async () => {
+    try {
+      const results = await Promise.all(
+        places.slice(0, 3).map(async (place) => {
+          const res = await fetch(`${BASE}/api/aurora/forecast`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              lat: place.lat,
+              lon: place.lon,
+            }),
+          });
 
-            return {
-              id: place.id,
-              kp: slot?.kp,
-              wind: data.current?.speed,
-            };
-          })
-        );
+          const data = await res.json();
+          const slot = getCurrentSlot(data.slots);
 
-        const mapped = {};
-        results.forEach((r) => {
-          mapped[r.id] = r;
-        });
+          return {
+            id: place.id,
 
-        setPlaceData(mapped);
-      } catch (e) {
-        console.error(e);
-      }
-    };
+            // 🔹 aina löytyy
+            kp: slot?.kp ?? null,
 
+            // 🔹 premium only
+            probability: slot?.probability ?? null,
+            clouds: slot?.clouds ?? null,
+            temp: slot?.temp ?? null,
+
+            // 🔹 current only premium
+            wind: data.current?.speed ?? null,
+          };
+        })
+      );
+
+      const mapped = {};
+      results.forEach((r) => {
+        mapped[r.id] = r;
+      });
+
+      setPlaceData(mapped);
+
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  fetchForecast();
+  fetchPlaces();
+
+  const interval = setInterval(() => {
     fetchForecast();
     fetchPlaces();
+  }, 60000);
 
-    const interval = setInterval(() => {
-      fetchForecast();
-      fetchPlaces();
-    }, 60000);
+  return () => clearInterval(interval);
 
-    return () => clearInterval(interval);
-  }, []);
+}, []);
 
   return (
     <div>
