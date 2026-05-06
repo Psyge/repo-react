@@ -6,6 +6,7 @@ import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
 import { Link } from "react-router-dom";
+import places from "./data/places";
 
 export default function HomePage() {
   const [kp, setKp] = useState(null);
@@ -26,28 +27,12 @@ export default function HomePage() {
     const res = await fetch(`${BASE}/api/aurora/forecast`);
     const data = await res.json();
 
-    console.log("FORECAST RAW:", data); // debug
+    console.log("FORECAST DATA:", data);
 
-    let parsed = [];
-
-    // 🔥 eri mahdolliset API muodot
-    if (Array.isArray(data)) {
-      parsed = data;
-    } else if (Array.isArray(data.forecast)) {
-      parsed = data.forecast;
-    } else if (Array.isArray(data.days)) {
-      parsed = data.days;
-    }
-
-    // 🔥 varmista että fieldit täsmää Forecast-komponenttiin
-    const normalized = parsed.map((d) => ({
-      probability: d.probability ?? d.prob ?? 0,
-      kp: d.kp ?? d.kp_index ?? "--",
-    }));
-
-    setForecast(normalized);
+    // 🔥 FIX
+    setForecast(Array.isArray(data) ? data : data.forecast || []);
   } catch (e) {
-    console.error("Forecast fetch failed:", e);
+    console.error(e);
     setForecast([]);
   }
 };
@@ -145,15 +130,33 @@ const forecastInterval = setInterval(fetchForecast, 300000); // 5 min
 
         {/* LOCATIONS */}
         <section className="container">
-          <h2>{t("locations.title")}</h2>
-          <p>{t("locations.sub")}</p>
+  <h2>{t("locations.title")}</h2>
+  <p>{t("locations.sub")}</p>
 
-          <div className="locations">
-            <div className="location-card">Rovaniemi</div>
-            <div className="location-card">Levi</div>
-            <div className="location-card">Saariselkä</div>
+  <div className="places-grid">
+    {places.slice(0, 3).map((place) => (
+      <div key={place.id} className="place-row">
+        
+        <div className="place-name">
+          {place.name}
+        </div>
+
+        <div className="data-group">
+          <div className="data-item">
+            <span className="label">KP</span>
+            <span className="value kp-val kp-mid">--</span>
           </div>
-        </section>
+
+          <div className="data-item">
+            <span className="label">Wind</span>
+            <span className="value">--</span>
+          </div>
+        </div>
+
+      </div>
+    ))}
+  </div>
+</section>
 
         {/* ARTICLES */}
         <section className="container">
@@ -161,26 +164,26 @@ const forecastInterval = setInterval(fetchForecast, 300000); // 5 min
           <p>{t("home.articles.sub")}</p>
 
           
-  <div className="articles">
-  <Link to="/blog/photography" className="article-card">
-    <div className="article-tag">GUIDE</div>
-    <h3>{t("blog.post1.title")}</h3>
+  <div className="home-articles">
+  <Link to="/blog/photography" className="blog-card">
+    <div className="blog-card-tag">GUIDE</div>
+    <h2>{t("blog.post1.title")}</h2>
     <p>{t("blog.post1.excerpt")}</p>
-    <div className="article-link">{t("blog.read")}</div>
+    <div className="blog-card-read">{t("blog.read")}</div>
   </Link>
 
-  <Link to="/blog/forecast" className="article-card">
-    <div className="article-tag">GUIDE</div>
-    <h3>{t("blog.post2.title")}</h3>
+  <Link to="/blog/forecast" className="blog-card">
+    <div className="blog-card-tag">GUIDE</div>
+    <h2>{t("blog.post2.title")}</h2>
     <p>{t("blog.post2.excerpt")}</p>
-    <div className="article-link">{t("blog.read")}</div>
+    <div className="blog-card-read">{t("blog.read")}</div>
   </Link>
 
-  <Link to="/blog/best-time" className="article-card">
-    <div className="article-tag">GUIDE</div>
-    <h3>{t("blog.post3.title")}</h3>
+  <Link to="/blog/best-time" className="blog-card">
+    <div className="blog-card-tag">GUIDE</div>
+    <h2>{t("blog.post3.title")}</h2>
     <p>{t("blog.post3.excerpt")}</p>
-    <div className="article-link">{t("blog.read")}</div>
+    <div className="blog-card-read">{t("blog.read")}</div>
   </Link>
 </div>
         </section>
