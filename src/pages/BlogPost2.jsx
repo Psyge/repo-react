@@ -1,6 +1,6 @@
 import Header from "../components/Header";
 import { Link } from "react-router-dom";
-import useTranslation from "../../hooks/useTranslation";
+import useTranslation from "../hooks/useTranslation";
 
 export default function ForecastPost() {
   const { t } = useTranslation();

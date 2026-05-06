@@ -1,4 +1,5 @@
 import Header from "../components/Header";
+import { Link } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 
 export default function BlogPost3() {
@@ -8,35 +9,55 @@ export default function BlogPost3() {
     <div>
       <Header />
 
-      <main className="container blog-post">
-        <h1>{t("blog.post3.title")}</h1>
-
-        <p>{t("blog.post3.excerpt")}</p>
-
-        <h2>Best months</h2>
-        <p>
-          The Northern Lights season in Lapland runs from late August to early April.
-          The best months are typically September–October and February–March.
+      <main
+        className="container article"
+        style={{
+          padding: "var(--space-lg) var(--space-md)",
+          maxWidth: "760px",
+        }}
+      >
+        {/* BACK */}
+        <p className="article-back">
+          <Link to="/blog">{t("blog.back")}</Link>
         </p>
 
-        <h2>Best hours</h2>
-        <p>
-          The most active time is usually between 9 PM and 2 AM,
-          when geomagnetic activity peaks and the sky is darkest.
-        </p>
+        {/* TITLE */}
+        <h1>{t("post3.h1")}</h1>
+        <p className="tagline">{t("post3.lead")}</p>
 
-        <h2>Weather matters</h2>
-        <p>
-          Even strong aurora activity is useless if the sky is cloudy.
-          Always combine aurora forecast with cloud cover data.
-        </p>
+        {/* SECTION 1 */}
+        <h2>{t("post3.h2.season")}</h2>
+        <p>{t("post3.p.season1")}</p>
 
-        <h2>Moon phase</h2>
-        <p>
-          A bright full moon can reduce visibility of faint auroras,
-          but strong displays are still clearly visible.
+        {/* SECTION 2 */}
+        <h2>{t("post3.h2.peaks")}</h2>
+        <ul>
+          <li>{t("post3.li.m1")}</li>
+          <li>{t("post3.li.m2")}</li>
+          <li>{t("post3.li.m3")}</li>
+        </ul>
+
+        {/* SECTION 3 */}
+        <h2>{t("post3.h2.hours")}</h2>
+        <p>{t("post3.p.hours1")}</p>
+
+        {/* SECTION 4 */}
+        <h2>{t("post3.h2.moon")}</h2>
+        <p>{t("post3.p.moon1")}</p>
+
+        {/* SECTION 5 */}
+        <h2>{t("post3.h2.cycle")}</h2>
+        <p>{t("post3.p.cycle1")}</p>
+
+        {/* CTA */}
+        <p className="article-cta">
+          {t("post3.cta")}
         </p>
       </main>
+
+      <footer className="footer">
+        <p>© RepoTracker</p>
+      </footer>
     </div>
   );
 }
