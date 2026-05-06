@@ -3,42 +3,36 @@ import useTranslation from "../hooks/useTranslation";
 export default function Forecast({ data }) {
   const { t } = useTranslation();
 
-  // 🔥 groupataan slotit päivittäin (max probability)
+  if (!data || data.length === 0) {
+    return (
+      <div className="fc-wrap">
+        <div className="fc-empty">{t("forecast.empty")}</div>
+      </div>
+    );
+  }
+
+  // 🔥 groupataan päivittäin
   const grouped = {};
 
-  (data || []).forEach((slot) => {
-    const date = new Date(slot.tsUtc).toDateString();
+  data.forEach((slot) => {
+    const d = new Date(slot.tsUtc);
+    const dayKey = d.toDateString();
 
-    if (!grouped[date]) {
-      grouped[date] = {
-        kp: slot.kp,
-        probability: slot.probability ?? null,
-      };
-    } else {
-      // ota päivän paras arvo
-      if ((slot.probability ?? 0) > (grouped[date].probability ?? 0)) {
-        grouped[date].probability = slot.probability;
-        grouped[date].kp = slot.kp;
-      }
-    }
+    if (!grouped[dayKey]) grouped[dayKey] = [];
+    grouped[dayKey].push({ ...slot, date: d });
   });
 
-  const days = Object.values(grouped).slice(0, 3);
+  const days = Object.entries(grouped).slice(0, 3);
 
   return (
-    <div className="forecast container">
-      <h2>{t("forecast.title")}</h2>
+    <div className="fc-wrap">
+      <div className="fc-head">
+        <h3>{t("forecast.title")}</h3>
+        <div className="fc-tz">UTC</div>
+      </div>
 
-      {/* EMPTY */}
-      {days.length === 0 && (
-        <div className="forecast-empty">
-          {t("forecast.empty")}
-        </div>
-      )}
-
-      {/* GRID */}
-      <div className="forecast-grid">
-        {days.map((day, i) => {
+      <div className="fc-days">
+        {days.map(([dayKey, slots], i) => {
           const label =
             i === 0
               ? t("forecast.today")
@@ -46,19 +40,42 @@ export default function Forecast({ data }) {
               ? t("forecast.tomorrow")
               : t("forecast.dayafter");
 
-          const prob = day?.probability;
-          const kp = day?.kp ?? "--";
-
           return (
-            <div key={i} className="forecast-card">
-              <div className="forecast-day">{label}</div>
+            <div key={dayKey}>
+              <div className="fc-day-head">{label}</div>
 
-              <div className="forecast-value">
-                {prob != null ? `${prob}%` : `Kp ${kp}`}
-              </div>
+              <div className="fc-row">
+                {slots.map((s, idx) => {
+                  const hour = s.date.getUTCHours();
 
-              <div className="forecast-meta">
-                Kp: <strong>{kp}</strong>
+                  // 🌙 night highlight (simple)
+                  const isNight = hour >= 20 || hour <= 5;
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`fc-slot ${isNight ? "fc-night" : ""}`}
+                    >
+                      <div className="fc-time">
+                        {hour.toString().padStart(2, "0")}:00
+                      </div>
+
+                      <div className="fc-prob">
+                        {s.probability != null
+  ? `${Math.round(s.probability)}%`
+  : `Kp ${s.kp ?? "--"}`}
+                      </div>
+
+                      <div className="fc-kp">Kp {s.kp}</div>
+
+                      {s.clouds != null && (
+                        <div className="fc-cloud">
+                          ☁ {s.clouds}%
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

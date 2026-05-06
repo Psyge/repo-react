@@ -6,6 +6,7 @@ import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
 import places from "./data/places";
+import { calculateAurora } from "./utils/auroraEngine";
 
 export default function HomePage() {
   const [kp, setKp] = useState(null);
@@ -16,33 +17,43 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  const aurora = calculateAurora({
+  kp,
+  speed: wind,
+  density: 5, // jos ei ole → default
+  bz,
+  cloudCover: 50, // jos ei ole → default
+  latitude: 67.5,
+});
+
   const BASE = "https://report.masto84.workers.dev";
 
   useEffect(() => {
     // 🔥 FORECAST (POST + slots)
     const fetchForecast = async () => {
-      try {
-        const res = await fetch(`${BASE}/api/aurora/forecast`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lat: 67.5,
-            lon: 26,
-          }),
-        });
+  try {
+    const res = await fetch(`${BASE}/api/aurora/forecast`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        lat: 67.5,
+        lon: 26,
+      }),
+    });
 
-        const data = await res.json();
+    const data = await res.json();
 
-        console.log("FORECAST RAW:", data);
+    console.log("FORECAST DATA:", data);
 
-        setForecast(data.slots || []);
-      } catch (e) {
-        console.error(e);
-        setForecast([]);
-      }
-    };
+    // 🔥 OIKEA
+    setForecast(data.slots || []);
+  } catch (e) {
+    console.error(e);
+    setForecast([]);
+  }
+};
 
     // 🔥 SOLAR (jos tämäkin on POST — jos ei, kerro)
     const fetchSolar = async () => {
@@ -92,22 +103,24 @@ export default function HomePage() {
               </div>
 
               <div className="kp-big">
-                <span>{kp ?? "--"}</span>
-              </div>
+  <span>
+    {aurora?.probability != null ? `${aurora.probability}%` : "--"}
+  </span>
+</div>
 
-              <div className="kp-meta">
-                <span>
-                  {t("kp.label")}: <strong>{kp ?? "--"}</strong>
-                </span>
+<div className="kp-meta">
+  <span>
+    {t("kp.label")}: <strong>{kp ?? "--"}</strong>
+  </span>
 
-                <span>
-                  {t("wind.speed")}: <strong>{wind ?? "--"}</strong>
-                </span>
+  <span>
+    {t("wind.speed")}: <strong>{wind ?? "--"}</strong>
+  </span>
 
-                <span>
-                  {t("bz.label")}: <strong>{bz ?? "--"}</strong>
-                </span>
-              </div>
+  <span>
+    {t("bz.label")}: <strong>{bz ?? "--"}</strong>
+  </span>
+</div>
             </div>
 
             <div
