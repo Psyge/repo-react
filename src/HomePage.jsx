@@ -103,13 +103,16 @@ export default function HomePage() {
   </span>
 
   <span>
-    {t("wind.speed")}: <strong>{wind ?? "--"}</strong>
-  </span>
+  {t("wind.speed")}: <strong>
+    {wind ? wind : "--"}
+  </strong>
+</span>
 
-  <span>
-    {t("bz.label")}: <strong>{bz ?? "--"}</strong>
-  </span>
-</div>
+<span>
+  {t("bz.label")}: <strong>
+    {bz ? bz : "--"}
+  </strong>
+</span>
             </div>
 
             <div
