@@ -30,7 +30,7 @@ export default function HomePage() {
 
   useEffect(() => {
     // 🔥 FORECAST (POST + slots)
-    const fetchForecast = async () => {
+ const fetchSolar = async () => {
   try {
     const res = await fetch(`${BASE}/api/aurora/forecast`, {
       method: "POST",
@@ -45,13 +45,14 @@ export default function HomePage() {
 
     const data = await res.json();
 
-    console.log("FORECAST DATA:", data);
+    console.log("FORECAST RAW:", data);
 
-    // 🔥 OIKEA
-    setForecast(data.slots || []);
+    setWind(data.current?.speed ?? "--");
+    setBz(data.current?.bz ?? "--");
+    setKp(data.slots?.[0]?.kp ?? "--");
+
   } catch (e) {
     console.error(e);
-    setForecast([]);
   }
 };
 
