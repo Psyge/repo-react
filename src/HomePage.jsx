@@ -62,7 +62,7 @@ export default function HomePage() {
 };
 
     fetchForecast();
-    fetchSolar();
+   
 
     const forecastInterval = setInterval(fetchForecast, 60000);
     
