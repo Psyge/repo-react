@@ -247,7 +247,8 @@ export default function HomePage() {
                   </div>
 
                  <div className="data-group">
-  <div className="data-item">
+
+                <div className="data-item">
     <span className="label">KP</span>
     <span className="value kp-val kp-mid">
       {data?.kp ?? "--"}
@@ -271,9 +272,10 @@ export default function HomePage() {
   <div className="data-item">
     <span className="label">Temp</span>
     <span className="value">
-      {data?.temp != null ? `${data.temp}°` : "--"}
+      {data?.temp != null ? `${Math.round(data.temp)}°` : "--"}
     </span>
   </div>
+
 </div>
                 </div>
               );
