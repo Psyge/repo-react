@@ -8,69 +8,122 @@ import Forecast from "./components/Forecast";
 import places from "./data/places";
 import { calculateAurora } from "./utils/auroraEngine";
 
+// 🔥 helper (oikea aikaslot)
+const getCurrentSlot = (slots) => {
+  if (!slots || slots.length === 0) return null;
+
+  const now = Date.now();
+
+  return slots.reduce((closest, slot) => {
+    const diff = Math.abs(new Date(slot.tsUtc).getTime() - now);
+    if (!closest || diff < closest.diff) {
+      return { slot, diff };
+    }
+    return closest;
+  }, null)?.slot;
+};
+
 export default function HomePage() {
   const [kp, setKp] = useState(null);
   const [wind, setWind] = useState(null);
   const [bz, setBz] = useState(null);
   const [forecast, setForecast] = useState([]);
+  const [placeData, setPlaceData] = useState({});
 
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const aurora = calculateAurora({
-  kp,
-  speed: wind,
-  density: 5, // jos ei ole → default
-  bz,
-  cloudCover: 50, // jos ei ole → default
-  latitude: 67.5,
-});
-
   const BASE = "https://report.masto84.workers.dev";
 
+  // 🔥 aurora laskenta
+  const aurora = calculateAurora({
+    kp,
+    speed: wind,
+    density: 5,
+    bz,
+    cloudCover: 50,
+    latitude: 67.5,
+  });
+
   useEffect(() => {
-    // 🔥 FORECAST (POST + slots)
-  const fetchForecast = async () => {
-  try {
-    const res = await fetch(`${BASE}/api/aurora/forecast`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        lat: 67.5,
-        lon: 26,
-      }),
-    });
+    // 🔥 FORECAST + HERO
+    const fetchForecast = async () => {
+      try {
+        const res = await fetch(`${BASE}/api/aurora/forecast`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            lat: 67.5,
+            lon: 26,
+          }),
+        });
 
-    const data = await res.json();
+        const data = await res.json();
+        console.log("FORECAST DATA:", data);
 
-    console.log("FORECAST DATA:", data);
+        setForecast(data.slots || []);
 
-    // 🔥 forecast
-    setForecast(data.slots || []);
+        const currentSlot = getCurrentSlot(data.slots);
 
-    // 🔥 current (hero)
-    setWind(data.current?.speed ?? 0);
-    setBz(data.current?.bz ?? 0);
-    setKp(data.slots?.[0]?.kp ?? 0);
+        setKp(currentSlot?.kp ?? 0);
+        setWind(data.current?.speed ?? null);
+        setBz(data.current?.bz ?? null);
 
-  } catch (e) {
-    console.error(e);
-    setForecast([]);
-  }
-};
+      } catch (e) {
+        console.error(e);
+        setForecast([]);
+      }
+    };
+
+    // 🔥 PLACES DATA
+    const fetchPlaces = async () => {
+      try {
+        const results = await Promise.all(
+          places.slice(0, 3).map(async (place) => {
+            const res = await fetch(`${BASE}/api/aurora/forecast`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                lat: place.lat,
+                lon: place.lon,
+              }),
+            });
+
+            const data = await res.json();
+            const slot = getCurrentSlot(data.slots);
+
+            return {
+              id: place.id,
+              kp: slot?.kp,
+              wind: data.current?.speed,
+            };
+          })
+        );
+
+        const mapped = {};
+        results.forEach((r) => {
+          mapped[r.id] = r;
+        });
+
+        setPlaceData(mapped);
+      } catch (e) {
+        console.error(e);
+      }
+    };
 
     fetchForecast();
-   
+    fetchPlaces();
 
-    const forecastInterval = setInterval(fetchForecast, 60000);
-    
+    const interval = setInterval(() => {
+      fetchForecast();
+      fetchPlaces();
+    }, 60000);
 
-    return () => {
-      clearInterval(forecastInterval);
-      
-    };
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -92,28 +145,28 @@ export default function HomePage() {
               </div>
 
               <div className="kp-big">
-  <span>
-    {aurora?.probability != null ? `${aurora.probability}%` : "--"}
-  </span>
-</div>
+                <span>
+                  {aurora?.probability != null
+                    ? `${aurora.probability}%`
+                    : "--"}
+                </span>
+              </div>
 
-<div className="kp-meta">
-  <span>
-    {t("kp.label")}: <strong>{kp ?? "--"}</strong>
-  </span>
+              <div className="kp-meta">
+                <span>
+                  {t("kp.label")}: <strong>{kp ?? "--"}</strong>
+                </span>
 
-  <span>
-  {t("wind.speed")}: <strong>
-    {wind ? wind : "--"}
-  </strong>
-</span>
+                <span>
+                  {t("wind.speed")}:{" "}
+                  <strong>{wind ?? "--"}</strong>
+                </span>
 
-<span>
-  {t("bz.label")}: <strong>
-    {bz ? bz : "--"}
-  </strong>
-</span>
-            </div>
+                <span>
+                  {t("bz.label")}:{" "}
+                  <strong>{bz ?? "--"}</strong>
+                </span>
+              </div>
             </div>
 
             <div
@@ -128,7 +181,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 🔥 FORECAST */}
+        {/* FORECAST */}
         <section className="container">
           <Forecast data={forecast} />
         </section>
@@ -142,33 +195,43 @@ export default function HomePage() {
           <Sightings />
         </section>
 
-        {/* 🔥 LOCATIONS */}
+        {/* LOCATIONS */}
         <section className="container">
           <h2>{t("locations.title")}</h2>
           <p>{t("locations.sub")}</p>
 
           <div className="places-grid">
-            {places.slice(0, 3).map((place) => (
-              <div key={place.id} className="place-row">
-                <div className="place-name">{place.name}</div>
+            {places.slice(0, 3).map((place) => {
+              const data = placeData[place.id];
 
-                <div className="data-group">
-                  <div className="data-item">
-                    <span className="label">KP</span>
-                    <span className="value kp-val kp-mid">--</span>
+              return (
+                <div key={place.id} className="place-row">
+                  <div className="place-name">
+                    {place.name}
                   </div>
 
-                  <div className="data-item">
-                    <span className="label">Wind</span>
-                    <span className="value">--</span>
+                  <div className="data-group">
+                    <div className="data-item">
+                      <span className="label">KP</span>
+                      <span className="value kp-val kp-mid">
+                        {data?.kp ?? "--"}
+                      </span>
+                    </div>
+
+                    <div className="data-item">
+                      <span className="label">Wind</span>
+                      <span className="value">
+                        {data?.wind ?? "--"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
-        {/* 🔥 ARTICLES */}
+        {/* ARTICLES */}
         <section className="container">
           <h2>{t("home.articles.title")}</h2>
           <p>{t("home.articles.sub")}</p>
@@ -178,21 +241,27 @@ export default function HomePage() {
               <div className="blog-card-tag">GUIDE</div>
               <h2>{t("blog.post1.title")}</h2>
               <p>{t("blog.post1.excerpt")}</p>
-              <div className="blog-card-read">{t("blog.read")}</div>
+              <div className="blog-card-read">
+                {t("blog.read")}
+              </div>
             </Link>
 
             <Link to="/blog/forecast" className="blog-card">
               <div className="blog-card-tag">GUIDE</div>
               <h2>{t("blog.post2.title")}</h2>
               <p>{t("blog.post2.excerpt")}</p>
-              <div className="blog-card-read">{t("blog.read")}</div>
+              <div className="blog-card-read">
+                {t("blog.read")}
+              </div>
             </Link>
 
             <Link to="/blog/best-time" className="blog-card">
               <div className="blog-card-tag">GUIDE</div>
               <h2>{t("blog.post3.title")}</h2>
               <p>{t("blog.post3.excerpt")}</p>
-              <div className="blog-card-read">{t("blog.read")}</div>
+              <div className="blog-card-read">
+                {t("blog.read")}
+              </div>
             </Link>
           </div>
         </section>
