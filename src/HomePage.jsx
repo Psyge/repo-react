@@ -30,7 +30,7 @@ export default function HomePage() {
 
   useEffect(() => {
     // 🔥 FORECAST (POST + slots)
- const fetchSolar = async () => {
+  const fetchForecast = async () => {
   try {
     const res = await fetch(`${BASE}/api/aurora/forecast`, {
       method: "POST",
@@ -45,28 +45,31 @@ export default function HomePage() {
 
     const data = await res.json();
 
-    console.log("FORECAST RAW:", data);
+    console.log("FORECAST DATA:", data);
 
-    setWind(data.current?.speed ?? "--");
-    setBz(data.current?.bz ?? "--");
-    setKp(data.slots?.[0]?.kp ?? "--");
+    // 🔥 forecast
+    setForecast(data.slots || []);
+
+    // 🔥 current (hero)
+    setWind(data.current?.speed ?? 0);
+    setBz(data.current?.bz ?? 0);
+    setKp(data.slots?.[0]?.kp ?? 0);
 
   } catch (e) {
     console.error(e);
+    setForecast([]);
   }
 };
-
-  
 
     fetchForecast();
     fetchSolar();
 
-    const forecastInterval = setInterval(fetchForecast, 300000);
-    const solarInterval = setInterval(fetchSolar, 60000);
+    const forecastInterval = setInterval(fetchForecast, 60000);
+    
 
     return () => {
       clearInterval(forecastInterval);
-      clearInterval(solarInterval);
+      
     };
   }, []);
 
