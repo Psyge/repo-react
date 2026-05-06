@@ -21,14 +21,34 @@ export default function HomePage() {
 
   useEffect(() => {
 
-    const fetchForecast = async () => {
+  const fetchForecast = async () => {
   try {
     const res = await fetch(`${BASE}/api/aurora/forecast`);
     const data = await res.json();
 
-    setForecast(data.forecast || []);
+    console.log("FORECAST RAW:", data); // debug
+
+    let parsed = [];
+
+    // 🔥 eri mahdolliset API muodot
+    if (Array.isArray(data)) {
+      parsed = data;
+    } else if (Array.isArray(data.forecast)) {
+      parsed = data.forecast;
+    } else if (Array.isArray(data.days)) {
+      parsed = data.days;
+    }
+
+    // 🔥 varmista että fieldit täsmää Forecast-komponenttiin
+    const normalized = parsed.map((d) => ({
+      probability: d.probability ?? d.prob ?? 0,
+      kp: d.kp ?? d.kp_index ?? "--",
+    }));
+
+    setForecast(normalized);
   } catch (e) {
-    console.error(e);
+    console.error("Forecast fetch failed:", e);
+    setForecast([]);
   }
 };
 
@@ -142,22 +162,26 @@ const forecastInterval = setInterval(fetchForecast, 300000); // 5 min
 
           
   <div className="articles">
-
   <Link to="/blog/photography" className="article-card">
+    <div className="article-tag">GUIDE</div>
     <h3>{t("blog.post1.title")}</h3>
     <p>{t("blog.post1.excerpt")}</p>
+    <div className="article-link">{t("blog.read")}</div>
   </Link>
 
   <Link to="/blog/forecast" className="article-card">
+    <div className="article-tag">GUIDE</div>
     <h3>{t("blog.post2.title")}</h3>
     <p>{t("blog.post2.excerpt")}</p>
+    <div className="article-link">{t("blog.read")}</div>
   </Link>
 
-  <Link to="/blog/timing" className="article-card">
+  <Link to="/blog/best-time" className="article-card">
+    <div className="article-tag">GUIDE</div>
     <h3>{t("blog.post3.title")}</h3>
     <p>{t("blog.post3.excerpt")}</p>
+    <div className="article-link">{t("blog.read")}</div>
   </Link>
-
 </div>
         </section>
       </main>
