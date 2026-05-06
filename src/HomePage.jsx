@@ -56,22 +56,7 @@ export default function HomePage() {
   }
 };
 
-    // 🔥 SOLAR (jos tämäkin on POST — jos ei, kerro)
-    const fetchSolar = async () => {
-      try {
-        const res = await fetch(`${BASE}/api/solar`, {
-          method: "GET", // ← jos tämä antaa vielä 404, vaihdetaan POSTiksi
-        });
-
-        const data = await res.json();
-
-        setKp(data.kp ?? 0);
-        setWind(data.speed ?? 0);
-        setBz(data.bz ?? 0);
-      } catch (e) {
-        console.error(e);
-      }
-    };
+  
 
     fetchForecast();
     fetchSolar();
