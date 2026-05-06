@@ -5,6 +5,7 @@ import Sightings from "./components/Sightings";
 import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
+import { Link } from "react-router-dom";
 
 export default function HomePage() {
   const [kp, setKp] = useState(null);
