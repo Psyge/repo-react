@@ -47,7 +47,30 @@ export default function HomePage() {
 
  useEffect(() => {
   // 🔥 helper
- 
+   try {
+    // 🔹 KP
+    const kpRes = await fetch("https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json");
+    const kpData = await kpRes.json();
+    const kpLast = kpData[kpData.length - 1];
+
+    // 🔹 WIND + DENSITY
+    const plasmaRes = await fetch("https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json");
+    const plasmaData = await plasmaRes.json();
+    const plasmaLast = plasmaData[plasmaData.length - 1];
+
+    // 🔹 BZ
+    const magRes = await fetch("https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json");
+    const magData = await magRes.json();
+    const magLast = magData[magData.length - 1];
+
+    // 🔥 SET STATE (TÄMÄ KORJAA KAIKEN)
+    setKp(parseFloat(kpLast[1]));
+    setWind(parseFloat(plasmaLast[2]));
+    setBz(parseFloat(magLast[3]));
+
+  } catch (e) {
+    console.error("SOLAR ERROR:", e);
+  }
 
   // 🔥 FORECAST + HERO
   const fetchForecast = async () => {
@@ -225,21 +248,35 @@ export default function HomePage() {
                     {place.name}
                   </div>
 
-                  <div className="data-group">
-                    <div className="data-item">
-                      <span className="label">KP</span>
-                      <span className="value kp-val kp-mid">
-                        {data?.kp ?? "--"}
-                      </span>
-                    </div>
+                 <div className="data-group">
+  <div className="data-item">
+    <span className="label">KP</span>
+    <span className="value kp-val kp-mid">
+      {data?.kp ?? "--"}
+    </span>
+  </div>
 
-                    <div className="data-item">
-                      <span className="label">Wind</span>
-                      <span className="value">
-                        {data?.wind ?? "--"}
-                      </span>
-                    </div>
-                  </div>
+  <div className="data-item">
+    <span className="label">Wind</span>
+    <span className="value">
+      {data?.wind ?? "--"}
+    </span>
+  </div>
+
+  <div className="data-item">
+    <span className="label">Clouds</span>
+    <span className="value">
+      {data?.clouds != null ? `${data.clouds}%` : "--"}
+    </span>
+  </div>
+
+  <div className="data-item">
+    <span className="label">Temp</span>
+    <span className="value">
+      {data?.temp != null ? `${data.temp}°` : "--"}
+    </span>
+  </div>
+</div>
                 </div>
               );
             })}
