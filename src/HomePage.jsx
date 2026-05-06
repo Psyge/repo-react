@@ -46,33 +46,32 @@ export default function HomePage() {
   });
 
  useEffect(() => {
-  // 🔥 helper
-   try {
-    // 🔹 KP
-    const kpRes = await fetch("https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json");
-    const kpData = await kpRes.json();
-    const kpLast = kpData[kpData.length - 1];
 
-    // 🔹 WIND + DENSITY
-    const plasmaRes = await fetch("https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json");
-    const plasmaData = await plasmaRes.json();
-    const plasmaLast = plasmaData[plasmaData.length - 1];
+  // 🔥 SOLAR (NOAA – toimii aina)
+  const fetchSolar = async () => {
+    try {
+      const kpRes = await fetch("https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json");
+      const kpData = await kpRes.json();
+      const kpLast = kpData[kpData.length - 1];
 
-    // 🔹 BZ
-    const magRes = await fetch("https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json");
-    const magData = await magRes.json();
-    const magLast = magData[magData.length - 1];
+      const plasmaRes = await fetch("https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json");
+      const plasmaData = await plasmaRes.json();
+      const plasmaLast = plasmaData[plasmaData.length - 1];
 
-    // 🔥 SET STATE (TÄMÄ KORJAA KAIKEN)
-    setKp(parseFloat(kpLast[1]));
-    setWind(parseFloat(plasmaLast[2]));
-    setBz(parseFloat(magLast[3]));
+      const magRes = await fetch("https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json");
+      const magData = await magRes.json();
+      const magLast = magData[magData.length - 1];
 
-  } catch (e) {
-    console.error("SOLAR ERROR:", e);
-  }
+      setKp(parseFloat(kpLast[1]));
+      setWind(parseFloat(plasmaLast[2]));
+      setBz(parseFloat(magLast[3]));
 
-  // 🔥 FORECAST + HERO
+    } catch (e) {
+      console.error("SOLAR ERROR:", e);
+    }
+  };
+
+  // 🔥 FORECAST (pidetään tämä)
   const fetchForecast = async () => {
     try {
       const res = await fetch(`${BASE}/api/aurora/forecast`, {
@@ -87,16 +86,18 @@ export default function HomePage() {
       });
 
       const data = await res.json();
-      console.log("FORECAST DATA:", data);
 
       setForecast(data.slots || []);
 
       const currentSlot = getCurrentSlot(data.slots);
 
-      // HERO (HUOM: current vain premium)
+      // ⚠️ ÄLÄ ylikirjoita NOAA dataa jos ei premium
+      if (data.current) {
+        setWind(data.current.speed ?? null);
+        setBz(data.current.bz ?? null);
+      }
+
       setKp(currentSlot?.kp ?? 0);
-      setWind(data.current?.speed ?? null);
-      setBz(data.current?.bz ?? null);
 
     } catch (e) {
       console.error(e);
@@ -104,7 +105,7 @@ export default function HomePage() {
     }
   };
 
-  // 🔥 PLACES DATA (nyt mukana clouds + temp)
+  // 🔥 PLACES (sun oma, ei kosketa)
   const fetchPlaces = async () => {
     try {
       const results = await Promise.all(
@@ -125,16 +126,10 @@ export default function HomePage() {
 
           return {
             id: place.id,
-
-            // 🔹 aina löytyy
             kp: slot?.kp ?? null,
-
-            // 🔹 premium only
             probability: slot?.probability ?? null,
             clouds: slot?.clouds ?? null,
             temp: slot?.temp ?? null,
-
-            // 🔹 current only premium
             wind: data.current?.speed ?? null,
           };
         })
@@ -152,10 +147,13 @@ export default function HomePage() {
     }
   };
 
+  // 🔥 CALLIT
+  fetchSolar();     // ← TÄRKEÄ
   fetchForecast();
   fetchPlaces();
 
   const interval = setInterval(() => {
+    fetchSolar();   // ← TÄRKEÄ
     fetchForecast();
     fetchPlaces();
   }, 60000);
