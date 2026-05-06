@@ -114,6 +114,7 @@ export default function HomePage() {
   </strong>
 </span>
             </div>
+            </div>
 
             <div
               className="map-preview"
