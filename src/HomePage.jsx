@@ -89,16 +89,7 @@ export default function HomePage() {
 
       setForecast(data.slots || []);
 
-      const currentSlot = getCurrentSlot(data.slots);
-
-      // ⚠️ ÄLÄ ylikirjoita NOAA dataa jos ei premium
-      if (data.current) {
-        setWind(data.current.speed ?? null);
-        setBz(data.current.bz ?? null);
-      }
-
-      setKp(currentSlot?.kp ?? 0);
-
+   
     } catch (e) {
       console.error(e);
       setForecast([]);
