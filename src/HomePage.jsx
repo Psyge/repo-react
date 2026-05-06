@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import Sightings from "./components/Sightings";
 import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
+import Forecast from "./components/Forecast";
 
 export default function HomePage() {
   const [kp, setKp] = useState(null);
@@ -13,9 +14,26 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  const [forecast, setForecast] = useState([]);
+
   const BASE = "https://report.masto84.workers.dev";
 
   useEffect(() => {
+
+    const fetchForecast = async () => {
+  try {
+    const res = await fetch(`${BASE}/api/aurora/forecast`);
+    const data = await res.json();
+
+    setForecast(data.forecast || []);
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+fetchForecast();
+const forecastInterval = setInterval(fetchForecast, 300000); // 5 min
+
     const fetchSolar = async () => {
       try {
         const res = await fetch(`${BASE}/api/solar`);
@@ -33,7 +51,10 @@ export default function HomePage() {
 
     const interval = setInterval(fetchSolar, 60000);
 
-    return () => clearInterval(interval);
+    return () => {
+  clearInterval(interval);
+  clearInterval(forecastInterval);
+};
   }, []);
 
   return (
@@ -88,6 +109,10 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section className="container">
+  <Forecast data={forecast} />
+</section>
+
         {/* SIGHTINGS */}
         <section className="container">
           <h2>{t("sightings.title")}</h2>
@@ -114,11 +139,25 @@ export default function HomePage() {
           <h2>{t("home.articles.title")}</h2>
           <p>{t("home.articles.sub")}</p>
 
-          <div className="articles">
-            <div className="article-card">
-              {t("blog.post1.title")}
-            </div>
-          </div>
+          
+  <div className="articles">
+
+  <Link to="/blog/photography" className="article-card">
+    <h3>{t("blog.post1.title")}</h3>
+    <p>{t("blog.post1.excerpt")}</p>
+  </Link>
+
+  <Link to="/blog/forecast" className="article-card">
+    <h3>{t("blog.post2.title")}</h3>
+    <p>{t("blog.post2.excerpt")}</p>
+  </Link>
+
+  <Link to="/blog/timing" className="article-card">
+    <h3>{t("blog.post3.title")}</h3>
+    <p>{t("blog.post3.excerpt")}</p>
+  </Link>
+
+</div>
         </section>
       </main>
 
