@@ -5,6 +5,8 @@ export default function BlogPage() {
   const { t } = useTranslation();
 
   return (
+    <div>
+    <Header />
     <main className="container">
       <h1>{t("blog.title")}</h1>
       <p>{t("blog.intro")}</p>
@@ -40,5 +42,6 @@ export default function BlogPage() {
 
       </div>
     </main>
+    </div>
   );
 }
