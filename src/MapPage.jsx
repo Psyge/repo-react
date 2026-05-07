@@ -150,7 +150,13 @@ if (searchParams.get("lat") && searchParams.get("lon")) {
     return () => {
       clearInterval(interval);
     };
-  }, [openPopup, initialLat, initialLon]);
+  }, [
+  openPopup,
+  initialLat,
+  initialLon,
+  auroraIcon,
+  searchParams,
+]);
   
   const auroraIcon = L.divIcon({
   className: "",
