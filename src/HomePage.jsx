@@ -99,54 +99,59 @@ export default function HomePage() {
   };
 
   // 🔥 PLACES (sun oma, ei kosketa)
-  const fetchPlaces = async () => {
-    try {
-      const results = await Promise.all(
-        places.slice(0, 3).map(async (place) => {
-          const res = await fetch(`${BASE}/api/aurora/forecast`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              lat: place.lat,
-              lon: place.lon,
-            }),
-          });
+ const fetchPlaces = async () => {
+  try {
+    const results = await Promise.all(
+      places.slice(0, 3).map(async (place) => {
 
-          const data = await res.json();
-const slot = getCurrentSlot(data.slots);
+        // 🔥 FORECAST
+        const res = await fetch(`${BASE}/api/aurora/forecast`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            lat: place.lat,
+            lon: place.lon,
+          }),
+        });
 
-// 🔥 WEATHER
-const weatherRes = await fetch(
-  `${BASE}/?lat=${place.lat}&lon=${place.lon}`
-);
+        const data = await res.json();
+        const slot = getCurrentSlot(data.slots);
 
-const weather = await weatherRes.json();
+        // 🔥 WEATHER
+        const weatherRes = await fetch(
+          `${BASE}/?lat=${place.lat}&lon=${place.lon}`
+        );
 
-          return {
-  id: place.id,
+        const weather = await weatherRes.json();
 
-  kp: slot?.kp ?? 0,
+        return {
+          id: place.id,
 
-  temp: Math.round(weather.main?.temp ?? 0),
+          kp: slot?.kp ?? 0,
 
-  clouds: weather.clouds?.all ?? 0,
+          temp: Math.round(weather.main?.temp ?? 0),
 
-  wind: weather.wind?.speed ?? 0,
+          clouds: weather.clouds?.all ?? 0,
+
+          wind: weather.wind?.speed ?? 0,
+        };
+      })
+    );
+
+    const mapped = {};
+
+    results.forEach((r) => {
+      mapped[r.id] = r;
+    });
+
+    setPlaceData(mapped);
+
+  } catch (e) {
+    console.error(e);
+  }
 };
-
-      const mapped = {};
-      results.forEach((r) => {
-        mapped[r.id] = r;
-      });
-
-      setPlaceData(mapped);
-
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   // 🔥 CALLIT
   fetchSolar();     // ← TÄRKEÄ
@@ -257,7 +262,7 @@ const weather = await weatherRes.json();
   </div>
 
   <div className="data-item">
-  <span className="label">{t("weather.clouds")}</span>
+    <span className="label">{t("weather.clouds")}</span>
   <span className="value">
     {data?.clouds ?? "--"}%
   </span>
