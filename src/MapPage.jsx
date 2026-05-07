@@ -134,7 +134,7 @@ const initialLon =
     return () => {
       clearInterval(interval);
     };
-  }, [openPopup]);
+  }, [openPopup, initialLat, initialLon]);
   
   const auroraIcon = L.divIcon({
   className: "",
