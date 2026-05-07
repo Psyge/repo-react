@@ -25,7 +25,7 @@ export default function Forecast({ data }) {
   }
 
   // 🔥 vain seuraavat 24h näkyviin
-  const chartData = data.slice(0, 8).map((slot) => {
+  const chartData = filtered.slice(0, 8).map((slot) => {
     const d = new Date(slot.tsUtc);
 
     return {
@@ -33,14 +33,19 @@ export default function Forecast({ data }) {
         .toString()
         .padStart(2, "0")}:00`,
 
-      kp: Number(slot.kp ?? 0),
+      kp: Math.round(slot.probability ?? 0),
 
       clouds: Number(slot.clouds ?? 0),
 
       probability: Number(slot.probability ?? 0),
     };
   });
+const filtered = data.filter((slot) => {
+  const hour = new Date(slot.tsUtc).getUTCHours();
 
+  // vain ilta/yö
+  return hour >= 18 || hour <= 4;
+});
   return (
     <section className="forecast-modern">
       <div className="forecast-head">
@@ -58,9 +63,9 @@ export default function Forecast({ data }) {
             />
 
             <YAxis
-              domain={[0, 9]}
-              stroke="#9ca3af"
-            />
+  domain={[0, 100]}
+  stroke="#9ca3af"
+/>
 
             <Tooltip />
 
@@ -72,7 +77,7 @@ export default function Forecast({ data }) {
               stroke="#2EF2D0"
               strokeWidth={3}
               dot={{ r: 4 }}
-              name="Kp"
+              name="Aurora %"
             />
 
             <Line
