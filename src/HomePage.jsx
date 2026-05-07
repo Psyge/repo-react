@@ -186,14 +186,44 @@ export default function HomePage() {
             </div>
 
             <div
-              className="map-preview"
-              onClick={() => navigate("/map")}
-              style={{ cursor: "pointer" }}
-            >
-              <div className="map-preview-cta">
-                {t("map.open")}
-              </div>
-            </div>
+  className="map-preview"
+  onClick={() => navigate("/map")}
+  style={{
+    cursor: "pointer",
+    position: "relative",
+    overflow: "hidden",
+  }}
+>
+  {/* 🔥 LIVE MAP PREVIEW */}
+  <iframe
+    title="Aurora Map Preview"
+    src="/map"
+    style={{
+      width: "100%",
+      height: "100%",
+      border: "0",
+      pointerEvents: "none",
+      transform: "scale(1.35)",
+      transformOrigin: "center center",
+      filter: "brightness(0.8) saturate(1.1)",
+    }}
+  />
+
+  {/* DARK OVERLAY */}
+  <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      background:
+        "linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.05))",
+    }}
+  />
+
+  {/* CTA */}
+  <div className="map-preview-cta">
+    {t("map.open")}
+  </div>
+</div>
           </div>
         </section>
 
