@@ -62,7 +62,9 @@ export default function HomePage() {
       const magData = await magRes.json();
       const magLast = magData[magData.length - 1];
 
-      setKp(parseFloat(kpLast[1]));
+      const parsedKp = parseFloat(kpLast[1]);
+
+      setKp(isNaN(parsedKp) ? 0 : parsedKp);
       setWind(parseFloat(plasmaLast[2]));
       setBz(parseFloat(magLast[3]));
 
@@ -113,18 +115,26 @@ export default function HomePage() {
           });
 
           const data = await res.json();
-          const slot = getCurrentSlot(data.slots);
+const slot = getCurrentSlot(data.slots);
+
+// 🔥 WEATHER
+const weatherRes = await fetch(
+  `${BASE}/?lat=${place.lat}&lon=${place.lon}`
+);
+
+const weather = await weatherRes.json();
 
           return {
-            id: place.id,
-            kp: slot?.kp ?? null,
-            probability: slot?.probability ?? null,
-            clouds: slot?.clouds ?? null,
-            temp: slot?.temp ?? null,
-            wind: data.current?.speed ?? null,
-          };
-        })
-      );
+  id: place.id,
+
+  kp: slot?.kp ?? 0,
+
+  temp: Math.round(weather.main?.temp ?? 0),
+
+  clouds: weather.clouds?.all ?? 0,
+
+  wind: weather.wind?.speed ?? 0,
+};
 
       const mapped = {};
       results.forEach((r) => {
@@ -247,24 +257,17 @@ export default function HomePage() {
   </div>
 
   <div className="data-item">
-    <span className="label">Wind</span>
-    <span className="value">
-      {data?.wind ?? "--"}
-    </span>
-  </div>
+  <span className="label">{t("weather.clouds")}</span>
+  <span className="value">
+    {data?.clouds ?? "--"}%
+  </span>
+</div>
 
-  <div className="data-item">
-    <span className="label">Clouds</span>
-    <span className="value">
-      {data?.clouds != null ? `${data.clouds}%` : "--"}
-    </span>
-  </div>
-
-  <div className="data-item">
-    <span className="label">Temp</span>
-    <span className="value">
-      {data?.temp != null ? `${Math.round(data.temp)}°` : "--"}
-    </span>
+<div className="data-item">
+  <span className="label">{t("weather.temp")}</span>
+  <span className="value">
+    {data?.temp ?? "--"}°
+  </span>
   </div>
 
 </div>
