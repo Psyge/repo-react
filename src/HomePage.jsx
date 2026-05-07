@@ -129,7 +129,7 @@ export default function HomePage() {
         return {
           id: place.id,
 
-          kp: slot?.kp ?? 0,
+          kp: kp ?? 0,
 
           temp: Math.round(weather.main?.temp ?? 0),
 
