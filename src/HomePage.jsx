@@ -7,7 +7,9 @@ import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
 import places from "./data/places";
 import { calculateAurora } from "./utils/auroraEngine";
-
+import { useRef } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 
 export default function HomePage() {
@@ -19,6 +21,9 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  const previewMapRef = useRef(null);
+const previewMapInstance = useRef(null);
 
   const BASE = "https://report.masto84.workers.dev";
 
@@ -141,7 +146,35 @@ export default function HomePage() {
   return () => clearInterval(interval);
 
 }, [kp]);
+useEffect(() => {
+  if (previewMapInstance.current || !previewMapRef.current) return;
 
+  const map = L.map(previewMapRef.current, {
+    zoomControl: false,
+    attributionControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    touchZoom: false,
+  }).setView([67.5, 26], 4);
+
+  L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+  ).addTo(map);
+
+  // 🔥 glow marker
+  L.circleMarker([68.5, 27], {
+    radius: 32,
+    color: "#35ffe1",
+    weight: 2,
+    fillColor: "#00ffd5",
+    fillOpacity: 0.18,
+  }).addTo(map);
+
+  previewMapInstance.current = map;
+}, []);
   return (
     <div>
       <Header />
@@ -191,37 +224,18 @@ export default function HomePage() {
   style={{
     cursor: "pointer",
     position: "relative",
-    overflow: "hidden",
   }}
 >
-  {/* 🔥 LIVE MAP PREVIEW */}
-  <iframe
-    title="Aurora Map Preview"
-    src="/map"
+  <div
+    ref={previewMapRef}
     style={{
       width: "100%",
       height: "100%",
-      border: "0",
-      pointerEvents: "none",
-      transform: "scale(1.35)",
-      transformOrigin: "center center",
-      filter: "brightness(0.8) saturate(1.1)",
     }}
   />
 
-  {/* DARK OVERLAY */}
-  <div
-    style={{
-      position: "absolute",
-      inset: 0,
-      background:
-        "linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.05))",
-    }}
-  />
-
-  {/* CTA */}
   <div className="map-preview-cta">
-    {t("map.open")}
+    <span>{t("map.open")}</span>
   </div>
 </div>
           </div>
