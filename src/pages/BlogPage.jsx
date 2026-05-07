@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
+import Header from "./components/Header";
 
 export default function BlogPage() {
   const { t } = useTranslation();
