@@ -1,47 +1,56 @@
-const blogPosts = {
+import { useParams, Link } from "react-router-dom";
+
+const posts = {
   photography: {
-    title: "How To Photograph Aurora",
-    excerpt: "Best settings and camera tips for northern lights.",
+    title: "How to Photograph Aurora",
     content: `
-Northern lights photography requires dark skies and a stable tripod.
-
-Use:
-- ISO 800–3200
-- shutter 2–10s
-- wide aperture (f/1.8–f/4)
-
-Manual focus is critical. Focus to infinity and test before aurora activity begins.
-    `,
+Use tripod and long exposure.
+ISO 800–3200 works best.
+Avoid city lights.
+`,
   },
 
   forecast: {
     title: "How Aurora Forecast Works",
-    excerpt: "Understanding Kp, Bz and solar wind.",
     content: `
-Aurora forecasts combine multiple space weather variables.
-
-Important values:
-- Kp index
-- Bz magnetic orientation
-- Solar wind speed
-- Cloud cover
-
-Negative Bz and high solar wind usually improve visibility.
-    `,
+KP index measures geomagnetic activity.
+Negative Bz improves aurora visibility.
+Solar wind speed matters.
+`,
   },
 
-  "best-time": {
+  timing: {
     title: "Best Time To See Aurora",
-    excerpt: "When and where northern lights are most visible.",
     content: `
-The best aurora season is from September to March.
-
-Best viewing hours:
-- 21:00–02:00
-
-Avoid city lights and monitor cloud forecasts carefully.
-    `,
+Best viewing hours are usually 22:00–02:00.
+Dark sky and clear weather are important.
+`,
   },
 };
 
-export default blogPosts;
+export default function BlogPost() {
+  const { slug } = useParams();
+
+  const post = posts[slug];
+
+  if (!post) {
+    return (
+      <div className="container">
+        <h1>Article not found</h1>
+        <Link to="/">Back</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container blog-post-page">
+      <Link to="/">← Back</Link>
+
+      <h1>{post.title}</h1>
+
+      <div className="blog-content">
+        {post.content}
+      </div>
+    </div>
+  );
+}
