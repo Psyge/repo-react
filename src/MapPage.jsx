@@ -29,6 +29,11 @@ const initialLon =
   parseFloat(searchParams.get("lon")) || 26;
   const BASE = "https://report.masto84.workers.dev";
 
+  const auroraIcon = L.divIcon({
+  className: "",
+  html: `<div class="map-marker"></div>`,
+  iconSize: [14, 14],
+});
   // ===== API =====
   const fetchAuroraPoint = async (lat, lon) => {
     try {
@@ -158,11 +163,7 @@ if (searchParams.get("lat") && searchParams.get("lon")) {
   searchParams,
 ]);
   
-  const auroraIcon = L.divIcon({
-  className: "",
-  html: `<div class="map-marker"></div>`,
-  iconSize: [14, 14],
-});
+  
   // ===== 🔍 SEARCH HANDLER
   const handleSearchSelect = (place) => {
   const map = mapInstance.current;
