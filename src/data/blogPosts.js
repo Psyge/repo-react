@@ -1,8 +1,8 @@
 import { useParams } from "react-router-dom";
 
-import BlogPost1 from "./pages/BlogPost1";
-import BlogPost2 from "./pages/BlogPost2";
-import BlogPost3 from "./pages/BlogPost3";
+import BlogPost1 from "../pages/BlogPost1";
+import BlogPost2 from "../pages/BlogPost2";
+import BlogPost3 from "../pages/BlogPost3";
 
 export default function BlogPost() {
   const { slug } = useParams();
