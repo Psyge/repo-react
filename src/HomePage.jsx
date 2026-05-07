@@ -32,7 +32,7 @@ export default function HomePage() {
     latitude: 67.5,
   });
 
- // eslint-disable-next-line react-hooks/exhaustive-deps 
+ // eslint-disable-next-line react-hooks/exhaustive-deps
  useEffect(() => {
 
   // 🔥 SOLAR (NOAA – toimii aina)
