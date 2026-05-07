@@ -247,7 +247,13 @@ export default function HomePage() {
               const data = placeData[place.id];
 
               return (
-                <div key={place.id} className="place-row">
+                <div
+  key={place.id}
+  className="place-row"
+  onClick={() =>
+    navigate(`/map?lat=${place.lat}&lon=${place.lon}`)
+  }
+>
                   <div className="place-name">
                     {place.name}
                   </div>
