@@ -7,6 +7,7 @@ import AuroraPopup from "./components/AuroraPopup";
 import Header from "./components/Header";
 import useTranslation from "./hooks/useTranslation";
 import SearchBox from "./components/SearchBox";
+import { useSearchParams } from "react-router-dom";
 
 import {
   createAuroraOverlay,
@@ -19,7 +20,13 @@ export default function MapPage() {
   const mapInstance = useRef(null);
   const markerRef = useRef(null);
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
 
+const initialLat =
+  parseFloat(searchParams.get("lat")) || 67.5;
+
+const initialLon =
+  parseFloat(searchParams.get("lon")) || 26;
   const BASE = "https://report.masto84.workers.dev";
 
   // ===== API =====
@@ -92,7 +99,10 @@ export default function MapPage() {
   useEffect(() => {
     if (mapInstance.current) return;
 
-    const map = L.map(mapRef.current).setView([67.5, 26], 5);
+    const map = L.map(mapRef.current).setView(
+  [initialLat, initialLon],
+  7
+);
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
