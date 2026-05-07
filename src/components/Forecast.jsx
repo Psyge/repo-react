@@ -1,86 +1,91 @@
 import useTranslation from "../hooks/useTranslation";
 
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+} from "recharts";
+
 export default function Forecast({ data }) {
   const { t } = useTranslation();
 
   if (!data || data.length === 0) {
     return (
-      <div className="fc-wrap">
-        <div className="fc-empty">{t("forecast.empty")}</div>
+      <div className="forecast-modern">
+        <div className="fc-empty">
+          {t("forecast.empty")}
+        </div>
       </div>
     );
   }
 
-  // 🔥 groupataan päivittäin
-  const grouped = {};
-
-  data.forEach((slot) => {
+  // 🔥 vain seuraavat 24h näkyviin
+  const chartData = data.slice(0, 8).map((slot) => {
     const d = new Date(slot.tsUtc);
-    const dayKey = d.toDateString();
 
-    if (!grouped[dayKey]) grouped[dayKey] = [];
-    grouped[dayKey].push({ ...slot, date: d });
+    return {
+      time: `${d.getUTCHours()
+        .toString()
+        .padStart(2, "0")}:00`,
+
+      kp: Number(slot.kp ?? 0),
+
+      clouds: Number(slot.clouds ?? 0),
+
+      probability: Number(slot.probability ?? 0),
+    };
   });
 
-  const days = Object.entries(grouped).slice(0, 3);
-
   return (
-    <div className="fc-wrap">
-      <div className="fc-head">
-        <h3>{t("forecast.title")}</h3>
-        <div className="fc-tz">UTC</div>
+    <section className="forecast-modern">
+      <div className="forecast-head">
+        <h2>{t("forecast.title")}</h2>
       </div>
 
-      <div className="fc-days">
-        {days.map(([dayKey, slots], i) => {
-          const label =
-            i === 0
-              ? t("forecast.today")
-              : i === 1
-              ? t("forecast.tomorrow")
-              : t("forecast.dayafter");
+      <div className="forecast-chart">
+        <ResponsiveContainer width="100%" height={320}>
+          <LineChart data={chartData}>
+            <CartesianGrid stroke="rgba(255,255,255,0.08)" />
 
-          return (
-            <div key={dayKey}>
-              <div className="fc-day-head">{label}</div>
+            <XAxis
+              dataKey="time"
+              stroke="#9ca3af"
+            />
 
-              <div className="fc-row">
-                {slots.map((s, idx) => {
-                  const hour = s.date.getUTCHours();
+            <YAxis
+              domain={[0, 9]}
+              stroke="#9ca3af"
+            />
 
-                  // 🌙 night highlight (simple)
-                  const isNight = hour >= 20 || hour <= 5;
+            <Tooltip />
 
-                  return (
-                    <div
-                      key={idx}
-                      className={`fc-slot ${isNight ? "fc-night" : ""}`}
-                    >
-                      <div className="fc-time">
-                        {hour.toString().padStart(2, "0")}:00
-                      </div>
+            <Legend />
 
-                      <div className="fc-prob">
-                        {s.probability != null
-  ? `${Math.round(s.probability)}%`
-  : `Kp ${s.kp ?? "--"}`}
-                      </div>
+            <Line
+              type="monotone"
+              dataKey="kp"
+              stroke="#2EF2D0"
+              strokeWidth={3}
+              dot={{ r: 4 }}
+              name="Kp"
+            />
 
-                      <div className="fc-kp">Kp {s.kp}</div>
-
-                      {s.clouds != null && (
-                        <div className="fc-cloud">
-                          ☁ {s.clouds}%
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+            <Line
+              type="monotone"
+              dataKey="clouds"
+              stroke="#7c3aed"
+              strokeWidth={2}
+              dot={false}
+              name="Clouds %"
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
-    </div>
+    </section>
   );
 }
