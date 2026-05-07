@@ -8,20 +8,7 @@ import Forecast from "./components/Forecast";
 import places from "./data/places";
 import { calculateAurora } from "./utils/auroraEngine";
 
-// 🔥 helper (oikea aikaslot)
-const getCurrentSlot = (slots) => {
-  if (!slots || slots.length === 0) return null;
 
-  const now = Date.now();
-
-  return slots.reduce((closest, slot) => {
-    const diff = Math.abs(new Date(slot.tsUtc).getTime() - now);
-    if (!closest || diff < closest.diff) {
-      return { slot, diff };
-    }
-    return closest;
-  }, null)?.slot;
-};
 
 export default function HomePage() {
   const [kp, setKp] = useState(null);
@@ -45,6 +32,7 @@ export default function HomePage() {
     latitude: 67.5,
   });
 
+ // eslint-disable-next-line react-hooks/exhaustive-deps 
  useEffect(() => {
 
   // 🔥 SOLAR (NOAA – toimii aina)
