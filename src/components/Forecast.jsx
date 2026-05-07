@@ -24,7 +24,14 @@ export default function Forecast({ data }) {
     );
   }
 
-  // 🔥 vain seuraavat 24h näkyviin
+  // 🔥 vain ilta/yö tunnit
+  const filtered = data.filter((slot) => {
+    const hour = new Date(slot.tsUtc).getUTCHours();
+
+    return hour >= 18 || hour <= 4;
+  });
+
+  // 🔥 chart data
   const chartData = filtered.slice(0, 8).map((slot) => {
     const d = new Date(slot.tsUtc);
 
@@ -33,19 +40,13 @@ export default function Forecast({ data }) {
         .toString()
         .padStart(2, "0")}:00`,
 
-      kp: Math.round(slot.probability ?? 0),
+      // 🔥 käytetään probabilitya eikä kp:tä
+      aurora: Number(slot.probability ?? 0),
 
       clouds: Number(slot.clouds ?? 0),
-
-      probability: Number(slot.probability ?? 0),
     };
   });
-const filtered = data.filter((slot) => {
-  const hour = new Date(slot.tsUtc).getUTCHours();
 
-  // vain ilta/yö
-  return hour >= 18 || hour <= 4;
-});
   return (
     <section className="forecast-modern">
       <div className="forecast-head">
@@ -63,23 +64,25 @@ const filtered = data.filter((slot) => {
             />
 
             <YAxis
-  domain={[0, 100]}
-  stroke="#9ca3af"
-/>
+              domain={[0, 100]}
+              stroke="#9ca3af"
+            />
 
             <Tooltip />
 
             <Legend />
 
+            {/* 🔥 Aurora probability */}
             <Line
               type="monotone"
-              dataKey="kp"
+              dataKey="aurora"
               stroke="#2EF2D0"
               strokeWidth={3}
               dot={{ r: 4 }}
               name="Aurora %"
             />
 
+            {/* ☁ Clouds */}
             <Line
               type="monotone"
               dataKey="clouds"
