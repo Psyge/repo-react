@@ -104,21 +104,6 @@ export default function HomePage() {
     const results = await Promise.all(
       places.slice(0, 3).map(async (place) => {
 
-        // 🔥 FORECAST
-        const res = await fetch(`${BASE}/api/aurora/forecast`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lat: place.lat,
-            lon: place.lon,
-          }),
-        });
-
-        const data = await res.json();
-        const slot = getCurrentSlot(data.slots);
-
         // 🔥 WEATHER
         const weatherRes = await fetch(
           `${BASE}/?lat=${place.lat}&lon=${place.lon}`
@@ -129,6 +114,7 @@ export default function HomePage() {
         return {
           id: place.id,
 
+          // 🔥 sama live KP kuin herossa
           kp: kp ?? 0,
 
           temp: Math.round(weather.main?.temp ?? 0),
