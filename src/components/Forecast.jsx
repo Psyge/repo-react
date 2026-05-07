@@ -46,7 +46,7 @@ export default function Forecast({ data }) {
       clouds: Number(slot.clouds ?? 0),
     };
   });
-
+console.log(data);
   return (
     <section className="forecast-modern">
       <div className="forecast-head">
@@ -84,13 +84,13 @@ export default function Forecast({ data }) {
 
             {/* ☁ Clouds */}
             <Line
-              type="monotone"
-              dataKey="clouds"
-              stroke="#7c3aed"
-              strokeWidth={2}
-              dot={false}
-              name="Clouds %"
-            />
+  type="monotone"
+  dataKey="clouds"
+  stroke="#a855f7"
+  strokeWidth={3}
+  dot={{ r: 3 }}
+  name="Clouds %"
+/>
           </LineChart>
         </ResponsiveContainer>
       </div>
