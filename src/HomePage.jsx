@@ -140,7 +140,7 @@ export default function HomePage() {
 
   return () => clearInterval(interval);
 
-}, []);
+}, [kp]);
 
   return (
     <div>
