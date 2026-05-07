@@ -101,7 +101,7 @@ const initialLon =
 
     const map = L.map(mapRef.current).setView(
   [initialLat, initialLon],
-  7
+  9
 );
 
     L.tileLayer(
@@ -130,7 +130,23 @@ const initialLon =
     });
 
     mapInstance.current = map;
+if (searchParams.get("lat") && searchParams.get("lon")) {
+  openPopup(map, initialLat, initialLon);
 
+  const marker = L.marker([initialLat, initialLon], {
+    icon: auroraIcon,
+  }).addTo(map);
+
+  markerRef.current = marker;
+
+  setTimeout(() => {
+    const el = marker.getElement();
+
+    if (el && el.firstChild) {
+      el.firstChild.classList.add("map-marker-active");
+    }
+  }, 0);
+}
     return () => {
       clearInterval(interval);
     };
