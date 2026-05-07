@@ -1,55 +1,27 @@
-import { useParams, Link } from "react-router-dom";
-import Header from "./components/Header";
-import blogPosts from "./data/blogPosts";
+import { useParams } from "react-router-dom";
+
+import BlogPost1 from "./pages/BlogPost1";
+import BlogPost2 from "./pages/BlogPost2";
+import BlogPost3 from "./pages/BlogPost3";
 
 export default function BlogPost() {
   const { slug } = useParams();
 
-  const post = blogPosts[slug];
+  if (slug === "photography") {
+    return <BlogPost1 />;
+  }
 
-  if (!post) {
-    return (
-      <div>
-        <Header />
+  if (slug === "forecast") {
+    return <BlogPost2 />;
+  }
 
-        <main className="container">
-          <h1>Article not found</h1>
-
-          <Link to="/">
-            Back home
-          </Link>
-        </main>
-      </div>
-    );
+  if (slug === "timing") {
+    return <BlogPost3 />;
   }
 
   return (
-    <div>
-      <Header />
-
-      <main className="container article">
-        <div className="article-back">
-          <Link to="/">
-            ← Back
-          </Link>
-        </div>
-
-        <h1>{post.title}</h1>
-
-        <p>{post.excerpt}</p>
-
-        <div className="article-content">
-          {post.content.split("\n").map((p, i) => {
-            if (!p.trim()) return null;
-
-            return (
-              <p key={i}>
-                {p}
-              </p>
-            );
-          })}
-        </div>
-      </main>
+    <div className="container">
+      <h1>Article not found</h1>
     </div>
   );
 }
