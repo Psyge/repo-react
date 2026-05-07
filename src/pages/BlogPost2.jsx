@@ -2,7 +2,7 @@ import Header from "../components/Header";
 import { Link } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 
-export default function ForecastPost() {
+export default function BlogPost2() {
   const { t } = useTranslation();
 
   return (

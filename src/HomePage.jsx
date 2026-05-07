@@ -286,7 +286,7 @@ export default function HomePage() {
               </div>
             </Link>
 
-            <Link to="/blog/best-time" className="blog-card">
+            <Link to="/blog/timing" className="blog-card">
               <div className="blog-card-tag">GUIDE</div>
               <h2>{t("blog.post3.title")}</h2>
               <p>{t("blog.post3.excerpt")}</p>
