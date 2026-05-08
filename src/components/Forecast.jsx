@@ -47,41 +47,41 @@ function freeAuroraScore(kp, hour) {
   });
 
   // 📊 koko 3 päivän data samaan charttiin
-  const chartData = filtered.map((slot) => {
-    const d = new Date(slot.tsUtc);
+const grouped = {};
 
-    const day = d.toLocaleDateString("fi-FI", {
-      weekday: "short",
-    });
+filtered.forEach((slot) => {
+  const d = new Date(slot.tsUtc);
 
-    return {
-      fullTime: d.toISOString(),
+  const dayKey = d.toISOString().slice(0, 10);
 
-      time: `${d
-        .getUTCHours()
-        .toString()
-        .padStart(2, "0")}:00`,
+  if (!grouped[dayKey]) {
+    grouped[dayKey] = {};
+  }
 
-      label: `${day} ${d
-        .getUTCHours()
-        .toString()
-        .padStart(2, "0")}`,
+  const hour = `${d.getUTCHours()}`
+    .padStart(2, "0") + ":00";
 
- aurora:
-  slot.probability ??
-  freeAuroraScore(
-    slot.kp ?? 0,
-    d.getUTCHours()
-  ),
+  grouped[dayKey][hour] =
+    slot.probability ??
+    freeAuroraScore(
+      slot.kp ?? 0,
+      d.getUTCHours()
+    );
+});
 
-      clouds:
-  slot.clouds != null
-    ? Number(slot.clouds)
-    : null,
+const hours = [
+  "18:00",
+  "21:00",
+  "00:00",
+  "03:00",
+];
 
-      kp: Number(slot.kp ?? 0),
-    };
-  });
+const chartData = hours.map((hour) => ({
+  time: hour,
+  day1: Object.values(grouped)[0]?.[hour] ?? null,
+  day2: Object.values(grouped)[1]?.[hour] ?? null,
+  day3: Object.values(grouped)[2]?.[hour] ?? null,
+}));
 
   return (
     <section className="forecast-modern">
@@ -106,7 +106,7 @@ function freeAuroraScore(kp, hour) {
             />
 
             <XAxis
-              dataKey="label"
+              dataKey="time"
               stroke="#9ca3af"
               tickLine={false}
               axisLine={false}
@@ -132,39 +132,35 @@ function freeAuroraScore(kp, hour) {
             <Legend />
 
             {/* 🌌 Aurora */}
-            <Line
-              type="monotone"
-              dataKey="aurora"
-              stroke="#2EF2D0"
-              strokeWidth={3}
-              dot={{ r: 4 }}
-              activeDot={{ r: 6 }}
-              connectNulls
-              name="Aurora %"
-            />
+          <Line
+  type="monotone"
+  dataKey="day1"
+  stroke="#2EF2D0"
+  strokeWidth={3}
+  connectNulls
+  name="Tonight"
+/>
 
-            {/* ☁ Clouds */}
-            <Line
-              type="monotone"
-              dataKey="clouds"
-              stroke="#a855f7"
-              strokeWidth={3}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
-              connectNulls
-              name="Clouds %"
-            />
+<Line
+  type="monotone"
+  dataKey="day2"
+  stroke="#60a5fa"
+  strokeWidth={3}
+  connectNulls
+  name="Tomorrow"
+/>
 
-            {/* päivän erotusviivat */}
-            <ReferenceLine
-              x={chartData[8]?.label}
-              stroke="rgba(255,255,255,0.15)"
-            />
+<Line
+  type="monotone"
+  dataKey="day3"
+  stroke="#f59e0b"
+  strokeWidth={3}
+  connectNulls
+  name="Day 3"
+/>
 
-            <ReferenceLine
-              x={chartData[16]?.label}
-              stroke="rgba(255,255,255,0.15)"
-            />
+          
+            
           </LineChart>
         </ResponsiveContainer>
       </div>
