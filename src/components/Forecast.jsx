@@ -24,7 +24,25 @@ export default function Forecast({ data }) {
       </section>
     );
   }
+function freeAuroraScore(kp, lat, hour) {
+  let score = (kp / 9) * 100;
 
+  // latitude boost
+  if (lat > 65) score += 15;
+  else if (lat > 62) score += 8;
+
+  // yöbonus
+  if (hour >= 22 || hour <= 1) {
+    score += 10;
+  }
+
+  // aamuheikennys
+  if (hour >= 3 && hour <= 5) {
+    score -= 10;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
   // 🌙 vain ilta/yö
   const filtered = data.filter((slot) => {
     const hour = new Date(slot.tsUtc).getUTCHours();
@@ -53,10 +71,13 @@ export default function Forecast({ data }) {
         .toString()
         .padStart(2, "0")}`,
 
-      aurora: Number(
+      aurora:
   slot.probability ??
-  Math.round(((slot.kp ?? 0) / 9) * 100)
-),
+  freeAuroraScore(
+    slot.kp ?? 0,
+    latitude,
+    d.getUTCHours()
+  ),
 
       clouds:
   slot.clouds != null
