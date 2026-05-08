@@ -53,9 +53,15 @@ export default function Forecast({ data }) {
         .toString()
         .padStart(2, "0")}`,
 
-      aurora: Number(slot.probability ?? 0),
+      aurora: Number(
+  slot.probability ??
+  Math.round(((slot.kp ?? 0) / 9) * 100)
+),
 
-      clouds: Number(slot.clouds ?? 0),
+      clouds:
+  slot.clouds != null
+    ? Number(slot.clouds)
+    : null,
 
       kp: Number(slot.kp ?? 0),
     };
