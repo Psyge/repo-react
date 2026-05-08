@@ -24,19 +24,15 @@ export default function Forecast({ data }) {
       </section>
     );
   }
-function freeAuroraScore(kp, lat, hour) {
+function freeAuroraScore(kp, hour) {
   let score = (kp / 9) * 100;
-
-  // latitude boost
-  if (lat > 65) score += 15;
-  else if (lat > 62) score += 8;
 
   // yöbonus
   if (hour >= 22 || hour <= 1) {
     score += 10;
   }
 
-  // aamuheikennys
+  // aamuyö heikompi
   if (hour >= 3 && hour <= 5) {
     score -= 10;
   }
@@ -71,11 +67,10 @@ function freeAuroraScore(kp, lat, hour) {
         .toString()
         .padStart(2, "0")}`,
 
-      aurora:
+ aurora:
   slot.probability ??
   freeAuroraScore(
     slot.kp ?? 0,
-    latitude,
     d.getUTCHours()
   ),
 
