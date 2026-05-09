@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import useTranslation from "./hooks/useTranslation";
 
 export default function PremiumPage() {
-  const { i18n } = useTranslation();
-  const fi = i18n.language === 'fi';
+    const { lang } = useTranslation();
+  const fi = lang === 'fi';
 
   useEffect(() => {
     document.title = fi
