@@ -2,9 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useTranslation from "./hooks/useTranslation";
 
+import {
+  activate,
+  bySession,
+} from "./lib/premium";
+
 export default function PremiumSuccessPage() {
-  const { i18n } = useTranslation();
-  const fi = i18n.language === 'fi';
+  const { lang } = useTranslation();
+const fi = lang === 'fi';
   const [state, setState] = useState({ kind: 'loading' });
 
   useEffect(() => {
@@ -20,7 +25,7 @@ export default function PremiumSuccessPage() {
       try {
         if (!token && sessionId) {
           try {
-            token = await window.AuroraPremium.bySession(sessionId);
+            token = await bySession(sessionId);
           } catch {
             return setState({
               kind: 'error',
@@ -39,7 +44,7 @@ export default function PremiumSuccessPage() {
           });
         }
 
-        const data = await window.AuroraPremium.activate(token);
+        const data = await activate(token);
         const days = Math.max(1, Math.round((data.expiresAt - Date.now()) / 86400000));
         setState({ kind: 'success', days });
       } catch (e) {
