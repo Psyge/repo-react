@@ -45,7 +45,10 @@ const fi = lang === 'fi';
         }
 
         const data = await activate(token);
-        const days = Math.max(1, Math.round((data.expiresAt - Date.now()) / 86400000));
+        const days = Math.max(
+  1,
+  Math.ceil((data.expiresAt - Date.now()) / 86400000)
+);
         setState({ kind: 'success', days });
       } catch (e) {
         if (e.status === 403) {

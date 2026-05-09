@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import useTranslation from "./hooks/useTranslation";
+import { isActive, read, openCheckout } from "./lib/premium";
 
 export default function PremiumPage() {
     const { lang } = useTranslation();
@@ -13,8 +14,8 @@ export default function PremiumPage() {
 
   useEffect(() => {
     const status = document.getElementById('premium-status');
-    if (status && window.AuroraPremium?.isActive()) {
-      const p = window.AuroraPremium.read();
+    if (status && isActive()) {
+  const p = read();
       const days = Math.ceil((p.expiresAt - Date.now()) / 86400000);
       status.innerHTML = `<span style="color:var(--accent)">✓ ${
         fi ? 'Premium aktiivinen' : 'Premium active'
@@ -29,7 +30,7 @@ export default function PremiumPage() {
     const btn = e.currentTarget;
     btn.setAttribute('aria-disabled', 'true');
     btn.textContent = fi ? 'Ladataan…' : 'Loading…';
-    window.AuroraPremium?.openCheckout(tier);
+    openCheckout(tier);
   };
 
   const tiers = [
