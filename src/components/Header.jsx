@@ -2,24 +2,60 @@ import { Link } from "react-router-dom";
 import { setLang } from "../utils/i18n";
 import useTranslation from "../hooks/useTranslation";
 
+import { usePremium } from "../context/PremiumContext";
+
 export default function Header() {
   const { t } = useTranslation();
+  const { premium } = usePremium();
 
   return (
     <header className="header">
       <div className="header-inner">
-        <div className="brand">RepoTracker</div>
+        <Link to="/" className="brand">
+          RepoTracker
+        </Link>
 
-        <nav>
+        <nav className="main-nav">
           <Link to="/">{t("nav.home")}</Link>
           <Link to="/map">{t("nav.map")}</Link>
           <Link to="/blog">{t("nav.blog")}</Link>
           <Link to="/faq">{t("nav.faq")}</Link>
+
+          <Link
+            to="/premium"
+            className={premium.active ? "premium-link active" : "premium-link"}
+          >
+            {premium.active
+              ? "✨ Premium Active"
+              : "⭐ Premium"}
+          </Link>
         </nav>
 
-        <div className="lang-switcher">
-          <button onClick={() => setLang("en")}>EN</button>
-          <button onClick={() => setLang("fi")}>FI</button>
+        <div className="header-right">
+          <div className="social-links">
+            <a
+              href="https://instagram.com/repotracker"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+            >
+              IG
+            </a>
+
+            <a
+              href="https://tiktok.com/@repotracker"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="TikTok"
+            >
+              TikTok
+            </a>
+          </div>
+
+          <div className="lang-switcher">
+            <button onClick={() => setLang("en")}>EN</button>
+            <button onClick={() => setLang("fi")}>FI</button>
+          </div>
         </div>
       </div>
     </header>

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import useTranslation from "./hooks/useTranslation";
 import { isActive, read, openCheckout } from "./lib/premium";
 
+
 export default function PremiumPage() {
     const { lang } = useTranslation();
   const fi = lang === 'fi';
