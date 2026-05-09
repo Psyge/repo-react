@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import useTranslation from "./hooks/useTranslation";
+import { useTranslation } from 'react-i18next';
 
 export default function PremiumPage() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const fi = i18n.language === 'fi';
 
   useEffect(() => {
