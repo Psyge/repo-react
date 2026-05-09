@@ -3,9 +3,9 @@ import HomePage from "./HomePage";
 import MapPage from "./MapPage";
 import BlogPost from "./BlogPost";
 import BlogPage from "./pages/BlogPage";
-import FaqPage from './pages/FaqPage';
-import PrivacyPage from './pages/PrivacyPage';
-import TermsPage from './pages/TermsPage';
+import FaqPage from './FaqPage';
+import PrivacyPage from './PrivacyPage';
+import TermsPage from './TermsPage';
 
 function App() {
   return (
