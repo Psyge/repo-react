@@ -1,0 +1,42 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+
+  font-family: var(--font-body);
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(0,255,204,0.08),
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at bottom right,
+      rgba(125,95,255,0.06),
+      transparent 50%
+    ),
+    var(--bg);
+
+  color: var(--fg);
+
+  line-height: 1.6;
+  min-height: 100vh;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}

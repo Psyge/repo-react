@@ -1,0 +1,59 @@
+.leaflet-popup-content-wrapper {
+  background: var(--bg-elevated) !important;
+
+  color: var(--fg) !important;
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius) !important;
+
+  box-shadow: var(--shadow-glow);
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-elevated) !important;
+}
+
+.aurora-popup {
+  min-width: 240px;
+
+  max-width: 280px;
+
+  text-align: center;
+}
+
+.ap-prob {
+  font-family: var(--font-display);
+
+  font-size: 56px;
+
+  font-weight: 700;
+
+  line-height: 1;
+
+  margin: 8px 0 4px;
+}
+
+.ap-level {
+  font-size: 13px;
+
+  font-weight: 600;
+
+  text-transform: uppercase;
+
+  margin-bottom: 14px;
+}
+
+.ap-quick {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 8px;
+
+  padding: 10px 0;
+
+  border-top: 1px solid var(--border);
+
+  border-bottom: 1px solid var(--border);
+}

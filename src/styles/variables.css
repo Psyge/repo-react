@@ -1,0 +1,33 @@
+:root {
+  --bg: #07070d;
+  --bg-elevated: #11111c;
+
+  --fg: #f0f0f5;
+  --fg-muted: #8a8aa3;
+
+  --accent: #00ffcc;
+  --accent-2: #7d5fff;
+
+  --border: #25253a;
+
+  --radius: 12px;
+
+  --gradient-aurora:
+    linear-gradient(
+      135deg,
+      #7DF5DB 0%,
+      #27B298 60%,
+      #2B7830 100%
+    );
+
+  --font-display:
+    'Space Grotesk',
+    sans-serif;
+
+  --font-body:
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}

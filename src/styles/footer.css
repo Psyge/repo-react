@@ -1,0 +1,47 @@
+footer {
+  margin-top: 80px;
+
+  padding: 48px 16px;
+
+  border-top: 1px solid var(--border-soft);
+
+  text-align: center;
+
+  color: var(--fg-dim);
+
+  font-size: 13px;
+}
+
+footer a {
+  color: var(--fg-muted);
+
+  margin: 0 8px;
+
+  transition: color .15s ease;
+}
+
+footer a:hover {
+  color: var(--accent);
+}
+
+.footer-socials {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+
+  margin-top: 16px;
+}
+
+.footer-socials a {
+  color: var(--fg-muted);
+
+  transition:
+    color .15s ease,
+    transform .15s ease;
+}
+
+.footer-socials a:hover {
+  color: var(--accent);
+
+  transform: translateY(-2px);
+}

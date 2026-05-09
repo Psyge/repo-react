@@ -1,0 +1,92 @@
+/* tablets */
+
+@media (max-width: 900px) {
+
+  .home-articles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* mobile */
+
+@media (max-width: 768px) {
+
+  .header-inner {
+    flex-wrap: wrap;
+  }
+
+  nav {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-text h1 {
+    font-size: 34px;
+  }
+
+  .kp-display {
+    padding: 20px;
+  }
+
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .place-row {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .data-group {
+    justify-content: center;
+  }
+
+  .forecast-modern {
+    padding: 18px;
+  }
+
+  .forecast-chart {
+    height: 240px;
+  }
+
+  #map {
+    height: 70vh;
+  }
+}
+
+/* small phones */
+
+@media (max-width: 480px) {
+
+  .hero-text h1 {
+    font-size: 28px;
+  }
+
+  .hero-text .tagline {
+    font-size: 14px;
+  }
+
+  .pricing-card {
+    padding: 24px 18px;
+  }
+
+  .pricing-card .price span {
+    font-size: 38px;
+  }
+
+  .fc-row {
+    grid-auto-columns: minmax(64px, 1fr);
+  }
+
+  .fc-slot {
+    min-width: 64px;
+  }
+
+  .ap-prob {
+    font-size: 42px;
+  }
+}

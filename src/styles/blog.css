@@ -1,0 +1,32 @@
+.blog-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fill, minmax(300px, 1fr));
+
+  gap: 16px;
+
+  margin-top: 16px;
+}
+
+.blog-card {
+  display: block;
+
+  padding: 16px;
+
+  background: var(--bg-elevated);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  transition:
+    transform .2s ease,
+    border-color .2s ease;
+}
+
+.blog-card:hover {
+  transform: translateY(-2px);
+
+  border-color: var(--accent);
+}
