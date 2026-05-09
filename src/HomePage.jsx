@@ -264,7 +264,9 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className="footer"><p>© RepoTracker</p></footer>
+      <footer className="footer"><p>© RepoTracker</p>
+      <Link to="/privacy">{t('footer.privacy')}</Link> + <Link to="/terms">{t('privacy.q.terms')}</Link>
+      </footer>
     </div>
   );
 }
