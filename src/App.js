@@ -6,6 +6,8 @@ import BlogPage from "./pages/BlogPage";
 import FaqPage from './FaqPage';
 import PrivacyPage from './PrivacyPage';
 import TermsPage from './TermsPage';
+import PremiumPage from './PremiumPage';
+import PremiumSuccessPage from './PremiumSuccessPage';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/premium" element={<PremiumPage />} />
+<Route path="/premium-success" element={<PremiumSuccessPage />} />
       </Routes>
     </BrowserRouter>
   );
