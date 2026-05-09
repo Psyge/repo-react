@@ -12,8 +12,21 @@ import { useSearchParams } from "react-router-dom";
 import {
   createAuroraOverlay,
   fetchAuroraData,
-  getAuroraIntensity,
 } from "./utils/auroraOverlay";
+
+const BASE = "https://report.masto84.workers.dev";
+
+/** Lue premium-status localStoragesta (sama avain kuin v2) */
+function readPremium() {
+  try {
+    const p = JSON.parse(localStorage.getItem("aurora_premium") || "null");
+    if (!p || !p.deviceKey || !p.expiresAt) return null;
+    if (p.expiresAt < Date.now()) return null;
+    return p;
+  } catch {
+    return null;
+  }
+}
 
 export default function MapPage() {
   const mapRef = useRef(null);
@@ -22,81 +35,48 @@ export default function MapPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
 
-const initialLat =
-  parseFloat(searchParams.get("lat")) || 67.5;
-
-const initialLon =
-  parseFloat(searchParams.get("lon")) || 26;
-  const BASE = "https://report.masto84.workers.dev";
+  const initialLat = parseFloat(searchParams.get("lat")) || 67.5;
+  const initialLon = parseFloat(searchParams.get("lon")) || 26;
 
   const auroraIcon = L.divIcon({
-  className: "",
-  html: `<div class="map-marker"></div>`,
-  iconSize: [14, 14],
-});
-  // ===== API =====
+    className: "",
+    html: `<div class="map-marker"></div>`,
+    iconSize: [14, 14],
+  });
+
+  // ===== API: hae aurora-laskenta workerista (lähettää deviceKey jos premium)
   const fetchAuroraPoint = async (lat, lon) => {
-    try {
-      const res = await fetch(`${BASE}/api/aurora/calc`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ lat, lon }),
-      });
-
-      if (!res.ok) throw new Error("fail");
-
-      return await res.json();
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
+    const p = readPremium();
+    const deviceKey = p?.deviceKey || "";
+    const res = await fetch(`${BASE}/api/aurora/calc`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lat, lon, deviceKey }),
+    });
+    if (!res.ok) throw new Error(`calc ${res.status}`);
+    return res.json();
   };
 
-  // ===== 🔥 POPUP (yksi source of truth)
+  // ===== POPUP — yksi source of truth, näyttää free/premium-version
   const openPopup = useCallback(async (map, lat, lng) => {
     if (!map) return;
 
-    const popup = L.popup().setLatLng([lat, lng]);
-
+    const popup = L.popup({ maxWidth: 320 }).setLatLng([lat, lng]);
     const container = document.createElement("div");
     popup.setContent(container);
     popup.openOn(map);
 
     const root = createRoot(container);
 
-    // loading
-    root.render(
-      <AuroraPopup lat={lat} lng={lng} prob={null} intensity={null} />
-    );
+    // Loading
+    root.render(<AuroraPopup lat={lat} lng={lng} data={null} />);
 
     try {
       const data = await fetchAuroraPoint(lat, lng);
-
-      const apiProb = data?.probability ?? 0;
-      const intensity = getAuroraIntensity(lat, lng);
-      const finalProb = Math.max(apiProb, intensity);
-
-      root.render(
-        <AuroraPopup
-          lat={lat}
-          lng={lng}
-          prob={finalProb}
-          intensity={intensity}
-        />
-      );
+      root.render(<AuroraPopup lat={lat} lng={lng} data={data} />);
     } catch (err) {
-      console.error(err);
-
-      root.render(
-        <AuroraPopup
-          lat={lat}
-          lng={lng}
-          prob={0}
-          intensity={0}
-        />
-      );
+      console.error("[aurora calc]", err);
+      root.render(<AuroraPopup lat={lat} lng={lng} data={null} error />);
     }
   }, []);
 
@@ -104,16 +84,13 @@ const initialLon =
   useEffect(() => {
     if (mapInstance.current) return;
 
-    const map = L.map(mapRef.current).setView(
-  [initialLat, initialLon],
-  9
-);
+    const map = L.map(mapRef.current).setView([initialLat, initialLon], 9);
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     ).addTo(map);
 
-    // ===== AURORA OVERLAY
+    // Aurora overlay
     const overlay = createAuroraOverlay();
     overlay.addTo(map);
 
@@ -125,86 +102,55 @@ const initialLon =
         console.error(e);
       }
     };
-
     loadAurora();
     const interval = setInterval(loadAurora, 60000);
 
-    // CLICK
+    // Click anywhere → popup
     map.on("click", (e) => {
       openPopup(map, e.latlng.lat, e.latlng.lng);
     });
 
     mapInstance.current = map;
-if (searchParams.get("lat") && searchParams.get("lon")) {
-  openPopup(map, initialLat, initialLon);
 
-  const marker = L.marker([initialLat, initialLon], {
-    icon: auroraIcon,
-  }).addTo(map);
-
-  markerRef.current = marker;
-
-  setTimeout(() => {
-    const el = marker.getElement();
-
-    if (el && el.firstChild) {
-      el.firstChild.classList.add("map-marker-active");
+    if (searchParams.get("lat") && searchParams.get("lon")) {
+      openPopup(map, initialLat, initialLon);
+      const marker = L.marker([initialLat, initialLon], {
+        icon: auroraIcon,
+      }).addTo(map);
+      markerRef.current = marker;
+      setTimeout(() => {
+        const el = marker.getElement();
+        if (el && el.firstChild) el.firstChild.classList.add("map-marker-active");
+      }, 0);
     }
-  }, 0);
-}
-    return () => {
-      clearInterval(interval);
-    };
-  }, [
-  openPopup,
-  initialLat,
-  initialLon,
-  auroraIcon,
-  searchParams,
-]);
-  
-  
-  // ===== 🔍 SEARCH HANDLER
+
+    return () => clearInterval(interval);
+  }, [openPopup, initialLat, initialLon, auroraIcon, searchParams]);
+
+  // ===== SEARCH HANDLER
   const handleSearchSelect = (place) => {
-  const map = mapInstance.current;
-  if (!map) return;
+    const map = mapInstance.current;
+    if (!map) return;
 
-  const { lat, lon } = place;
+    const { lat, lon } = place;
+    map.flyTo([lat, lon], 7, { duration: 1.5 });
 
-  // 🔥 smooth zoom
-  map.flyTo([lat, lon], 7, {
-    duration: 1.5,
-  });
+    if (markerRef.current) markerRef.current.remove();
 
-  // ❌ poista vanha marker
-  if (markerRef.current) {
-    markerRef.current.remove();
-  }
+    const marker = L.marker([lat, lon], { icon: auroraIcon }).addTo(map);
+    markerRef.current = marker;
 
-  // 🔥 uusi marker (CSS-pohjainen)
-  const marker = L.marker([lat, lon], {
-    icon: auroraIcon,
-  }).addTo(map);
+    setTimeout(() => {
+      const el = marker.getElement();
+      if (el && el.firstChild) el.firstChild.classList.add("map-marker-active");
+    }, 0);
 
-  markerRef.current = marker;
-
-  // 🔥 highlight efekti (CSS)
-  setTimeout(() => {
-    const el = marker.getElement();
-    if (el && el.firstChild) {
-      el.firstChild.classList.add("map-marker-active");
-    }
-  }, 0);
-
-  // 🔥 popup
-  openPopup(map, lat, lon);
-};
+    openPopup(map, lat, lon);
+  };
 
   return (
     <div>
       <Header />
-
-      {/* 🔍 SEARCH */}
       <div
         style={{
           position: "absolute",
@@ -217,18 +163,9 @@ if (searchParams.get("lat") && searchParams.get("lon")) {
         <SearchBox onSelect={handleSearchSelect} />
       </div>
 
-      {/* UX hint */}
-      <div className="map-hint">
-        {t("map.click_hint")}
-      </div>
+      <div className="map-hint">{t("map.click_hint")}</div>
 
-      <div
-        ref={mapRef}
-        style={{
-          height: "100vh",
-          width: "100%",
-        }}
-      />
+      <div ref={mapRef} style={{ height: "100vh", width: "100%" }} />
     </div>
   );
 }
