@@ -3,25 +3,29 @@
 
   margin: 0 auto;
 
-  padding: 0 16px;
+  padding: 0 var(--space-md);
 }
 
-.block {
+section.block {
   position: relative;
 
-  padding: 48px 16px;
+  padding:
+    var(--space-xl)
+    var(--space-md);
 }
 
 .section-head {
   display: flex;
+
   justify-content: space-between;
+
   align-items: end;
 
-  gap: 12px;
-
-  margin-bottom: 24px;
-
   flex-wrap: wrap;
+
+  gap: var(--space-sm);
+
+  margin-bottom: var(--space-lg);
 }
 
 .section-head p {

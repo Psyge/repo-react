@@ -1,7 +1,9 @@
 footer {
-  margin-top: 80px;
+  margin-top: var(--space-2xl);
 
-  padding: 48px 16px;
+  padding:
+    var(--space-xl)
+    var(--space-md);
 
   border-top: 1px solid var(--border-soft);
 
@@ -12,12 +14,18 @@ footer {
   font-size: 13px;
 }
 
+footer p {
+  margin-top: 6px;
+}
+
 footer a {
   color: var(--fg-muted);
 
-  margin: 0 8px;
+  margin: 0 var(--space-sm);
 
-  transition: color .15s ease;
+  transition:
+    color .15s ease,
+    transform .15s ease;
 }
 
 footer a:hover {
@@ -26,13 +34,25 @@ footer a:hover {
 
 .footer-socials {
   display: flex;
-  justify-content: center;
-  gap: 12px;
 
-  margin-top: 16px;
+  justify-content: center;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 14px;
+
+  margin-top: var(--space-md);
 }
 
 .footer-socials a {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
   color: var(--fg-muted);
 
   transition:

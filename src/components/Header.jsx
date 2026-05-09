@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { setLang } from "../utils/i18n";
 import useTranslation from "../hooks/useTranslation";
-
+import { FaInstagram, FaTiktok } from "react-icons/fa";
 import { usePremium } from "../context/PremiumContext";
 
 export default function Header() {
@@ -36,19 +36,19 @@ export default function Header() {
             <a
               href="https://instagram.com/repotracker"
               target="_blank"
-              rel="noopener noreferrer"
+              rel="noreferrer"
               aria-label="Instagram"
             >
-              IG
+              <FaInstagram />
             </a>
 
             <a
               href="https://tiktok.com/@repotracker"
               target="_blank"
-              rel="noopener noreferrer"
+              rel="noreferrer"
               aria-label="TikTok"
             >
-              TikTok
+              <FaTiktok />
             </a>
           </div>
 
