@@ -150,10 +150,14 @@ export async function bySession(
 
     // 202 = webhook not ready, 429 = throttle; backoff hieman
     if (res.status === 429) {
-      wait = Math.min(maxIntervalMs, wait + 500);
-    }
+  wait = Math.min(maxIntervalMs, wait + 500);
+}
 
-    await new Promise((r) => setTimeout(r, wait));
+const delay = wait;
+
+await new Promise((resolve) =>
+  setTimeout(resolve, delay)
+);
   }
 
   throw new Error("Timeout waiting for payment confirmation");

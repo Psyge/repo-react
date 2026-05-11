@@ -58,3 +58,7 @@
 
   text-align: center;
 }
+.buy-btn {
+  appearance: none;
+  -webkit-appearance: none;
+}

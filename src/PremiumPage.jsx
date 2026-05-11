@@ -153,14 +153,14 @@ export default function PremiumPage() {
               ))}
             </ul>
 
-            <a
-              href="#"
-              data-buy={tier.id}
-              className={`buy-btn${tier.featured ? " primary" : ""}`}
-              onClick={(e) => handleBuy(e, tier.id)}
-            >
-              {tier.cta}
-            </a>
+           <button
+  type="button"
+  data-buy={tier.id}
+  className={`buy-btn${tier.featured ? " primary" : ""}`}
+  onClick={(e) => handleBuy(e, tier.id)}
+>
+  {tier.cta}
+</button>
           </article>
         ))}
       </section>
