@@ -181,7 +181,7 @@ export default function HomePage() {
             <p className="tagline">{t("hero.sub")}</p>
           </div>
 
-          <div className="hero-grid">
+          <div className="hero-side">
             <div className="kp-display">
               <div className="kp-label">{t("probability.label")}</div>
               <div className="kp-big">

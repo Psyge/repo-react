@@ -1,14 +1,14 @@
 .hero-split {
   position: relative;
-
   overflow: hidden;
 
   padding:
     calc(24px + var(--nav-h) + 20px)
     16px
-    16px;
+    24px;
 }
 
+/* Aurora glow tausta */
 .hero-split::before {
   content: "";
 
@@ -26,71 +26,7 @@
   pointer-events: none;
 }
 
-.hero-text {
-  position: relative;
-  z-index: 1;
-
-  text-align: center;
-
-  margin-bottom: 24px;
-}
-
-.hero-text h1 {
-  animation: fadeUp 1s ease-out;
-}
-
-.hero-text .tagline {
-  animation: fadeUp 1.4s ease-out;
-
-  color: var(--fg-muted);
-
-  margin-top: 12px;
-
-  max-width: 620px;
-
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-
-  gap: 24px;
-
-  position: relative;
-  z-index: 1;
-}
-
-.aurora-text {
-  background: var(--gradient-aurora);
-
-  -webkit-background-clip: text;
-  background-clip: text;
-
-  color: transparent;
-}
-.hero-grid .kp-display {
-  margin: 0;
-  max-width: none;
-
-  height: 100%;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.map-preview-link {
-  display: block;
-  height: 100%;
-}
-
-.map-preview-link .map-preview {
-  height: 100%;
-  min-height: 280px;
-}
-
+/* Animated glow */
 .hero-split::after {
   content: "";
 
@@ -119,12 +55,206 @@
   }
 }
 
+/* =========================
+   HERO TEXT
+========================= */
+
+.hero-text {
+  position: relative;
+  z-index: 2;
+
+  text-align: center;
+
+  margin-bottom: 32px;
+}
+
+.hero-text h1 {
+  animation: fadeUp 1s ease-out;
+}
+
+.hero-text .tagline {
+  animation: fadeUp 1.4s ease-out;
+
+  color: var(--fg-muted);
+
+  margin-top: 12px;
+
+  max-width: 620px;
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* =========================
+   GRID
+========================= */
+
+.hero-grid {
+  position: relative;
+  z-index: 2;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 24px;
+
+  align-items: stretch;
+}
+
+/* =========================
+   LEFT SIDE KP BOX
+========================= */
+
+.hero-grid .kp-display {
+  margin: 0;
+  max-width: none;
+
+  min-height: 280px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  padding: 32px;
+
+  border-radius: 24px;
+
+  background: rgba(255,255,255,0.04);
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* label */
+.kp-label {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  color: var(--fg-muted);
+
+  margin-bottom: 12px;
+}
+
+/* big number */
+.kp-big {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 800;
+  line-height: 1;
+
+  margin-bottom: 20px;
+}
+
+.kp-big span {
+  background: var(--gradient-aurora);
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  color: transparent;
+}
+
+/* meta rows */
+.kp-meta {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+
+  color: var(--fg-muted);
+
+  font-size: 0.95rem;
+}
+
+.kp-meta strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+/* =========================
+   MAP BOX
+========================= */
+
+.map-preview {
+  position: relative;
+
+  min-height: 280px;
+
+  border-radius: 24px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  background: rgba(255,255,255,0.03);
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.25);
+}
+
+.map-preview .leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+.map-preview-cta {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+
+  z-index: 500;
+
+  padding: 10px 14px;
+
+  border-radius: 999px;
+
+  background: rgba(0,0,0,0.55);
+
+  backdrop-filter: blur(10px);
+
+  color: white;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* =========================
+   TEXT EFFECT
+========================= */
+
+.aurora-text {
+  background: var(--gradient-aurora);
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  color: transparent;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
 @media (max-width: 768px) {
   .hero-grid {
     grid-template-columns: 1fr;
   }
 
-  .map-preview-link .map-preview {
+  .hero-grid .kp-display,
+  .map-preview {
     min-height: 240px;
+  }
+
+  .hero-grid .kp-display {
+    padding: 24px;
+  }
+
+  .kp-big {
+    font-size: 4rem;
   }
 }

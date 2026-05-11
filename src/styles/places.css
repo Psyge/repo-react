@@ -1,41 +1,38 @@
 .places-grid {
-  display: grid;
-  gap: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
 }
 
+/* pelkkä tekstirivi */
 .place-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 
   gap: var(--space-md);
 
-  background: var(--bg-elevated);
+  padding: 0 0 14px;
 
-  border: 1px solid var(--border-soft);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 
-  border-radius: var(--radius);
-
-  padding:
-    var(--space-md)
-    var(--space-lg);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 
   cursor: pointer;
 
   transition:
-    border-color .15s ease,
-    transform .15s ease,
-    box-shadow .15s ease;
+    opacity .15s ease,
+    transform .15s ease;
 }
 
 .place-row:hover {
-  border-color: var(--accent);
+  transform: translateY(-1px);
+  opacity: .9;
 
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 4px 20px -10px rgba(0,255,204,0.45);
+  box-shadow: none;
 }
 
 .place-name {
@@ -43,12 +40,14 @@
 
   font-size: 18px;
   font-weight: 600;
+
+  color: var(--fg);
 }
 
 .data-group {
   display: flex;
 
-  gap: var(--space-md);
+  gap: 24px;
 }
 
 .data-item {
@@ -79,4 +78,26 @@
   font-family: var(--font-display);
 
   font-weight: 600;
+
+  color: var(--fg);
+}
+
+/* mobile */
+@media (max-width: 768px) {
+  .place-row {
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+  .data-group {
+    width: 100%;
+
+    justify-content: space-between;
+  }
+
+  .data-item {
+    text-align: left;
+  }
 }
