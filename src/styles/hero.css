@@ -8,7 +8,7 @@
     24px;
 }
 
-/* Aurora glow tausta */
+/* aurora background glow */
 .hero-split::before {
   content: "";
 
@@ -26,7 +26,7 @@
   pointer-events: none;
 }
 
-/* Animated glow */
+/* moving glow */
 .hero-split::after {
   content: "";
 
@@ -94,7 +94,10 @@
   z-index: 2;
 
   display: grid;
-  grid-template-columns: 1fr 1fr;
+
+  grid-template-columns:
+    minmax(320px, 420px)
+    1fr;
 
   gap: 24px;
 
@@ -102,7 +105,7 @@
 }
 
 /* =========================
-   LEFT SIDE KP BOX
+   KP CARD
 ========================= */
 
 .hero-grid .kp-display {
@@ -114,12 +117,20 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+
+  text-align: center;
 
   padding: 32px;
 
   border-radius: 24px;
 
-  background: rgba(255,255,255,0.04);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.05),
+      rgba(255,255,255,0.02)
+    );
 
   border: 1px solid rgba(255,255,255,0.08);
 
@@ -132,19 +143,22 @@
 
 /* label */
 .kp-label {
-  font-size: 0.9rem;
+  font-size: 11px;
+
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.18em;
 
   color: var(--fg-muted);
 
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
-/* big number */
+/* big percentage */
 .kp-big {
-  font-size: clamp(3rem, 8vw, 6rem);
+  font-size: clamp(3.5rem, 8vw, 6rem);
+
   font-weight: 800;
+
   line-height: 1;
 
   margin-bottom: 20px;
@@ -159,25 +173,31 @@
   color: transparent;
 }
 
-/* meta rows */
+/* meta */
 .kp-meta {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  flex-wrap: wrap;
 
-  gap: 10px;
+  gap: 16px;
 
   color: var(--fg-muted);
 
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+}
+
+.kp-meta span {
+  white-space: nowrap;
 }
 
 .kp-meta strong {
   color: var(--fg);
+
   font-weight: 700;
 }
 
 /* =========================
-   MAP BOX
+   MAP
 ========================= */
 
 .map-preview {
@@ -204,6 +224,7 @@
 
 .map-preview-cta {
   position: absolute;
+
   bottom: 16px;
   left: 16px;
 
@@ -223,10 +244,7 @@
   font-weight: 600;
 }
 
-/* =========================
-   TEXT EFFECT
-========================= */
-
+/* gradient text */
 .aurora-text {
   background: var(--gradient-aurora);
 
@@ -256,5 +274,11 @@
 
   .kp-big {
     font-size: 4rem;
+  }
+
+  .kp-meta {
+    flex-direction: column;
+
+    gap: 8px;
   }
 }

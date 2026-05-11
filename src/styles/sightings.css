@@ -2,56 +2,142 @@
   display: flex;
   flex-direction: column;
 
-  gap: 14px;
+  gap: 12px;
+
+  margin-top: 20px;
 }
 
-/* pelkät tekstirivit */
 .sighting-row {
   display: flex;
+
   justify-content: space-between;
   align-items: center;
 
-  padding: 0 0 14px;
+  gap: 20px;
 
-  background: transparent;
-  border: 0;
-  border-radius: 0;
+  padding:
+    18px
+    20px;
 
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.04),
+      rgba(255,255,255,0.02)
+    );
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.18);
+
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    background .15s ease;
 }
 
-/* tekstien värit */
-.sighting-row .place,
-.sighting-row .time,
-.sighting-row .meta {
+.sighting-row:hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(0,255,204,0.25);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.05),
+      rgba(255,255,255,0.03)
+    );
+}
+
+/* left side */
+.sighting-main {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  min-width: 0;
+}
+
+.sighting-place {
+  font-size: 1rem;
+  font-weight: 700;
+
+  color: var(--fg);
+}
+
+.sighting-time {
+  font-size: 0.9rem;
+
   color: var(--fg-muted);
 }
 
-.sighting-row strong,
-.sighting-row .active {
-  color: var(--fg);
+/* right side */
+.sighting-meta {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  flex-shrink: 0;
+}
+
+.sighting-strength {
+  font-size: 0.85rem;
+  font-weight: 700;
+
+  color: var(--accent);
+
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sighting-user {
+  font-size: 0.9rem;
+
+  color: var(--fg-muted);
 }
 
 /* empty state */
 .sightings-empty {
   text-align: center;
 
-  padding: 12px 0;
+  padding:
+    28px
+    24px;
 
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  backdrop-filter: none;
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.04),
+      rgba(255,255,255,0.02)
+    );
+
+  border: 1px solid rgba(255,255,255,0.08);
 
   color: var(--fg-muted);
+
+  backdrop-filter: blur(10px);
 }
 
 /* mobile */
 @media (max-width: 768px) {
   .sighting-row {
     flex-direction: column;
-    align-items: flex-start;
 
-    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .sighting-meta {
+    width: 100%;
+
+    justify-content: space-between;
   }
 }

@@ -2,52 +2,81 @@
   display: flex;
   flex-direction: column;
 
-  gap: 18px;
+  gap: 12px;
+
+  margin-top: 20px;
 }
 
-/* pelkkä tekstirivi */
 .place-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+
+  grid-template-columns:
+    minmax(120px, 1fr)
+    auto;
+
   align-items: center;
 
-  gap: var(--space-md);
+  gap: 20px;
 
-  padding: 0 0 14px;
+  padding:
+    18px
+    20px;
 
-  background: transparent;
-  border: 0;
-  border-radius: 0;
+  border-radius: 18px;
 
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.04),
+      rgba(255,255,255,0.02)
+    );
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.18);
 
   cursor: pointer;
 
   transition:
-    opacity .15s ease,
-    transform .15s ease;
+    transform .15s ease,
+    border-color .15s ease,
+    background .15s ease;
 }
 
 .place-row:hover {
-  transform: translateY(-1px);
-  opacity: .9;
+  transform: translateY(-2px);
 
-  box-shadow: none;
+  border-color: rgba(0,255,204,0.25);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.05),
+      rgba(255,255,255,0.03)
+    );
 }
+
+/* location name */
 
 .place-name {
-  font-family: var(--font-display);
-
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
 
   color: var(--fg);
+
+  min-width: 0;
 }
+
+/* right side metrics */
 
 .data-group {
   display: flex;
+  align-items: center;
 
-  gap: 24px;
+  gap: 28px;
 }
 
 .data-item {
@@ -59,9 +88,11 @@
 .data-item .label {
   display: block;
 
+  margin-bottom: 6px;
+
   font-size: 10px;
 
-  letter-spacing: .15em;
+  letter-spacing: 0.14em;
 
   text-transform: uppercase;
 
@@ -71,24 +102,25 @@
 .data-item .value {
   display: block;
 
-  margin-top: 2px;
-
-  font-size: 18px;
-
-  font-family: var(--font-display);
-
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
 
   color: var(--fg);
 }
 
+/* highlighted KP */
+
+.kp-val {
+  color: var(--accent);
+}
+
 /* mobile */
+
 @media (max-width: 768px) {
   .place-row {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: 1fr;
 
-    gap: 12px;
+    gap: 16px;
   }
 
   .data-group {
@@ -98,6 +130,6 @@
   }
 
   .data-item {
-    text-align: left;
+    flex: 1;
   }
 }
