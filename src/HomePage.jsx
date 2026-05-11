@@ -28,7 +28,12 @@ export default function HomePage() {
   const [kp, setKp] = useState(null);
   const [wind, setWind] = useState(null);
   const [bz, setBz] = useState(null);
-  const [forecast, setForecast] = useState([]);
+  const [forecast, setForecast] = useState({
+  tier: "free",
+  slots: [],
+  genAt: null,
+  current: null,
+});
   const [placeData, setPlaceData] = useState({});
 
   const navigate = useNavigate();
@@ -74,20 +79,27 @@ export default function HomePage() {
 
     // Forecast — välitetään deviceKey jotta worker palauttaa premium-datan
     const fetchForecast = async () => {
-      try {
-        const deviceKey = readDeviceKey();
-        const res = await fetch(`${BASE}/api/aurora/forecast`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lat: 67.5, lon: 26, deviceKey }),
-        });
-        const data = await res.json();
-        setForecast(data.slots || []);
-      } catch (e) {
-        console.error(e);
-        setForecast([]);
-      }
-    };
+  try {
+    const deviceKey = readDeviceKey();
+    const res = await fetch(`${BASE}/api/aurora/forecast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lat: 67.5, lon: 26, deviceKey }),
+    });
+
+    const data = await res.json();
+
+    setForecast({
+      tier: data?.tier || "free",
+      slots: Array.isArray(data?.slots) ? data.slots : [],
+      genAt: data?.genAt || null,
+      current: data?.current || null, // premiumille
+    });
+  } catch (e) {
+    console.error("FORECAST ERROR:", e);
+    setForecast({ tier: "free", slots: [], genAt: null, current: null });
+  }
+};
 
     const fetchPlaces = async () => {
       try {
@@ -191,7 +203,12 @@ export default function HomePage() {
 
         {/* FORECAST */}
         <section className="container">
-          <Forecast data={forecast} />
+          <Forecast
+  data={forecast.slots}
+  tier={forecast.tier}
+  genAt={forecast.genAt}
+  current={forecast.current}
+/>
         </section>
 
         {/* SIGHTINGS */}
