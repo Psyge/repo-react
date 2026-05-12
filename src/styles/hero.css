@@ -1,14 +1,20 @@
+/* ========================================
+   HERO
+======================================== */
+
 .hero-split {
   position: relative;
   overflow: hidden;
 
   padding:
-    calc(24px + var(--nav-h) + 20px)
-    16px
-    24px;
+    calc(var(--space-lg) + var(--nav-h) + 20px)
+    var(--space-md)
+    var(--space-lg);
+
+  z-index: 0;
 }
 
-/* aurora background glow */
+/* aurora glow background */
 .hero-split::before {
   content: "";
 
@@ -26,7 +32,7 @@
   pointer-events: none;
 }
 
-/* moving glow */
+/* animated glow */
 .hero-split::after {
   content: "";
 
@@ -43,6 +49,8 @@
   animation: auroraMove 8s ease-in-out infinite alternate;
 
   pointer-events: none;
+
+  z-index: 0;
 }
 
 @keyframes auroraMove {
@@ -55,9 +63,9 @@
   }
 }
 
-/* =========================
+/* ========================================
    HERO TEXT
-========================= */
+======================================== */
 
 .hero-text {
   position: relative;
@@ -65,7 +73,7 @@
 
   text-align: center;
 
-  margin-bottom: 32px;
+  margin-bottom: var(--space-lg);
 }
 
 .hero-text h1 {
@@ -73,21 +81,21 @@
 }
 
 .hero-text .tagline {
-  animation: fadeUp 1.4s ease-out;
-
   color: var(--fg-muted);
 
-  margin-top: 12px;
+  margin-top: var(--space-sm);
 
   max-width: 620px;
 
   margin-left: auto;
   margin-right: auto;
+
+  animation: fadeUp 1.4s ease-out;
 }
 
-/* =========================
+/* ========================================
    GRID
-========================= */
+======================================== */
 
 .hero-grid {
   position: relative;
@@ -95,18 +103,16 @@
 
   display: grid;
 
-  grid-template-columns:
-    minmax(320px, 420px)
-    1fr;
+  grid-template-columns: 1fr 1fr;
 
-  gap: 24px;
+  gap: var(--space-lg);
 
   align-items: stretch;
 }
 
-/* =========================
+/* ========================================
    KP CARD
-========================= */
+======================================== */
 
 .hero-grid .kp-display {
   margin: 0;
@@ -141,11 +147,13 @@
     inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
-/* label */
+/* probability label */
+
 .kp-label {
   font-size: 11px;
 
   text-transform: uppercase;
+
   letter-spacing: 0.18em;
 
   color: var(--fg-muted);
@@ -153,7 +161,8 @@
   margin-bottom: 18px;
 }
 
-/* big percentage */
+/* huge percentage */
+
 .kp-big {
   font-size: clamp(3.5rem, 8vw, 6rem);
 
@@ -173,7 +182,8 @@
   color: transparent;
 }
 
-/* meta */
+/* stats row */
+
 .kp-meta {
   display: flex;
   justify-content: center;
@@ -183,7 +193,7 @@
 
   color: var(--fg-muted);
 
-  font-size: 0.9rem;
+  font-size: 0.92rem;
 }
 
 .kp-meta span {
@@ -196,9 +206,9 @@
   font-weight: 700;
 }
 
-/* =========================
-   MAP
-========================= */
+/* ========================================
+   MAP PREVIEW
+======================================== */
 
 .map-preview {
   position: relative;
@@ -244,7 +254,10 @@
   font-weight: 600;
 }
 
-/* gradient text */
+/* ========================================
+   GRADIENT TEXT
+======================================== */
+
 .aurora-text {
   background: var(--gradient-aurora);
 
@@ -254,9 +267,9 @@
   color: transparent;
 }
 
-/* =========================
+/* ========================================
    MOBILE
-========================= */
+======================================== */
 
 @media (max-width: 768px) {
   .hero-grid {

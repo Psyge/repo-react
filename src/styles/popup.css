@@ -1,103 +1,123 @@
-/* =========================
-   LEAFLET POPUP BASE
-========================= */
+/* ========================================
+   LEAFLET POPUP FIX
+======================================== */
 
 .leaflet-popup-content-wrapper {
+  padding: 0 !important;
+
+  overflow: hidden;
+
+  border-radius: 22px !important;
+
   background:
     linear-gradient(
       180deg,
-      rgba(10,14,30,0.96),
-      rgba(6,10,22,0.96)
+      rgba(7,12,28,0.96),
+      rgba(5,8,20,0.98)
     ) !important;
 
-  color: var(--fg) !important;
-
   border: 1px solid rgba(255,255,255,0.08);
-
-  border-radius: 24px !important;
 
   backdrop-filter: blur(18px);
 
   box-shadow:
-    0 20px 50px rgba(0,0,0,0.45),
-    0 0 40px rgba(0,255,204,0.08);
+    0 25px 60px rgba(0,0,0,0.55),
+    0 0 40px rgba(0,255,200,0.08);
 }
 
 .leaflet-popup-content {
-  margin:
-    18px
-    18px
-    16px !important;
+  margin: 0 !important;
+
+  width: auto !important;
 }
 
 .leaflet-popup-tip {
-  background:
-    rgba(10,14,30,0.96) !important;
+  background: rgba(7,12,28,0.98) !important;
 
-  border:
-    1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
-.leaflet-container a.leaflet-popup-close-button {
-  color: var(--fg-muted);
-
-  font-size: 18px;
-
-  padding:
-    10px
-    12px;
-
-  transition:
-    color .15s ease,
-    transform .15s ease;
-}
-
-.leaflet-container a.leaflet-popup-close-button:hover {
-  color: var(--accent);
-
-  transform: scale(1.05);
-}
-
-/* =========================
-   POPUP
-========================= */
+/* ========================================
+   POPUP CONTAINER
+======================================== */
 
 .aurora-popup {
-  min-width: 240px;
+  position: relative;
+
+  min-width: 260px;
   max-width: 300px;
 
-  text-align: center;
+  padding: 20px 18px;
 
-  position: relative;
+  color: var(--fg);
+
+  overflow: hidden;
 }
 
-/* location */
+/* glow background INSIDE popup */
 
-.aurora-popup .ap-name {
+.aurora-popup::before {
+  content: "";
+
+  position: absolute;
+  inset: -30%;
+
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(0,255,204,0.16),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(125,95,255,0.12),
+      transparent 40%
+    );
+
+  filter: blur(50px);
+
+  z-index: 0;
+
+  pointer-events: none;
+}
+
+/* keep all content above glow */
+
+.aurora-popup > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ========================================
+   TITLE
+======================================== */
+
+.ap-name {
   font-size: 11px;
 
   text-transform: uppercase;
-  letter-spacing: 0.18em;
 
-  color: var(--fg-dim);
+  letter-spacing: 0.16em;
 
-  margin-bottom: 10px;
+  color: var(--fg-muted);
 
-  font-weight: 700;
+  margin-bottom: 16px;
 }
 
-/* probability */
+/* ========================================
+   BIG PROBABILITY
+======================================== */
 
-.aurora-popup .ap-prob {
-  font-size: clamp(3rem, 7vw, 4.5rem);
+.ap-prob {
+  font-family: var(--font-display);
+
+  font-size: 58px;
 
   font-weight: 800;
 
   line-height: 1;
 
-  margin:
-    6px
-    0;
+  margin: 6px 0;
 
   letter-spacing: -0.04em;
 
@@ -109,193 +129,180 @@
   color: transparent;
 }
 
-/* aurora level */
+/* ========================================
+   LEVEL
+======================================== */
 
-.aurora-popup .ap-level {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding:
-    6px
-    12px;
-
-  border-radius: 999px;
-
-  background:
-    rgba(0,255,204,0.08);
-
-  border:
-    1px solid rgba(0,255,204,0.14);
-
-  font-size: 11px;
+.ap-level {
+  font-size: 12px;
 
   font-weight: 700;
 
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+
+  letter-spacing: 0.18em;
 
   color: var(--accent);
 
   margin-bottom: 18px;
 }
 
-/* =========================
+/* ========================================
    QUICK STATS
-========================= */
+======================================== */
 
-.aurora-popup .ap-quick {
+.ap-quick {
   display: grid;
 
-  grid-template-columns:
-    repeat(3, 1fr);
-
-  gap: 10px;
-
-  padding:
-    14px
-    0;
-
-  margin-bottom: 12px;
-
-  border-top:
-    1px solid rgba(255,255,255,0.08);
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.08);
-}
-
-.aurora-popup .ap-quick > div {
-  display: flex;
-  flex-direction: column;
-
-  gap: 4px;
-}
-
-.aurora-popup .ap-quick span {
-  font-size: 10px;
-
-  color: var(--fg-dim);
-
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-}
-
-.aurora-popup .ap-quick strong {
-  font-size: 1rem;
-  font-weight: 700;
-
-  color: var(--fg);
-}
-
-/* =========================
-   DETAILS BUTTON
-========================= */
-
-.aurora-popup .ap-toggle {
-  width: 100%;
-
-  margin-top: 4px;
-
-  padding:
-    10px
-    14px;
-
-  border-radius: 999px;
-
-  border:
-    1px solid rgba(255,255,255,0.08);
-
-  background:
-    rgba(255,255,255,0.03);
-
-  color: var(--accent);
-
-  font-size: 0.82rem;
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    background .15s ease,
-    border-color .15s ease,
-    transform .15s ease;
-}
-
-.aurora-popup .ap-toggle:hover {
-  background:
-    rgba(0,255,204,0.08);
-
-  border-color:
-    rgba(0,255,204,0.18);
-
-  transform: translateY(-1px);
-}
-
-/* =========================
-   DETAILS SECTION
-========================= */
-
-.aurora-popup .ap-details {
-  display: grid;
+  grid-template-columns: repeat(3, 1fr);
 
   gap: 10px;
 
   margin-top: 14px;
 
-  padding-top: 14px;
+  padding:
+    14px
+    0;
 
-  border-top:
-    1px dashed rgba(255,255,255,0.12);
+  border-top: 1px solid rgba(255,255,255,0.08);
 
-  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-.aurora-popup .ap-details[hidden] {
+.ap-quick > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  text-align: center;
+}
+
+.ap-quick span {
+  font-size: 10px;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.12em;
+
+  color: var(--fg-dim);
+}
+
+.ap-quick strong {
+  font-family: var(--font-display);
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  color: var(--fg);
+}
+
+/* ========================================
+   BUTTON
+======================================== */
+
+.ap-toggle {
+  width: 100%;
+
+  margin-top: 16px;
+
+  border: 0;
+
+  border-radius: 14px;
+
+  padding:
+    12px
+    16px;
+
+  background: var(--gradient-aurora);
+
+  color: #03120f;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform .15s ease,
+    box-shadow .15s ease;
+
+  box-shadow:
+    0 0 24px rgba(0,255,204,0.35);
+}
+
+.ap-toggle:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 0 34px rgba(0,255,204,0.45);
+}
+
+/* ========================================
+   DETAILS
+======================================== */
+
+.ap-details {
+  margin-top: 16px;
+
+  padding-top: 14px;
+
+  border-top: 1px dashed rgba(255,255,255,0.1);
+
+  display: grid;
+
+  gap: 10px;
+}
+
+.ap-details[hidden] {
   display: none !important;
 }
 
-.aurora-popup .ap-details > div {
+.ap-details > div {
   display: flex;
 
   justify-content: space-between;
-  align-items: center;
 
-  gap: 12px;
+  gap: 16px;
 
-  font-size: 0.85rem;
+  font-size: 13px;
 
   color: var(--fg-muted);
 }
 
-.aurora-popup .ap-details strong {
+.ap-details strong {
   color: var(--fg);
 
   font-weight: 700;
 }
 
-/* description */
+/* ========================================
+   DESCRIPTION
+======================================== */
 
-.aurora-popup .ap-desc {
+.ap-desc {
+  margin-top: 14px;
+
   text-align: center;
 
-  color: var(--fg-dim);
-
-  font-size: 0.82rem;
+  font-size: 13px;
 
   line-height: 1.5;
 
-  font-style: italic;
+  color: var(--fg-muted);
 }
 
-/* loading */
+/* ========================================
+   LOADING
+======================================== */
 
-.aurora-popup .ap-loading {
-  padding:
-    26px
-    12px;
+.ap-loading {
+  padding: 28px 10px;
+
+  text-align: center;
 
   color: var(--fg-muted);
 
-  font-size: 0.9rem;
+  font-size: 13px;
 }
