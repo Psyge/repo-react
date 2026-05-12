@@ -115,7 +115,7 @@
 ======================================== */
 
 .hero-grid .kp-display {
-  margin: 0;
+  margin-right: 15px;
   max-width: none;
 
   min-height: 280px;
