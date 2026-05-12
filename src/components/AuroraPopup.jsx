@@ -91,61 +91,85 @@ export default function AuroraPopup({ lat, lng, data, error }) {
   }
 
   // ---- PREMIUM
-  return (
-    <div style={{ minWidth: 240, color: "#fff" }}>
-      <Loc lat={lat} lng={lng} />
+return (
+  <div className="aurora-popup">
+    <Loc lat={lat} lng={lng} />
 
-      <div style={{ fontSize: 30, fontWeight: 700, color, marginTop: 6 }}>
-        {data.probability != null ? `${data.probability}%` : "–"}
-      </div>
-      <div style={{ fontSize: 13, color }}>{levelLabel}</div>
+    <div
+      className="ap-prob"
+      style={{ color }}
+    >
+      {data.probability != null
+        ? `${data.probability}%`
+        : "–"}
+    </div>
 
-      <div
-        style={{
-          marginTop: 6,
-          height: 6,
-          background: "rgba(255,255,255,0.1)",
-          borderRadius: 6,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            width: `${data.probability ?? 0}%`,
-            height: "100%",
-            background: color,
-            transition: "width .3s ease",
-          }}
-        />
+    <div
+      className="ap-level"
+      style={{ color }}
+    >
+      {levelLabel}
+    </div>
+
+    <div className="ap-quick">
+      <div>
+        <span>{t("kp.label", "Kp")}</span>
+        <strong>{fmt(data.kp)}</strong>
       </div>
 
-      <div style={{ marginTop: 10, fontSize: 12 }}>
-        <Row label={t("kp.label", "Kp")} value={fmt(data.kp)} />
-        <Row
-          label={`${t("row.clouds", "Clouds")}${data.cloudSource === "fmi" ? " (FMI)" : ""}`}
-          value={data.clouds != null ? `${data.clouds}%` : "–"}
-        />
-        <Row label={t("wind.speed", "Solar wind")} value={fmt(data.speed, " km/s", 0)} />
-        <Row label={t("bz.label", "Bz")} value={fmt(data.bz, " nT")} />
-        <Row label={t("wind.density", "Density")} value={fmt(data.density, " p/cm³")} />
-        {data.temp != null && <Row label={t("row.temp", "Temp")} value={`${data.temp}°C`} />}
-        {data.windMs != null && (
-          <Row label={t("weather.wind", "Wind")} value={`${data.windMs} m/s`} />
-        )}
-        {data.weatherDesc && (
-          <div style={{ marginTop: 6, opacity: 0.7, fontStyle: "italic" }}>
-            {data.weatherDesc}
-          </div>
-        )}
+      <div>
+        <span>{t("row.clouds", "Clouds")}</span>
+        <strong>
+          {data.clouds != null
+            ? `${data.clouds}%`
+            : "–"}
+        </strong>
+      </div>
+
+      <div>
+        <span>{t("bz.label", "Bz")}</span>
+        <strong>{fmt(data.bz)}</strong>
       </div>
     </div>
-  );
-}
+
+    <div className="ap-details">
+      <div>
+        <span>{t("wind.speed", "Solar wind")}</span>
+        <strong>{fmt(data.speed, " km/s", 0)}</strong>
+      </div>
+
+      <div>
+        <span>{t("wind.density", "Density")}</span>
+        <strong>{fmt(data.density, " p/cm³")}</strong>
+      </div>
+
+      {data.temp != null && (
+        <div>
+          <span>{t("row.temp", "Temp")}</span>
+          <strong>{data.temp}°C</strong>
+        </div>
+      )}
+
+      {data.windMs != null && (
+        <div>
+          <span>{t("weather.wind", "Wind")}</span>
+          <strong>{data.windMs} m/s</strong>
+        </div>
+      )}
+    </div>
+
+    {data.weatherDesc && (
+      <div className="ap-desc">
+        {data.weatherDesc}
+      </div>
+    )}
+  </div>
+);
 
 /* ---------- helpers ---------- */
 function Loc({ lat, lng }) {
   return (
-    <div style={{ fontSize: 12, opacity: 0.7 }}>
+    <div className="ap-name">
       📍 {lat.toFixed(2)}, {lng.toFixed(2)}
     </div>
   );
