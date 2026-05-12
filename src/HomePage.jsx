@@ -182,25 +182,58 @@ export default function HomePage() {
   </div>
 
   <div className="hero-grid">
-    <div className="kp-display">
-      ...
+  <div className="kp-display">
+    <div className="kp-label">
+      {t("probability.label")}
     </div>
 
-    <div
-      className="map-preview"
-      onClick={() => navigate("/map")}
-      style={{ cursor: "pointer", position: "relative" }}
-    >
-      <div
-        ref={previewMapRef}
-        style={{ width: "100%", height: "100%" }}
-      />
+    <div className="kp-big">
+      <span>
+        {aurora?.probability != null
+          ? `${aurora.probability}%`
+          : "--"}
+      </span>
+    </div>
 
-      <div className="map-preview-cta">
-        <span>{t("map.open")}</span>
-      </div>
+    <div className="kp-meta">
+      <span>
+        {t("kp.label")}:
+        <strong> {kp ?? "--"}</strong>
+      </span>
+
+      <span>
+        {t("wind.speed")}:
+        <strong> {wind ?? "--"}</strong>
+      </span>
+
+      <span>
+        {t("bz.label")}:
+        <strong> {bz ?? "--"}</strong>
+      </span>
     </div>
   </div>
+
+  <div
+    className="map-preview"
+    onClick={() => navigate("/map")}
+    style={{
+      cursor: "pointer",
+      position: "relative",
+    }}
+  >
+    <div
+      ref={previewMapRef}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
+    />
+
+    <div className="map-preview-cta">
+      <span>{t("map.open")}</span>
+    </div>
+  </div>
+</div>
 </section>
 
         {/* FORECAST */}
