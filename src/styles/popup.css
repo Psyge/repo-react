@@ -346,3 +346,15 @@
 .leaflet-popup-close-button:hover {
   opacity: 1;
 }
+.aurora-popup-wrap .leaflet-popup-content {
+  margin: 0;
+}
+
+.aurora-popup-wrap .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+}
+
+.aurora-popup {
+  padding: 18px;
+}
