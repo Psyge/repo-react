@@ -164,7 +164,8 @@ return (
       </div>
     )}
   </div>
-);
+  );
+}
 
 /* ---------- helpers ---------- */
 function Loc({ lat, lng }) {
@@ -195,4 +196,5 @@ function levelColor(level) {
       veryhigh: "#ff3b7f",
     }[level] || "#888"
   );
-}
+  }
+
