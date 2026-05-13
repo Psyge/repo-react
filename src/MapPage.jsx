@@ -63,7 +63,7 @@ export default function MapPage() {
 
     const popup = L.popup({
   maxWidth: 320,
-  offset: L.point(0, -18),
+  offset: L.point(0, -60),
   autoPanPadding: L.point(24, 24),
   className: "aurora-popup-wrap",
 }).setLatLng([lat, lng]);
