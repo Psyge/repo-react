@@ -4,15 +4,23 @@ import useTranslation from "../hooks/useTranslation";
 
 export default function SearchBox({ onSelect }) {
   const [query, setQuery] = useState("");
-  const { results, search, loading, setResults } = useSearch();
+
+  const {
+    results,
+    search,
+    loading,
+    setResults,
+  } = useSearch();
+
   const { t } = useTranslation();
 
   const debounceRef = useRef(null);
   const boxRef = useRef(null);
 
-  // 🔥 debounce input
+  // debounce
   const handleChange = (e) => {
     const val = e.target.value;
+
     setQuery(val);
 
     if (debounceRef.current) {
@@ -28,19 +36,30 @@ export default function SearchBox({ onSelect }) {
     }, 300);
   };
 
-  // 🔥 klikkaus ulkopuolelle → sulje lista
+  // click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (boxRef.current && !boxRef.current.contains(e.target)) {
+      if (
+        boxRef.current &&
+        !boxRef.current.contains(e.target)
+      ) {
         setResults([]);
       }
     };
 
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener(
+      "click",
+      handleClickOutside
+    );
+
+    return () =>
+      document.removeEventListener(
+        "click",
+        handleClickOutside
+      );
   }, [setResults]);
 
-  // 🔥 cleanup debounce
+  // cleanup debounce
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
@@ -50,35 +69,42 @@ export default function SearchBox({ onSelect }) {
   }, []);
 
   return (
-    <div className="search-box" ref={boxRef}>
+    <div
+      className="map-search"
+      ref={boxRef}
+    >
       <input
         type="text"
+        className="map-search-input"
         placeholder={t("search.placeholder")}
         value={query}
         onChange={handleChange}
       />
 
       {loading && (
-        <div className="search-loading">
+        <div className="map-search-loading">
           {t("loading")}
         </div>
       )}
 
       {results.length > 0 && (
-        <ul className="search-results">
+        <div className="map-search-results">
           {results.map((r, i) => (
-            <li
+            <div
               key={i}
+              className="map-search-item"
               onClick={() => {
                 onSelect(r);
+
                 setQuery(r.name);
+
                 setResults([]);
               }}
             >
               {r.name}
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

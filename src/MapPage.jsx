@@ -156,17 +156,9 @@ export default function MapPage() {
   return (
     <div>
       <Header />
-      <div
-        style={{
-          position: "absolute",
-          top: "80px",
-          left: "20px",
-          zIndex: 1000,
-          width: "300px",
-        }}
-      >
-        <SearchBox onSelect={handleSearchSelect} />
-      </div>
+      <div className="map-search-wrap">
+  <SearchBox onSelect={handleSearchSelect} />
+</div>
 
       <div className="map-hint">{t("map.click_hint")}</div>
 
