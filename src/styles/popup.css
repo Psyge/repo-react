@@ -358,3 +358,6 @@
 .aurora-popup {
   padding: 18px;
 }
+.leaflet-popup-content {
+  padding: 15px;
+}
