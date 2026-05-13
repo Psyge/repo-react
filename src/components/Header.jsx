@@ -22,13 +22,17 @@ export default function Header() {
           <Link to="/faq">{t("nav.faq")}</Link>
 
           <Link
-            to="/premium"
-            className={premium.active ? "premium-link active" : "premium-link"}
-          >
-            {premium.active
-              ? "✨ Premium Active"
-              : "⭐ Premium"}
-          </Link>
+  to="/premium"
+  className={
+    premium.active
+      ? "premium-link active"
+      : "premium-link"
+  }
+>
+  {premium.active
+    ? "✨ Premium Active"
+    : "Premium"}
+</Link>
         </nav>
 
         <div className="header-right">
