@@ -98,7 +98,7 @@ export default function Forecast({ data }) {
 
   return (
     <section className="forecast-modern">
-      <div className="forecast-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="forecast-head" >
         <h2>{t("forecast.title")}</h2>
         {isPremium ? (
           <span className="fc-badge" style={{ color: "#2EF2D0", fontWeight: 600 }}>
@@ -113,7 +113,7 @@ export default function Forecast({ data }) {
 
       <div className="forecast-chart" style={{ position: "relative" }}>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 10 }}>
+          <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
             <XAxis dataKey="time" stroke="#9ca3af" tickLine={false} axisLine={false} interval={1} />
             <YAxis domain={[0, 100]} stroke="#9ca3af" tickLine={false} axisLine={false} />
