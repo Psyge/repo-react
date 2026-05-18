@@ -9,11 +9,15 @@ export default function Sightings() {
 
   const loadClusters = async () => {
     try {
-      const res = await fetch(`${BASE}/api/sightings/clusters`, {
-        cache: "no-cache",
-      });
+      const res = await fetch(
+        `${BASE}/api/sightings/clusters`,
+        {
+          cache: "no-cache",
+        }
+      );
 
       const data = await res.json();
+
       setClusters(data.clusters || []);
     } catch (e) {
       console.error(e);
@@ -23,33 +27,63 @@ export default function Sightings() {
   useEffect(() => {
     loadClusters();
 
-    const interval = setInterval(loadClusters, 120000);
+    const interval = setInterval(
+      loadClusters,
+      120000
+    );
 
-    // 🔥 mahdollistaa report-napin refreshin
     window.__refreshSightings = loadClusters;
 
     return () => {
       clearInterval(interval);
+
       delete window.__refreshSightings;
     };
   }, []);
 
   return (
-    <div className="sightings">
+    <div className="sightings-list">
       {clusters.length === 0 ? (
         <div className="sightings-empty">
           {t("sightings.empty")}
         </div>
       ) : (
         clusters.map((c, i) => (
-          <div key={i} className="sighting-row">
-            <span className="sighting-region">
-              📍 {c.region}
-            </span>
+          <div
+            key={i}
+            className="sighting-row"
+          >
+            <div className="sighting-main">
+              <div className="sighting-place">
+                📍 {c.region}
+              </div>
 
-            <span className="sighting-meta">
-              {c.count} {t("sightings.reports")} · {c.minutesAgo} min
-            </span>
+              <div className="sighting-time">
+                {c.minutesAgo} min ago
+              </div>
+            </div>
+
+            <div className="sighting-meta">
+              <div className="sighting-item">
+                <span className="label">
+                  Reports
+                </span>
+
+                <span className="value">
+                  {c.count}
+                </span>
+              </div>
+
+              <div className="sighting-item">
+                <span className="label">
+                  Status
+                </span>
+
+                <span className="value">
+                  Active
+                </span>
+              </div>
+            </div>
           </div>
         ))
       )}

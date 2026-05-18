@@ -1,13 +1,36 @@
+/* ===== SECTION ===== */
+
+.sightings-section {
+  margin-top: 72px;
+}
+
+.sightings-section p {
+  margin-top: 10px;
+  margin-bottom: 28px;
+
+  max-width: 680px;
+
+  line-height: 1.6;
+
+  color: var(--fg-muted);
+}
+
+.sightings-section .btn-primary {
+  margin-bottom: 28px;
+}
+
+/* ===== LIST ===== */
+
 .sightings-list {
   display: flex;
   flex-direction: column;
 
-  gap: 12px;
+  gap: 16px;
 
-  margin-top: 18px;
+  margin-top: 8px;
 }
 
-/* single row */
+/* ===== SINGLE ROW ===== */
 
 .sighting-row {
   display: grid;
@@ -21,10 +44,10 @@
   gap: 20px;
 
   padding:
-    18px
-    20px;
+    20px
+    22px;
 
-  border-radius: 18px;
+  border-radius: 20px;
 
   background:
     linear-gradient(
@@ -42,22 +65,30 @@
 
   transition:
     transform .15s ease,
-    border-color .15s ease;
+    border-color .15s ease,
+    background .15s ease;
 }
 
 .sighting-row:hover {
   transform: translateY(-2px);
 
   border-color: rgba(0,255,204,0.25);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.05),
+      rgba(255,255,255,0.025)
+    );
 }
 
-/* left side */
+/* ===== LEFT SIDE ===== */
 
 .sighting-main {
   display: flex;
   flex-direction: column;
 
-  gap: 4px;
+  gap: 6px;
 
   min-width: 0;
 }
@@ -70,24 +101,24 @@
 }
 
 .sighting-time {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
 
   color: var(--fg-muted);
 }
 
-/* right side */
+/* ===== RIGHT SIDE ===== */
 
 .sighting-meta {
   display: flex;
   align-items: center;
 
-  gap: 28px;
+  gap: 32px;
 }
 
 .sighting-item {
   text-align: center;
 
-  min-width: 56px;
+  min-width: 58px;
 }
 
 .sighting-item .label {
@@ -113,14 +144,14 @@
   color: var(--fg);
 }
 
-/* empty state */
+/* ===== EMPTY STATE ===== */
 
 .sightings-empty {
   padding:
-    24px
-    20px;
+    28px
+    22px;
 
-  border-radius: 18px;
+  border-radius: 20px;
 
   text-align: center;
 
@@ -138,13 +169,13 @@
   backdrop-filter: blur(10px);
 }
 
-/* mobile */
+/* ===== MOBILE ===== */
 
 @media (max-width: 768px) {
   .sighting-row {
     grid-template-columns: 1fr;
 
-    gap: 16px;
+    gap: 18px;
   }
 
   .sighting-meta {
@@ -155,5 +186,9 @@
 
   .sighting-item {
     flex: 1;
+  }
+
+  .sightings-section {
+    margin-top: 56px;
   }
 }
