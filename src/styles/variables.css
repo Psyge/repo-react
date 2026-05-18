@@ -30,4 +30,12 @@
     'Segoe UI',
     Roboto,
     sans-serif;
+
+  /* spacing */
+
+  --space-xs: 6px;
+  --space-sm: 12px;
+  --space-md: 20px;
+  --space-lg: 32px;
+  --space-xl: 56px;
 }
