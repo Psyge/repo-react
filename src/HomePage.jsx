@@ -177,140 +177,176 @@ export default function HomePage() {
       <Header />
 
       <main>
+
         {/* HERO */}
-        <section className="hero-split container">
-          <div className="hero-text">
-            <h1>{t("hero.title")}</h1>
-            <p className="tagline">{t("hero.sub")}</p>
-          </div>
+        <section className="block">
+          <div className="container">
 
-          <div className="hero-grid">
-            <div className="kp-display">
-              <div className="kp-label">
-                {t("probability.label")}
+            <div className="hero-split">
+              <div className="hero-text">
+                <h1>{t("hero.title")}</h1>
+                <p className="tagline">{t("hero.sub")}</p>
               </div>
 
-              <div className="kp-big">
-                <span>
-                  {aurora?.probability != null
-                    ? `${aurora.probability}%`
-                    : "--"}
-                </span>
-              </div>
+              <div className="hero-grid">
+                <div className="kp-display">
+                  <div className="kp-label">
+                    {t("probability.label")}
+                  </div>
 
-              <div className="kp-meta">
-                <span>
-                  {t("kp.label")}:
-                  <strong> {kp ?? "--"}</strong>
-                </span>
+                  <div className="kp-big">
+                    <span>
+                      {aurora?.probability != null
+                        ? `${aurora.probability}%`
+                        : "--"}
+                    </span>
+                  </div>
 
-                <span>
-                  {t("wind.speed")}:
-                  <strong> {wind ?? "--"}</strong>
-                </span>
+                  <div className="kp-meta">
+                    <span>
+                      {t("kp.label")}:
+                      <strong> {kp ?? "--"}</strong>
+                    </span>
 
-                <span>
-                  {t("bz.label")}:
-                  <strong> {bz ?? "--"}</strong>
-                </span>
+                    <span>
+                      {t("wind.speed")}:
+                      <strong> {wind ?? "--"}</strong>
+                    </span>
+
+                    <span>
+                      {t("bz.label")}:
+                      <strong> {bz ?? "--"}</strong>
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  className="map-preview"
+                  onClick={() => navigate("/map")}
+                  style={{
+                    cursor: "pointer",
+                    position: "relative",
+                  }}
+                >
+                  <div
+                    ref={previewMapRef}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                    }}
+                  />
+
+                  <div className="map-preview-cta">
+                    <span>{t("map.open")}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div
-              className="map-preview"
-              onClick={() => navigate("/map")}
-              style={{
-                cursor: "pointer",
-                position: "relative",
-              }}
-            >
-              <div
-                ref={previewMapRef}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
-
-              <div className="map-preview-cta">
-                <span>{t("map.open")}</span>
-              </div>
-            </div>
           </div>
         </section>
 
         {/* FORECAST */}
-        <section className="container">
-          <Forecast
-            data={forecast.slots}
-            tier={forecast.tier}
-            genAt={forecast.genAt}
-            current={forecast.current}
-          />
+        <section className="block">
+          <div className="container">
+
+            <Forecast
+              data={forecast.slots}
+              tier={forecast.tier}
+              genAt={forecast.genAt}
+              current={forecast.current}
+            />
+
+          </div>
         </section>
 
         {/* SIGHTINGS */}
-        <section className="container">
-          <h2>{t("sightings.title")}</h2>
-          <p>{t("sightings.sub")}</p>
+        <section className="block">
+          <div className="container">
 
-          <ReportButton />
+            <div className="section-head">
+              <div>
+                <h2>{t("sightings.title")}</h2>
+                <p>{t("sightings.sub")}</p>
+              </div>
+            </div>
 
-          <Sightings />
+            <ReportButton />
+
+            <Sightings />
+
+          </div>
         </section>
 
         {/* LOCATIONS */}
-        <PlacesSection kp={kp} />
+        <section className="block">
+          <div className="container">
 
-        {/* ARTICLES */}
-        <section className="container">
-          <h2>{t("home.articles.title")}</h2>
-          <p>{t("home.articles.sub")}</p>
+            <PlacesSection kp={kp} />
 
-          <div className="home-articles">
-            <Link to="/blog/photography" className="blog-card">
-              <div className="blog-card-tag">
-                GUIDE
-              </div>
-
-              <h2>{t("blog.post1.title")}</h2>
-
-              <p>{t("blog.post1.excerpt")}</p>
-
-              <div className="blog-card-read">
-                {t("blog.read")}
-              </div>
-            </Link>
-
-            <Link to="/blog/forecast" className="blog-card">
-              <div className="blog-card-tag">
-                GUIDE
-              </div>
-
-              <h2>{t("blog.post2.title")}</h2>
-
-              <p>{t("blog.post2.excerpt")}</p>
-
-              <div className="blog-card-read">
-                {t("blog.read")}
-              </div>
-            </Link>
-
-            <Link to="/blog/timing" className="blog-card">
-              <div className="blog-card-tag">
-                GUIDE
-              </div>
-
-              <h2>{t("blog.post3.title")}</h2>
-
-              <p>{t("blog.post3.excerpt")}</p>
-
-              <div className="blog-card-read">
-                {t("blog.read")}
-              </div>
-            </Link>
           </div>
         </section>
+
+        {/* ARTICLES */}
+        <section className="block">
+          <div className="container">
+
+            <div className="section-head">
+              <div>
+                <h2>{t("home.articles.title")}</h2>
+                <p>{t("home.articles.sub")}</p>
+              </div>
+            </div>
+
+            <div className="home-articles">
+
+              <Link to="/blog/photography" className="blog-card">
+                <div className="blog-card-tag">
+                  GUIDE
+                </div>
+
+                <h2>{t("blog.post1.title")}</h2>
+
+                <p>{t("blog.post1.excerpt")}</p>
+
+                <div className="blog-card-read">
+                  {t("blog.read")}
+                </div>
+              </Link>
+
+              <Link to="/blog/forecast" className="blog-card">
+                <div className="blog-card-tag">
+                  GUIDE
+                </div>
+
+                <h2>{t("blog.post2.title")}</h2>
+
+                <p>{t("blog.post2.excerpt")}</p>
+
+                <div className="blog-card-read">
+                  {t("blog.read")}
+                </div>
+              </Link>
+
+              <Link to="/blog/timing" className="blog-card">
+                <div className="blog-card-tag">
+                  GUIDE
+                </div>
+
+                <h2>{t("blog.post3.title")}</h2>
+
+                <p>{t("blog.post3.excerpt")}</p>
+
+                <div className="blog-card-read">
+                  {t("blog.read")}
+                </div>
+              </Link>
+
+            </div>
+
+          </div>
+        </section>
+
       </main>
 
       <footer className="footer">
