@@ -5,9 +5,15 @@
   gap: 12px;
 
   margin-top: 20px;
+
+  width: 100%;
 }
 
 .place-row {
+  width: 100%;
+
+  box-sizing: border-box;
+
   display: grid;
 
   grid-template-columns:
