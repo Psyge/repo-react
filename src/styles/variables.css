@@ -35,7 +35,7 @@
 
   --space-xs: 6px;
   --space-sm: 12px;
-  --space-md: 20px;
-  --space-lg: 32px;
-  --space-xl: 56px;
+  --space-md: 0px;
+  --space-lg: 20px;
+  --space-xl: 20px;
 }
