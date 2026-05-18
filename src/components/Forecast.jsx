@@ -112,7 +112,7 @@ export default function Forecast({ data }) {
       </div>
 
       <div className="forecast-chart" style={{ position: "relative" }}>
-        <ResponsiveContainer width="100%" height={340}>
+        <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 10 }}>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
             <XAxis dataKey="time" stroke="#9ca3af" tickLine={false} axisLine={false} interval={1} />
@@ -130,7 +130,14 @@ export default function Forecast({ data }) {
                 return [`${value}%`, name];
               }}
             />
-            <Legend />
+            <Legend
+  verticalAlign="bottom"
+  align="center"
+  wrapperStyle={{
+    paddingTop: 16,
+    bottom: -6,
+  }}
+/>
 
             {/* Tonight — aina näkyvissä */}
             <Line
