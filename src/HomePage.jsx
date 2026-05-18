@@ -261,22 +261,18 @@ export default function HomePage() {
         </section>
 
         {/* SIGHTINGS */}
-        <section className="block">
-          <div className="container">
+      <section className="container section-block">
+  <div className="section-head">
+    <div>
+      <h2>{t("sightings.title")}</h2>
+      <p>{t("sightings.sub")}</p>
+    </div>
 
-            <div className="section-head">
-              <div>
-                <h2>{t("sightings.title")}</h2>
-                <p>{t("sightings.sub")}</p>
-              </div>
-            </div>
+    <ReportButton />
+  </div>
 
-            <ReportButton />
-
-            <Sightings />
-
-          </div>
-        </section>
+  <Sightings />
+</section>
 
         {/* LOCATIONS */}
         <section className="block">
