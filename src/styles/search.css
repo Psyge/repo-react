@@ -9,6 +9,7 @@
   z-index: 1200;
 
   width: min(520px, 92vw);
+  pointer-events: auto;
 }
 
 .map-search-input {
@@ -79,4 +80,7 @@
   background: rgba(255,255,255,0.04);
 
   padding-left: 22px;
+}
+.leaflet-container {
+  z-index: 1;
 }
