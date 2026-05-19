@@ -83,7 +83,7 @@ export default function AuroraPopup({ lat, lng, data, error }) {
               fontSize: 12,
             }}
           >
-            🔒 {t("forecast.unlock_full", "Unlock full forecast — from 2,99 €")}
+            🔒 {t("forecast.popup_full", "Unlock full forecast — from 2,99 €")}
           </a>
         </div>
       </div>

@@ -1,4 +1,5 @@
 {
+  "forecast.popup_full": "Avaa koko ennuste",
   "forecast.free_hint": "Ilmainen versio näyttää tämän illan Kp-arvoon perustuvan ennusteen. Premium-versio sisältää OVATION-tiedot sekä pilvisyysennusteen kolmeksi päiväksi.",
   "forecast.unlock_full": "Avaa 3 päivän revontuliennuste",
   "forecast.tonight": "Tänä iltana",
