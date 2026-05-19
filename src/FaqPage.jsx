@@ -1,4 +1,5 @@
 import useTranslation from "./hooks/useTranslation";
+import Header from "./components/Header";
 import { useEffect } from 'react';
 
 const QUESTIONS = [
