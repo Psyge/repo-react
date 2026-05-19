@@ -35,7 +35,7 @@ export default function Header() {
 </Link>
         </nav>
 
-        <div className="header-right">
+        <div className="header-socials">
           <div className="social-links">
             <a
               href="https://instagram.com/repotracker"
