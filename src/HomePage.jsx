@@ -352,7 +352,7 @@ export default function HomePage() {
           {t("footer.privacy")}
         </Link>
 
-        {" + "}
+        {" - "}
 
         <Link to="/terms">
           {t("privacy.q.terms")}

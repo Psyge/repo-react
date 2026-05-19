@@ -1,4 +1,7 @@
 {
+  "forecast.free_hint": "Ilmainen versio näyttää tämän illan Kp-arvoon perustuvan ennusteen. Premium-versio sisältää OVATION-tiedot sekä pilvisyysennusteen kolmeksi päiväksi.",
+  "forecast.unlock_full": "Avaa 3 päivän revontuliennuste",
+  "forecast.tonight": "Tänä iltana",
   "app.title": "Revontulitutka — Reaaliaikainen ennuste",
   "app.tagline": "Revontulien näkyvyys Lapissa juuri nyt",
   "hero.title": "Koe revontulet livenä Lapissa",
