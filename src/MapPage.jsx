@@ -5,8 +5,10 @@ import { createRoot } from "react-dom/client";
 
 import AuroraPopup from "./components/AuroraPopup";
 import Header from "./components/Header";
-import useTranslation from "./hooks/useTranslation";
 import SearchBox from "./components/SearchBox";
+
+import useTranslation from "./hooks/useTranslation";
+
 import { useSearchParams } from "react-router-dom";
 
 import {
@@ -14,14 +16,33 @@ import {
   fetchAuroraData,
 } from "./utils/auroraOverlay";
 
-const BASE = "https://report.masto84.workers.dev";
+import {
+  loadSightingsLayer,
+} from "./utils/mapSightings";
 
-/** Lue premium-status localStoragesta (sama avain kuin v2) */
+const BASE =
+  "https://report.masto84.workers.dev";
+
 function readPremium() {
   try {
-    const p = JSON.parse(localStorage.getItem("aurora_premium") || "null");
-    if (!p || !p.deviceKey || !p.expiresAt) return null;
-    if (p.expiresAt < Date.now()) return null;
+    const p = JSON.parse(
+      localStorage.getItem(
+        "aurora_premium"
+      ) || "null"
+    );
+
+    if (
+      !p ||
+      !p.deviceKey ||
+      !p.expiresAt
+    ) {
+      return null;
+    }
+
+    if (p.expiresAt < Date.now()) {
+      return null;
+    }
+
     return p;
   } catch {
     return null;
@@ -30,124 +51,303 @@ function readPremium() {
 
 export default function MapPage() {
   const mapRef = useRef(null);
-  const mapInstance = useRef(null);
-  const markerRef = useRef(null);
-  const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
 
-  const initialLat = parseFloat(searchParams.get("lat")) || 67.5;
-  const initialLon = parseFloat(searchParams.get("lon")) || 26;
+  const mapInstance = useRef(null);
+
+  const markerRef = useRef(null);
+
+  const { t } = useTranslation();
+
+  const [searchParams] =
+    useSearchParams();
+
+  const initialLat =
+    parseFloat(
+      searchParams.get("lat")
+    ) || 67.5;
+
+  const initialLon =
+    parseFloat(
+      searchParams.get("lon")
+    ) || 26;
 
   const auroraIcon = L.divIcon({
     className: "",
-    html: `<div class="map-marker"></div>`,
+
+    html: `
+      <div class="map-marker"></div>
+    `,
+
     iconSize: [14, 14],
   });
 
-  // ===== API: hae aurora-laskenta workerista (lähettää deviceKey jos premium)
-  const fetchAuroraPoint = async (lat, lon) => {
-    const p = readPremium();
-    const deviceKey = p?.deviceKey || "";
-    const res = await fetch(`${BASE}/api/aurora/calc`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lat, lon, deviceKey }),
-    });
-    if (!res.ok) throw new Error(`calc ${res.status}`);
-    return res.json();
-  };
+  const fetchAuroraPoint =
+    async (lat, lon) => {
+      const p = readPremium();
 
-  // ===== POPUP — yksi source of truth, näyttää free/premium-version
-  const openPopup = useCallback(async (map, lat, lng) => {
-    if (!map) return;
+      const deviceKey =
+        p?.deviceKey || "";
 
-    const popup = L.popup({
-  maxWidth: 320,
-  offset: L.point(-120, 0),
-  autoPanPadding: L.point(24, 24),
-  className: "aurora-popup-wrap",
-}).setLatLng([lat, lng]);
-    const container = document.createElement("div");
-    popup.setContent(container);
-    popup.openOn(map);
+      const res = await fetch(
+        `${BASE}/api/aurora/calc`,
+        {
+          method: "POST",
 
-    const root = createRoot(container);
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
 
-    // Loading
-    root.render(<AuroraPopup lat={lat} lng={lng} data={null} />);
+          body: JSON.stringify({
+            lat,
+            lon,
+            deviceKey,
+          }),
+        }
+      );
 
-    try {
-      const data = await fetchAuroraPoint(lat, lng);
-      root.render(<AuroraPopup lat={lat} lng={lng} data={data} />);
-    } catch (err) {
-      console.error("[aurora calc]", err);
-      root.render(<AuroraPopup lat={lat} lng={lng} data={null} error />);
-    }
-  }, []);
+      if (!res.ok) {
+        throw new Error(
+          `calc ${res.status}`
+        );
+      }
 
-  // ===== INIT MAP
+      return res.json();
+    };
+
+  const openPopup = useCallback(
+    async (map, lat, lng) => {
+      if (!map) return;
+
+      const popup = L.popup({
+        maxWidth: 320,
+
+        offset: L.point(-120, 0),
+
+        autoPanPadding:
+          L.point(24, 24),
+
+        className:
+          "aurora-popup-wrap",
+      }).setLatLng([lat, lng]);
+
+      const container =
+        document.createElement("div");
+
+      popup.setContent(container);
+
+      popup.openOn(map);
+
+      const root =
+        createRoot(container);
+
+      root.render(
+        <AuroraPopup
+          lat={lat}
+          lng={lng}
+          data={null}
+        />
+      );
+
+      try {
+        const data =
+          await fetchAuroraPoint(
+            lat,
+            lng
+          );
+
+        root.render(
+          <AuroraPopup
+            lat={lat}
+            lng={lng}
+            data={data}
+          />
+        );
+      } catch (err) {
+        console.error(
+          "[aurora calc]",
+          err
+        );
+
+        root.render(
+          <AuroraPopup
+            lat={lat}
+            lng={lng}
+            data={null}
+            error
+          />
+        );
+      }
+    },
+    []
+  );
+
   useEffect(() => {
-    if (mapInstance.current) return;
+    if (mapInstance.current)
+      return;
 
-    const map = L.map(mapRef.current).setView([initialLat, initialLon], 9);
+    const map = L.map(
+      mapRef.current
+    ).setView(
+      [initialLat, initialLon],
+      9
+    );
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     ).addTo(map);
 
-    // Aurora overlay
-    const overlay = createAuroraOverlay();
+    // ===== Aurora overlay
+
+    const overlay =
+      createAuroraOverlay();
+
     overlay.addTo(map);
 
-    const loadAurora = async () => {
-      try {
-        const data = await fetchAuroraData();
-        overlay.setData(data);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    loadAurora();
-    const interval = setInterval(loadAurora, 60000);
+    const loadAurora =
+      async () => {
+        try {
+          const data =
+            await fetchAuroraData();
 
-    // Click anywhere → popup
+          overlay.setData(data);
+        } catch (e) {
+          console.error(e);
+        }
+      };
+
+    loadAurora();
+
+    const auroraInterval =
+      setInterval(
+        loadAurora,
+        60000
+      );
+
+    // ===== Sightings layer
+
+    const sightingsLayer =
+      L.layerGroup().addTo(map);
+
+    loadSightingsLayer(
+      sightingsLayer
+    );
+
+    const sightingsInterval =
+      setInterval(() => {
+        loadSightingsLayer(
+          sightingsLayer
+        );
+      }, 60000);
+
+    // ===== Click popup
+
     map.on("click", (e) => {
-      openPopup(map, e.latlng.lat, e.latlng.lng);
+      openPopup(
+        map,
+        e.latlng.lat,
+        e.latlng.lng
+      );
     });
 
     mapInstance.current = map;
 
-    if (searchParams.get("lat") && searchParams.get("lon")) {
-      openPopup(map, initialLat, initialLon);
-      const marker = L.marker([initialLat, initialLon], {
-        icon: auroraIcon,
-      }).addTo(map);
+    // ===== Initial marker
+
+    if (
+      searchParams.get("lat") &&
+      searchParams.get("lon")
+    ) {
+      openPopup(
+        map,
+        initialLat,
+        initialLon
+      );
+
+      const marker = L.marker(
+        [initialLat, initialLon],
+        {
+          icon: auroraIcon,
+        }
+      ).addTo(map);
+
       markerRef.current = marker;
+
       setTimeout(() => {
-        const el = marker.getElement();
-        if (el && el.firstChild) el.firstChild.classList.add("map-marker-active");
+        const el =
+          marker.getElement();
+
+        if (
+          el &&
+          el.firstChild
+        ) {
+          el.firstChild.classList.add(
+            "map-marker-active"
+          );
+        }
       }, 0);
     }
 
-    return () => clearInterval(interval);
-  }, [openPopup, initialLat, initialLon, auroraIcon, searchParams]);
+    return () => {
+      clearInterval(
+        auroraInterval
+      );
 
-  // ===== SEARCH HANDLER
-  const handleSearchSelect = (place) => {
-    const map = mapInstance.current;
+      clearInterval(
+        sightingsInterval
+      );
+    };
+  }, [
+    openPopup,
+    initialLat,
+    initialLon,
+    auroraIcon,
+    searchParams,
+  ]);
+
+  const handleSearchSelect = (
+    place
+  ) => {
+    const map =
+      mapInstance.current;
+
     if (!map) return;
 
     const { lat, lon } = place;
-    map.flyTo([lat, lon], 7, { duration: 1.5 });
 
-    if (markerRef.current) markerRef.current.remove();
+    map.flyTo(
+      [lat, lon],
+      7,
+      {
+        duration: 1.5,
+      }
+    );
 
-    const marker = L.marker([lat, lon], { icon: auroraIcon }).addTo(map);
+    if (markerRef.current) {
+      markerRef.current.remove();
+    }
+
+    const marker = L.marker(
+      [lat, lon],
+      {
+        icon: auroraIcon,
+      }
+    ).addTo(map);
+
     markerRef.current = marker;
 
     setTimeout(() => {
-      const el = marker.getElement();
-      if (el && el.firstChild) el.firstChild.classList.add("map-marker-active");
+      const el =
+        marker.getElement();
+
+      if (
+        el &&
+        el.firstChild
+      ) {
+        el.firstChild.classList.add(
+          "map-marker-active"
+        );
+      }
     }, 0);
 
     openPopup(map, lat, lon);
@@ -156,13 +356,26 @@ export default function MapPage() {
   return (
     <div>
       <Header />
+
       <div className="map-search-wrap">
-  <SearchBox onSelect={handleSearchSelect} />
-</div>
+        <SearchBox
+          onSelect={
+            handleSearchSelect
+          }
+        />
+      </div>
 
-      <div className="map-hint">{t("map.click_hint")}</div>
+      <div className="map-hint">
+        {t("map.click_hint")}
+      </div>
 
-      <div ref={mapRef} style={{ height: "100vh", width: "100%" }} />
+      <div
+        ref={mapRef}
+        style={{
+          height: "100vh",
+          width: "100%",
+        }}
+      />
     </div>
   );
 }
