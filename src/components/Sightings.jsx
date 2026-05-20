@@ -1,13 +1,56 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import useTranslation from "../hooks/useTranslation";
 
+
+function readPremium() {
+  try {
+    const p = JSON.parse(
+      localStorage.getItem(
+        "aurora_premium"
+      ) || "null"
+    );
+
+    if (
+      !p ||
+      !p.deviceKey ||
+      !p.expiresAt
+    ) {
+      return null;
+    }
+
+    if (p.expiresAt < Date.now()) {
+      return null;
+    }
+
+    return p;
+  } catch {
+    return null;
+  }
+}
+
 export default function Sightings() {
-  const [clusters, setClusters] = useState([]);
+  const [clusters, setClusters] =
+    useState([]);
+
+  
   const { t } = useTranslation();
 
-  const BASE = "https://report.masto84.workers.dev";
+  const navigate = useNavigate();
+
+  const BASE =
+    "https://report.masto84.workers.dev";
+
+  const premium = readPremium();
 
   const loadClusters = async () => {
+    // FREE users ei näe sightings-listaa
+    if (!premium) {
+      setClusters([]);
+      return;
+    }
+
     try {
       const res = await fetch(
         `${BASE}/api/sightings/clusters`,
@@ -18,7 +61,9 @@ export default function Sightings() {
 
       const data = await res.json();
 
-      setClusters(data.clusters || []);
+      setClusters(
+        data.clusters || []
+      );
     } catch (e) {
       console.error(e);
     }
@@ -27,12 +72,14 @@ export default function Sightings() {
   useEffect(() => {
     loadClusters();
 
-    const interval = setInterval(
-      loadClusters,
-      120000
-    );
+    const interval =
+      setInterval(
+        loadClusters,
+        120000
+      );
 
-    window.__refreshSightings = loadClusters;
+    window.__refreshSightings =
+      loadClusters;
 
     return () => {
       clearInterval(interval);
@@ -40,6 +87,16 @@ export default function Sightings() {
       delete window.__refreshSightings;
     };
   }, []);
+
+  // FREE upsell
+  if (!premium) {
+    return (
+      <div className="sightings-empty">
+        🔒 Premium required to view
+        live aurora sightings
+      </div>
+    );
+  }
 
   return (
     <div className="sightings-list">
@@ -52,6 +109,14 @@ export default function Sightings() {
           <div
             key={i}
             className="sighting-row"
+            onClick={() => {
+              navigate(
+                `/map?lat=${c.lat}&lon=${c.lon}&sighting=1`
+              );
+            }}
+            style={{
+              cursor: "pointer",
+            }}
           >
             <div className="sighting-main">
               <div className="sighting-place">

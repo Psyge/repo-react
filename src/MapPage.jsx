@@ -70,6 +70,8 @@ export default function MapPage() {
     parseFloat(
       searchParams.get("lon")
     ) || 26;
+  const isSighting =
+  searchParams.get("sighting");
 
   const auroraIcon = L.divIcon({
     className: "",
@@ -226,19 +228,26 @@ export default function MapPage() {
 
     // ===== Sightings layer
 
+    const premium =
+      readPremium();
+
     const sightingsLayer =
       L.layerGroup().addTo(map);
 
-    loadSightingsLayer(
-      sightingsLayer
-    );
+    let sightingsInterval = null;
 
-    const sightingsInterval =
-      setInterval(() => {
-        loadSightingsLayer(
-          sightingsLayer
-        );
-      }, 60000);
+    if (premium) {
+      loadSightingsLayer(
+        sightingsLayer
+      );
+
+      sightingsInterval =
+        setInterval(() => {
+          loadSightingsLayer(
+            sightingsLayer
+          );
+        }, 60000);
+    }
 
     // ===== Click popup
 
@@ -255,49 +264,62 @@ export default function MapPage() {
     // ===== Initial marker
 
     if (
-      searchParams.get("lat") &&
-      searchParams.get("lon")
-    ) {
-      openPopup(
-        map,
-        initialLat,
-        initialLon
-      );
-
-      const marker = L.marker(
-        [initialLat, initialLon],
-        {
-          icon: auroraIcon,
-        }
-      ).addTo(map);
-
-      markerRef.current = marker;
-
-      setTimeout(() => {
-        const el =
-          marker.getElement();
-
-        if (
-          el &&
-          el.firstChild
-        ) {
-          el.firstChild.classList.add(
-            "map-marker-active"
-          );
-        }
-      }, 0);
+  searchParams.get("lat") &&
+  searchParams.get("lon")
+) {
+  map.flyTo(
+    [initialLat, initialLon],
+    isSighting ? 11 : 7,
+    {
+      duration: 1.5,
     }
+  );
 
-    return () => {
-      clearInterval(
-        auroraInterval
-      );
+  openPopup(
+    map,
+    initialLat,
+    initialLon
+  );
 
-      clearInterval(
-        sightingsInterval
+  const marker = L.marker(
+    [initialLat, initialLon],
+    {
+      icon: auroraIcon,
+    }
+  ).addTo(map);
+
+  markerRef.current = marker;
+
+  setTimeout(() => {
+    const el =
+      marker.getElement();
+
+    if (
+      el &&
+      el.firstChild
+    ) {
+      el.firstChild.classList.add(
+        isSighting
+          ? "map-marker-sighting"
+          : "map-marker-active"
       );
-    };
-  }, [
+    }
+  }, 0);
+}
+
+   return () => {
+  clearInterval(
+    auroraInterval
+  );
+
+  if (sightingsInterval) {
+    clearInterval(
+      sightingsInterval
+    );
+  }
+};
+
+}, [
     openPopup,
     initialLat,
     initialLon,
