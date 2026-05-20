@@ -46,6 +46,7 @@ export default function Sightings() {
 
  const loadClusters = useCallback(
   async () => {
+    // FREE users ei näe sightings-listaa
     if (!premium) {
       setClusters([]);
       return;
@@ -88,7 +89,7 @@ export default function Sightings() {
 
       delete window.__refreshSightings;
     };
-  }, []);
+  }, [loadClusters]);
 
   // FREE upsell
   if (!premium) {
