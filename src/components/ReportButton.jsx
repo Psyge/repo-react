@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import useTranslation from "../hooks/useTranslation";
 
 const BASE = "https://report.masto84.workers.dev";
@@ -9,20 +9,114 @@ const TURNSTILE_SITE_KEY =
 export default function ReportButton() {
   const { t } = useTranslation();
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const tokenRef = useRef(null);
+  // ===== Invisible Turnstile
+  const getTurnstileToken = async () => {
+    return new Promise(
+      (resolve, reject) => {
+        try {
+          if (!window.turnstile) {
+            reject(
+              new Error(
+                "Turnstile not loaded"
+              )
+            );
+            return;
+          }
+
+          const container =
+            document.getElementById(
+              "turnstile-container"
+            );
+
+          if (!container) {
+            reject(
+              new Error(
+                "Turnstile container missing"
+              )
+            );
+            return;
+          }
+
+          // tyhjennä vanha widget
+          container.innerHTML = "";
+
+          // renderöi uusi invisible widget
+          const id =
+            window.turnstile.render(
+              container,
+              {
+                sitekey:
+                  TURNSTILE_SITE_KEY,
+
+                size: "invisible",
+
+                callback: (
+                  token
+                ) => {
+                  resolve(token);
+
+                  // poista widget jälkeenpäin
+                  setTimeout(() => {
+                    try {
+                      window.turnstile.remove(
+                        id
+                      );
+                    } catch {}
+                  }, 0);
+                },
+
+                "error-callback":
+                  () => {
+                    reject(
+                      new Error(
+                        "Turnstile failed"
+                      )
+                    );
+                  },
+
+                "expired-callback":
+                  () => {
+                    reject(
+                      new Error(
+                        "Turnstile expired"
+                      )
+                    );
+                  },
+              }
+            );
+
+          // pieni delay estää race conditionit
+          setTimeout(() => {
+            try {
+              window.turnstile.execute(
+                id
+              );
+            } catch (err) {
+              reject(err);
+            }
+          }, 50);
+        } catch (err) {
+          reject(err);
+        }
+      }
+    );
+  };
 
   const report = async () => {
     if (loading) return;
 
-    if (!tokenRef.current) {
-      alert("Complete captcha first");
-      return;
-    }
+    if (
+      !navigator.geolocation
+    ) {
+      alert(
+        t(
+          "sightings.geo_denied"
+        )
+      );
 
-    if (!navigator.geolocation) {
-      alert(t("sightings.geo_denied"));
       return;
     }
 
@@ -31,30 +125,45 @@ export default function ReportButton() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const payload = {
-            lat: Number(pos.coords.latitude),
-            lon: Number(pos.coords.longitude),
+          // ===== captcha token
+          const turnstileToken =
+            await getTurnstileToken();
 
-            createdAt: Date.now(),
+          const payload = {
+            lat: Number(
+              pos.coords.latitude
+            ),
+
+            lon: Number(
+              pos.coords.longitude
+            ),
+
+            createdAt:
+              Date.now(),
+
             source: "web",
 
-            turnstileToken:
-              tokenRef.current,
+            turnstileToken,
           };
 
           const res = await fetch(
             `${BASE}/api/sightings`,
             {
               method: "POST",
+
               headers: {
                 "Content-Type":
                   "application/json",
               },
-              body: JSON.stringify(payload),
+
+              body: JSON.stringify(
+                payload
+              ),
             }
           );
 
-          const text = await res.text();
+          const text =
+            await res.text();
 
           console.log(
             "sighting response:",
@@ -62,69 +171,79 @@ export default function ReportButton() {
             text
           );
 
-          if (res.status === 429) {
-            alert(t("sightings.cooldown"));
+          if (
+            res.status === 429
+          ) {
+            alert(
+              t(
+                "sightings.cooldown"
+              )
+            );
+
             return;
           }
 
           if (!res.ok) {
             throw new Error(
-              text || "Request failed"
+              text ||
+                "Request failed"
             );
           }
 
-          alert(t("sightings.thanks"));
+          alert(
+            t(
+              "sightings.thanks"
+            )
+          );
 
+          // refresh sightings lista
           if (
             window.__refreshSightings
           ) {
             window.__refreshSightings();
           }
-
-          tokenRef.current = null;
-
-          window.turnstile.reset();
         } catch (err) {
           console.error(
             "REPORT ERROR:",
             err
           );
 
-          alert(t("sightings.error"));
+          alert(
+            t(
+              "sightings.error"
+            )
+          );
         } finally {
           setLoading(false);
         }
       },
+
       (err) => {
         console.error(err);
 
-        alert(t("sightings.geo_denied"));
+        alert(
+          t(
+            "sightings.geo_denied"
+          )
+        );
 
         setLoading(false);
       },
+
       {
         enableHighAccuracy: true,
+
         timeout: 10000,
       }
     );
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-      }}
-    >
+    <>
       <div
-        className="cf-turnstile"
-        data-sitekey={
-          TURNSTILE_SITE_KEY
-        }
-        data-theme="dark"
-        data-callback={(token) => {
-          tokenRef.current = token;
+        id="turnstile-container"
+        style={{
+          display: "none",
         }}
       />
 
@@ -134,9 +253,13 @@ export default function ReportButton() {
         disabled={loading}
       >
         {loading
-          ? "Loading..."
-          : t("sightings.report_btn")}
+          ? t(
+              "common.loading"
+            ) || "Loading..."
+          : t(
+              "sightings.report_btn"
+            )}
       </button>
-    </div>
+    </>
   );
 }
