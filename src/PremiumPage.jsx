@@ -128,6 +128,8 @@ export default function PremiumPage() {
   ];
 
   return (
+    <div>
+          <Header />
     <main className="premium-page container">
       <section className="premium-hero">
         <h1>Aurora Premium</h1>
@@ -214,5 +216,6 @@ export default function PremiumPage() {
         </p>
       </section>
     </main>
+    </div>
   );
 }

@@ -234,90 +234,135 @@
 }
 /* ========================================
    MOBILE FORECAST
+/* ========================================
+   MOBILE FORECAST
 ======================================== */
 
 @media (max-width: 768px) {
 
   .forecast-modern {
-    padding: 18px 16px 22px;
+    margin-top: 18px;
+
+    padding: 18px 14px 20px;
 
     border-radius: 20px;
-
-    margin-top: 20px;
   }
 
   .forecast-head {
-    margin-bottom: 18px;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-bottom: 14px;
   }
 
   .forecast-head h2 {
-    font-size: 1.9rem;
+    font-size: 1.8rem;
 
-    line-height: 1.15;
+    line-height: 1.05;
+
+    letter-spacing: 0;
   }
+
+  /* chart smaller */
 
   .forecast-chart {
-    height: 210px;
+    height: 180px;
   }
 
-  /* unlock text */
+  /* chart area */
 
-  .forecast-head .forecast-lock,
-  .forecast-head p,
-  .fc-more,
-  .fc-tz {
-    font-size: 12px;
+  .recharts-wrapper {
+    margin-top: -6px;
   }
 
-  /* chart labels */
+  /* axis labels */
 
-  .fc-row {
-    grid-auto-columns: minmax(56px, 1fr);
-
-    gap: 4px;
-  }
-
-  .fc-slot {
-    min-width: 56px;
-
-    padding: 6px 4px;
-  }
-
-  .fc-prob {
-    font-size: 14px;
-  }
-
-  .fc-time,
-  .fc-kp,
-  .fc-cloud {
-    font-size: 10px;
-  }
-
-  /* unlock button */
-
-  .fc-unlock {
-    margin-top: 14px;
-
-    padding: 10px 14px;
-
-    font-size: 13px;
-
-    border-radius: 999px;
+  .recharts-cartesian-axis-tick-value {
+    font-size: 10px !important;
   }
 
   /* legend */
 
   .forecast-modern .recharts-default-legend {
-    font-size: 11px !important;
+    display: flex !important;
 
-    line-height: 1.2 !important;
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+    gap: 8px 14px;
+
+    margin-top: 10px !important;
+
+    padding: 0 4px;
+
+    line-height: 1.2;
+
+    font-size: 11px !important;
   }
 
-  /* bottom description */
+  .forecast-modern .recharts-legend-item {
+    margin-right: 0 !important;
+  }
 
-  .forecast-modern p {
-    font-size: 12px;
+  /* unlock button */
 
-    line-height: 1.5;
+  .fc-unlock {
+    margin-top: 12px;
+
+    padding: 10px 14px;
+
+    border-radius: 999px;
+
+    font-size: 13px;
+
+    text-align: center;
+  }
+
+  /* bottom text */
+
+  .forecast-modern p,
+  .forecast-modern .forecast-desc {
+    margin-top: 14px;
+
+    padding: 0 4px;
+
+    text-align: center;
+
+    font-size: 11px;
+
+    line-height: 1.45;
+
+    color: var(--fg-muted);
+  }
+
+  /* compact rows */
+
+  .fc-row {
+    grid-auto-columns: minmax(54px, 1fr);
+
+    gap: 4px;
+  }
+
+  .fc-slot {
+    min-width: 54px;
+
+    padding: 6px 4px;
+  }
+
+  .fc-time {
+    font-size: 9px;
+  }
+
+  .fc-prob {
+    font-size: 13px;
+  }
+
+  .fc-kp,
+  .fc-cloud {
+    font-size: 9px;
+
+    line-height: 1.15;
   }
 }
