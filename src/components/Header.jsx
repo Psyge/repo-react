@@ -38,7 +38,7 @@ export default function Header() {
         <div className="header-socials">
           <div className="social-links">
             <a
-              href="https://instagram.com/repotracker"
+              href="https://instagram.com/repotracker_"
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram"
