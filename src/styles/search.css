@@ -10,6 +10,9 @@
 
   width: min(520px, 92vw);
   pointer-events: auto;
+  transform: translateZ(0);
+
+  will-change: transform;
 }
 
 .map-search-input {

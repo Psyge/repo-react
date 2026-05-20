@@ -59,6 +59,9 @@ function createLayer() {
 
       this._canvas.style.pointerEvents = "none";
 
+      this._canvas.style.transform = "translateZ(0)";
+this._canvas.style.willChange = "transform";
+
       map.getPanes().overlayPane.appendChild(this._container);
 
       this._ctx = this._canvas.getContext("2d");
@@ -128,6 +131,7 @@ function createLayer() {
     return;
   }
 
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, cv.width, cv.height);
 
       if (!latestData || !Array.isArray(latestData.coordinates)) return;

@@ -9,6 +9,12 @@ header {
   -webkit-backdrop-filter: blur(12px);
 
   border-bottom: 1px solid var(--border-soft);
+
+   transform: translateZ(0);
+
+  will-change: transform;
+
+  backface-visibility: hidden;
 }
 
 .header-inner {
