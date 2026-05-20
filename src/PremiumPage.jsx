@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import useTranslation from "./hooks/useTranslation";
 import { isActive, read, openCheckout } from "./lib/premium";
+import Header from "./components/Header";
 
 export default function PremiumPage() {
   const { lang } = useTranslation();
