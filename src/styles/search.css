@@ -91,13 +91,19 @@
 @media (max-width: 768px) {
 
      .map-search {
-        left: 25px;
-        padding: 0 44px;
-        right: 0;
-        top: 168px;
-        transform: none;
-        width: 100%;
-    }
+  position: absolute;
+
+  top: 78px;
+
+  left: 12px;
+  right: 12px;
+
+  width: auto;
+
+  transform: none;
+
+  z-index: 1200;
+}
 
 
   .map-search-input {

@@ -117,11 +117,7 @@
       0 0 0 0 rgba(255,59,59,0);
   }
 }
-/* ========================================
-   MOBILE MAP
-/* ========================================
-   MOBILE MAP
-======================================== */
+
 
 @media (max-width: 768px) {
 
@@ -219,9 +215,15 @@
     font-size: 14px;
   }
 
-  .leaflet-top {
-    top: 72px;
-  }
+ .leaflet-top,
+.leaflet-bottom {
+  z-index: 900;
+}
+
+.leaflet-control-zoom {
+  margin-top: 90px !important;
+  margin-left: 12px !important;
+}
 
   .leaflet-control-zoom {
     margin-top: 12px !important;
