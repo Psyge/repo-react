@@ -1,76 +1,25 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import useTranslation from "../hooks/useTranslation";
 
 const BASE = "https://report.masto84.workers.dev";
 
-// Cloudflare Turnstile site key
-const TURNSTILE_SITE_KEY = "0x4AAAAAADF29-_iSqwRQWf2";
-
-// widget pysyy muistissa
-let widgetId = null;
-let executing = false;
+const TURNSTILE_SITE_KEY =
+  "0x4AAAAAADF29-_iSqwRQWf2";
 
 export default function ReportButton() {
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(false);
 
-  // ===== Get invisible Turnstile token
-  const getTurnstileToken = () => {
-    return new Promise((resolve, reject) => {
-      try {
-        if (!window.turnstile) {
-          reject(new Error("Turnstile not loaded"));
-          return;
-        }
-
-        if (executing) {
-          reject(new Error("Turnstile already running"));
-          return;
-        }
-
-        executing = true;
-
-        // renderöi vain kerran
-        if (widgetId === null) {
-          widgetId = window.turnstile.render(
-            "#turnstile-container",
-            {
-              sitekey: TURNSTILE_SITE_KEY,
-              size: "invisible",
-
-              callback: (token) => {
-                executing = false;
-                resolve(token);
-              },
-
-              "error-callback": () => {
-                executing = false;
-                reject(new Error("Turnstile failed"));
-              },
-
-              "expired-callback": () => {
-                executing = false;
-                reject(new Error("Turnstile expired"));
-              },
-            }
-          );
-        } else {
-          // resetoi vanha captcha
-          window.turnstile.reset(widgetId);
-        }
-
-        // suorita captcha
-        window.turnstile.execute(widgetId);
-      } catch (err) {
-        executing = false;
-        reject(err);
-      }
-    });
-  };
+  const tokenRef = useRef(null);
 
   const report = async () => {
     if (loading) return;
+
+    if (!tokenRef.current) {
+      alert("Complete captcha first");
+      return;
+    }
 
     if (!navigator.geolocation) {
       alert(t("sightings.geo_denied"));
@@ -82,10 +31,6 @@ export default function ReportButton() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          // ===== Get captcha token
-          const turnstileToken =
-            await getTurnstileToken();
-
           const payload = {
             lat: Number(pos.coords.latitude),
             lon: Number(pos.coords.longitude),
@@ -93,7 +38,8 @@ export default function ReportButton() {
             createdAt: Date.now(),
             source: "web",
 
-            turnstileToken,
+            turnstileToken:
+              tokenRef.current,
           };
 
           const res = await fetch(
@@ -101,7 +47,8 @@ export default function ReportButton() {
             {
               method: "POST",
               headers: {
-                "Content-Type": "application/json",
+                "Content-Type":
+                  "application/json",
               },
               body: JSON.stringify(payload),
             }
@@ -128,11 +75,15 @@ export default function ReportButton() {
 
           alert(t("sightings.thanks"));
 
-          // refresh sightings lista
-          if (window.__refreshSightings) {
+          if (
+            window.__refreshSightings
+          ) {
             window.__refreshSightings();
           }
 
+          tokenRef.current = null;
+
+          window.turnstile.reset();
         } catch (err) {
           console.error(
             "REPORT ERROR:",
@@ -159,10 +110,22 @@ export default function ReportButton() {
   };
 
   return (
-    <>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
       <div
-        id="turnstile-container"
-        style={{ display: "none" }}
+        className="cf-turnstile"
+        data-sitekey={
+          TURNSTILE_SITE_KEY
+        }
+        data-theme="dark"
+        data-callback={(token) => {
+          tokenRef.current = token;
+        }}
       />
 
       <button
@@ -171,9 +134,9 @@ export default function ReportButton() {
         disabled={loading}
       >
         {loading
-          ? t("common.loading") || "Loading..."
+          ? "Loading..."
           : t("sightings.report_btn")}
       </button>
-    </>
+    </div>
   );
 }
