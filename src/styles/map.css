@@ -211,34 +211,31 @@
 
   /* leaflet controls */
 
-  .leaflet-control-container {
-    font-size: 14px;
-     transform: translateZ(0);
-
-  will-change: transform;
-  }
-
- .leaflet-top,
+ .leaflet-control-container,
+.leaflet-top,
 .leaflet-bottom {
-  z-index: 900;
-   transform: translateZ(0);
+  position: relative;
+
+  z-index: 1200 !important;
+
+  transform: translateZ(0);
 
   will-change: transform;
 }
 
 .leaflet-control-zoom {
+  position: relative;
+
+  z-index: 1200 !important;
+
   margin-top: 90px !important;
+
   margin-left: 12px !important;
-   transform: translateZ(0);
+
+  transform: translateZ(0);
 
   will-change: transform;
 }
-
-  .leaflet-control-zoom {
-    margin-top: 12px !important;
-
-    margin-left: 12px !important;
-  }
 
   .leaflet-touch .leaflet-bar a {
     width: 38px;
