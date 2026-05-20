@@ -1,3 +1,4 @@
+import { useState } from "react";
 import useTranslation from "../hooks/useTranslation";
 
 const BASE = "https://report.masto84.workers.dev";
@@ -5,52 +6,78 @@ const BASE = "https://report.masto84.workers.dev";
 // Cloudflare Turnstile site key
 const TURNSTILE_SITE_KEY = "0x4AAAAAADF29-_iSqwRQWf2";
 
+// widget pysyy muistissa
+let widgetId = null;
+let executing = false;
+
 export default function ReportButton() {
   const { t } = useTranslation();
+
+  const [loading, setLoading] = useState(false);
 
   // ===== Get invisible Turnstile token
   const getTurnstileToken = () => {
     return new Promise((resolve, reject) => {
       try {
-        // poistetaan vanha widget jos olemassa
-        const existing = document.getElementById("turnstile-container");
-
-        if (existing) {
-          existing.innerHTML = "";
+        if (!window.turnstile) {
+          reject(new Error("Turnstile not loaded"));
+          return;
         }
 
-        const widgetId = window.turnstile.render(
-          "#turnstile-container",
-          {
-            sitekey: TURNSTILE_SITE_KEY,
-            size: "invisible",
+        if (executing) {
+          reject(new Error("Turnstile already running"));
+          return;
+        }
 
-            callback: (token) => {
-              resolve(token);
-            },
+        executing = true;
 
-            "error-callback": () => {
-              reject(new Error("Turnstile failed"));
-            },
+        // renderöi vain kerran
+        if (widgetId === null) {
+          widgetId = window.turnstile.render(
+            "#turnstile-container",
+            {
+              sitekey: TURNSTILE_SITE_KEY,
+              size: "invisible",
 
-            "expired-callback": () => {
-              reject(new Error("Turnstile expired"));
-            },
-          }
-        );
+              callback: (token) => {
+                executing = false;
+                resolve(token);
+              },
 
+              "error-callback": () => {
+                executing = false;
+                reject(new Error("Turnstile failed"));
+              },
+
+              "expired-callback": () => {
+                executing = false;
+                reject(new Error("Turnstile expired"));
+              },
+            }
+          );
+        } else {
+          // resetoi vanha captcha
+          window.turnstile.reset(widgetId);
+        }
+
+        // suorita captcha
         window.turnstile.execute(widgetId);
       } catch (err) {
+        executing = false;
         reject(err);
       }
     });
   };
 
   const report = async () => {
+    if (loading) return;
+
     if (!navigator.geolocation) {
       alert(t("sightings.geo_denied"));
       return;
     }
+
+    setLoading(true);
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -66,7 +93,6 @@ export default function ReportButton() {
             createdAt: Date.now(),
             source: "web",
 
-            // backend tarvitsee tämän
             turnstileToken,
           };
 
@@ -101,16 +127,29 @@ export default function ReportButton() {
           }
 
           alert(t("sightings.thanks"));
+
+          // refresh sightings lista
+          if (window.__refreshSightings) {
+            window.__refreshSightings();
+          }
+
         } catch (err) {
-          console.error("REPORT ERROR:", err);
+          console.error(
+            "REPORT ERROR:",
+            err
+          );
 
           alert(t("sightings.error"));
+        } finally {
+          setLoading(false);
         }
       },
       (err) => {
         console.error(err);
 
         alert(t("sightings.geo_denied"));
+
+        setLoading(false);
       },
       {
         enableHighAccuracy: true,
@@ -129,8 +168,11 @@ export default function ReportButton() {
       <button
         onClick={report}
         className="btn-primary"
+        disabled={loading}
       >
-        {t("sightings.report_btn")}
+        {loading
+          ? t("common.loading") || "Loading..."
+          : t("sightings.report_btn")}
       </button>
     </>
   );
