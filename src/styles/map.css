@@ -1,13 +1,13 @@
 #map {
-  height: calc(100vh - 130px);
+  height: calc(100dvh - 78px);
 
-  min-height: 500px;
+  width: 100%;
 
-  border-radius: var(--radius);
+  border-radius: 0;
 
   overflow: hidden;
 
-  border: 1px solid var(--border);
+  border: none;
 }
 
 .map-preview {
@@ -219,6 +219,23 @@
     height: 34px;
 
     line-height: 34px;
+  }
+   html,
+  body {
+    overflow-x: hidden;
+  }
+
+  #map {
+    margin-top: 0;
+  }
+
+  .leaflet-control-zoom {
+    margin-top: 12px !important;
+    margin-left: 12px !important;
+  }
+
+  .map-search {
+    top: 92px;
   }
 }
 

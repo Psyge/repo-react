@@ -81,6 +81,8 @@ function createLayer() {
     },
 
     _reset() {
+
+      if (!this._canvas || !this._map) return;
       const size = this._map.getSize();
       const tl = this._map.containerPointToLayerPoint([0, 0]);
 
@@ -114,12 +116,19 @@ function createLayer() {
     },
 
     _draw() {
-      const ctx = this._ctx;
-      const cv = this._canvas;
+  const ctx = this._ctx;
+  const cv = this._canvas;
 
-      if (!ctx || !cv) return;
+  if (
+    !ctx ||
+    !cv ||
+    cv.width === 0 ||
+    cv.height === 0
+  ) {
+    return;
+  }
 
-      ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.clearRect(0, 0, cv.width, cv.height);
 
       if (!latestData || !Array.isArray(latestData.coordinates)) return;
 
@@ -158,6 +167,14 @@ function createLayer() {
         const pos = map.latLngToContainerPoint(ll);
 
         const sprite = pickSprite(intensity);
+
+        if (
+  !sprite ||
+  sprite.width === 0 ||
+  sprite.height === 0
+) {
+  return;
+}
 
         const baseAlpha = zoom > 8 ? 0.6 : 0.45;
 
