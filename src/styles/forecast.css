@@ -239,80 +239,61 @@
 @media (max-width: 768px) {
 
   .forecast-modern {
-    margin-top: 24px;
-
-    padding: 18px 16px 24px;
+    padding: 18px 16px 22px;
 
     border-radius: 20px;
+
+    margin-top: 28px;
   }
 
   .forecast-head {
-    flex-direction: column;
-
-    align-items: flex-start;
-
-    gap: 8px;
-
     margin-bottom: 18px;
   }
 
   .forecast-head h2 {
-    font-size: 1.35rem;
+    font-size: 1.9rem;
 
-    line-height: 1.2;
+    line-height: 1.15;
   }
 
   .forecast-chart {
-    height: 220px;
+    height: 210px;
   }
 
-  /* HOURLY */
+  /* unlock text */
 
-  .fc-wrap {
-    padding: 14px;
+  .forecast-head .forecast-lock,
+  .forecast-head p,
+  .fc-more,
+  .fc-tz {
+    font-size: 12px;
   }
 
-  .fc-head {
-    margin-bottom: 14px;
-  }
-
-  .fc-head h3 {
-    font-size: 1rem;
-  }
-
-  .fc-days {
-    gap: 14px;
-  }
+  /* chart labels */
 
   .fc-row {
-    gap: 8px;
+    grid-auto-columns: minmax(56px, 1fr);
 
-    padding-bottom: 6px;
-
-    grid-auto-columns: minmax(64px, 1fr);
+    gap: 4px;
   }
 
   .fc-slot {
-    min-width: 64px;
+    min-width: 56px;
 
-    padding: 8px 4px;
-
-    border-radius: 12px;
+    padding: 6px 4px;
   }
 
   .fc-prob {
-    font-size: 15px;
+    font-size: 14px;
   }
 
+  .fc-time,
   .fc-kp,
-  .fc-cloud,
-  .fc-time {
+  .fc-cloud {
     font-size: 10px;
   }
 
-  .fc-day-head {
-    font-size: 11px;
-  }
+  /* unlock button */
 
   .fc-unlock {
     margin-top: 14px;
@@ -320,42 +301,23 @@
     padding: 10px 14px;
 
     font-size: 13px;
-  }
-}
 
-/* ========================================
-   SMALL MOBILE
-======================================== */
-
-@media (max-width: 520px) {
-
-  .forecast-modern {
-    padding: 16px 14px 20px;
+    border-radius: 999px;
   }
 
-  .forecast-head h2 {
-    font-size: 1.2rem;
+  /* legend */
+
+  .forecast-modern .recharts-default-legend {
+    font-size: 11px !important;
+
+    line-height: 1.2 !important;
   }
 
-  .forecast-chart {
-    height: 180px;
-  }
+  /* bottom description */
 
-  .fc-row {
-    grid-auto-columns: minmax(58px, 1fr);
-  }
+  .forecast-modern p {
+    font-size: 12px;
 
-  .fc-slot {
-    min-width: 58px;
-
-    padding: 7px 4px;
-  }
-
-  .fc-prob {
-    font-size: 14px;
-  }
-
-  .fc-wrap {
-    padding: 12px;
+    line-height: 1.5;
   }
 }
