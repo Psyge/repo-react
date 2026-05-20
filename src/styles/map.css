@@ -1,5 +1,5 @@
 #map {
-  height: calc(100dvh - 78px);
+  height: calc(100dvh - 140px);
 
   width: 100%;
 
@@ -119,17 +119,30 @@
 }
 /* ========================================
    MOBILE MAP
+/* ========================================
+   MOBILE MAP
 ======================================== */
 
 @media (max-width: 768px) {
 
-  #map {
-    height: calc(100vh - 92px);
-
-    min-height: 420px;
-
-    border-radius: 18px;
+  html,
+  body {
+    overflow-x: hidden;
   }
+
+  #map {
+    height: calc(100dvh - 92px);
+
+    min-height: unset;
+
+    width: 100%;
+
+    border-radius: 0;
+
+    margin-top: 0;
+  }
+
+  /* preview */
 
   .map-preview {
     height: 220px;
@@ -153,18 +166,51 @@
     text-align: center;
   }
 
+  /* markers */
+
   .map-marker {
     width: 16px;
     height: 16px;
   }
 
   .map-marker-active {
-    transform: scale(1.25);
+    transform: scale(1.2);
   }
 
   .map-marker-sighting {
     width: 20px;
     height: 20px;
+  }
+
+  /* search */
+
+  .map-search {
+    position: absolute;
+
+    top: 78px;
+
+    left: 12px;
+    right: 12px;
+
+    width: auto;
+
+    transform: none;
+
+    z-index: 1200;
+  }
+
+  .map-search-input {
+    width: 100%;
+
+    height: 48px;
+
+    border-radius: 16px;
+
+    padding: 0 16px 0 44px;
+
+    font-size: 14px;
+
+    margin: 0;
   }
 
   /* leaflet controls */
@@ -173,16 +219,21 @@
     font-size: 14px;
   }
 
+  .leaflet-top {
+    top: 72px;
+  }
+
   .leaflet-control-zoom {
     margin-top: 12px !important;
-    margin-right: 12px !important;
+
+    margin-left: 12px !important;
   }
 
   .leaflet-touch .leaflet-bar a {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
 
-    line-height: 36px;
+    line-height: 38px;
 
     font-size: 18px;
   }
@@ -205,9 +256,7 @@
 @media (max-width: 520px) {
 
   #map {
-    height: calc(100vh - 84px);
-
-    min-height: 360px;
+    height: calc(100dvh - 84px);
   }
 
   .map-preview {
@@ -220,22 +269,15 @@
 
     line-height: 34px;
   }
-   html,
-  body {
-    overflow-x: hidden;
-  }
-
-  #map {
-    margin-top: 0;
-  }
-
-  .leaflet-control-zoom {
-    margin-top: 12px !important;
-    margin-left: 12px !important;
-  }
 
   .map-search {
-    top: 92px;
+    top: 74px;
+  }
+
+  .map-search-input {
+    height: 46px;
+
+    font-size: 13px;
   }
 }
 
@@ -245,7 +287,8 @@
 
 @media (hover: none) {
 
-  .map-marker:hover {
+  .map-marker:hover,
+  .map-preview:hover {
     transform: none;
   }
 }
