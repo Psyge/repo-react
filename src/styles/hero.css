@@ -278,45 +278,53 @@
 
   .hero-split {
     padding:
-      calc(var(--nav-h) + 36px)
-      14px
-      32px;
+      calc(var(--nav-h) + 110px)
+      0
+      40px;
   }
 
   .hero-text {
+    padding:
+      0
+      18px;
+
     margin-bottom: 20px;
   }
 
-  .hero-text h1 {
-    font-size: 2.4rem;
-    line-height: 1.15;
+ .hero-text h1 {
+    font-size: 2.5rem;
+
+    line-height: 1.08;
+
+    max-width: 340px;
+
+    margin: 0 auto;
   }
 
   .hero-text .tagline {
-    font-size: 0.95rem;
-    line-height: 1.6;
+    font-size: 0.98rem;
 
-    margin-top: 12px;
+    max-width: 340px;
 
-    max-width: 100%;
+    margin-top: 14px;
   }
 
-  .hero-grid {
-    grid-template-columns: 1fr 1fr;
+ .hero-grid {
+    gap: 14px;
 
-    gap: 12px;
-
-    align-items: stretch;
+    padding:
+      0
+      18px;
   }
 
-  .hero-grid .kp-display,
+
+   .hero-grid .kp-display,
   .map-preview {
-    min-height: 180px;
+    min-height: 200px;
   }
 
   .hero-grid .kp-display {
     padding: 18px;
-    margin-right: 0;
   }
 
   .kp-big {
