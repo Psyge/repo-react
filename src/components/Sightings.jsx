@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, } from "react";
 import { useNavigate } from "react-router-dom";
 
 import useTranslation from "../hooks/useTranslation";
@@ -44,8 +44,8 @@ export default function Sightings() {
 
   const premium = readPremium();
 
-  const loadClusters = async () => {
-    // FREE users ei näe sightings-listaa
+ const loadClusters = useCallback(
+  async () => {
     if (!premium) {
       setClusters([]);
       return;
@@ -67,7 +67,9 @@ export default function Sightings() {
     } catch (e) {
       console.error(e);
     }
-  };
+  },
+  [premium]
+);
 
   useEffect(() => {
     loadClusters();

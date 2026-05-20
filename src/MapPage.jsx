@@ -325,6 +325,7 @@ export default function MapPage() {
     initialLon,
     auroraIcon,
     searchParams,
+    isSighting,
   ]);
 
   const handleSearchSelect = (
