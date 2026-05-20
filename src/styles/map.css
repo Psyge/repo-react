@@ -117,3 +117,118 @@
       0 0 0 0 rgba(255,59,59,0);
   }
 }
+/* ========================================
+   MOBILE MAP
+======================================== */
+
+@media (max-width: 768px) {
+
+  #map {
+    height: calc(100vh - 92px);
+
+    min-height: 420px;
+
+    border-radius: 18px;
+  }
+
+  .map-preview {
+    height: 220px;
+
+    border-radius: 18px;
+  }
+
+  .map-preview:hover {
+    transform: none;
+
+    box-shadow: none;
+  }
+
+  .map-preview-cta {
+    align-items: flex-end;
+
+    justify-content: center;
+
+    padding-bottom: 18px;
+
+    text-align: center;
+  }
+
+  .map-marker {
+    width: 16px;
+    height: 16px;
+  }
+
+  .map-marker-active {
+    transform: scale(1.25);
+  }
+
+  .map-marker-sighting {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* leaflet controls */
+
+  .leaflet-control-container {
+    font-size: 14px;
+  }
+
+  .leaflet-control-zoom {
+    margin-top: 12px !important;
+    margin-right: 12px !important;
+  }
+
+  .leaflet-touch .leaflet-bar a {
+    width: 36px;
+    height: 36px;
+
+    line-height: 36px;
+
+    font-size: 18px;
+  }
+
+  /* popup */
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 18px;
+  }
+
+  .leaflet-popup-content {
+    margin: 14px;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE
+======================================== */
+
+@media (max-width: 520px) {
+
+  #map {
+    height: calc(100vh - 84px);
+
+    min-height: 360px;
+  }
+
+  .map-preview {
+    height: 200px;
+  }
+
+  .leaflet-touch .leaflet-bar a {
+    width: 34px;
+    height: 34px;
+
+    line-height: 34px;
+  }
+}
+
+/* ========================================
+   TOUCH DEVICES
+======================================== */
+
+@media (hover: none) {
+
+  .map-marker:hover {
+    transform: none;
+  }
+}

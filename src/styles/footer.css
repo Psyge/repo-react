@@ -65,3 +65,58 @@ footer a:hover {
 
   transform: translateY(-2px);
 }
+/* ========================================
+   MOBILE FOOTER
+======================================== */
+
+@media (max-width: 768px) {
+
+  footer {
+    margin-top: 56px;
+
+    padding:
+      28px
+      16px;
+
+    font-size: 12px;
+  }
+
+  footer p {
+    margin-top: 8px;
+
+    line-height: 1.6;
+  }
+
+  footer a {
+    margin: 0 6px;
+  }
+
+  .footer-socials {
+    gap: 12px;
+
+    margin-top: 18px;
+  }
+
+  .footer-socials a {
+    width: 36px;
+    height: 36px;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,0.03);
+
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+}
+
+/* ========================================
+   TOUCH DEVICES
+======================================== */
+
+@media (hover: none) {
+
+  footer a:hover,
+  .footer-socials a:hover {
+    transform: none;
+  }
+}

@@ -40,3 +40,21 @@ a {
   color: var(--accent);
   text-decoration: none;
 }
+/* ========================================
+   MOBILE GLOBAL
+======================================== */
+
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

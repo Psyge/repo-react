@@ -90,3 +90,45 @@
   box-shadow:
     0 8px 24px -8px rgba(0,255,204,.5);
 }
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 768px) {
+
+  .btn-primary,
+  .buy-btn,
+  .cta-btn {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 48px;
+
+    font-size: 15px;
+  }
+
+  .btn-primary {
+    padding: 14px 18px;
+  }
+
+  .buy-btn {
+    padding: 14px 18px;
+  }
+
+  .cta-btn {
+    padding: 16px 20px;
+  }
+}
+
+/* touch devices */
+
+@media (hover: none) {
+
+  .btn-primary:hover,
+  .buy-btn:hover {
+    transform: none;
+  }
+}

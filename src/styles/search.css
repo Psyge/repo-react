@@ -84,3 +84,66 @@
 .leaflet-container {
   z-index: 1;
 }
+@media (max-width: 768px) {
+
+  .map-search {
+    top: 84px;
+
+    width: calc(100vw - 20px);
+
+    max-width: none;
+  }
+
+  .map-search-input {
+    height: 50px;
+
+    padding:
+      0
+      16px
+      0
+      46px;
+
+    font-size: 14px;
+
+    border-radius: 18px;
+  }
+
+  .map-search-results {
+    margin-top: 10px;
+
+    border-radius: 18px;
+
+    max-height: 320px;
+
+    overflow-y: auto;
+  }
+
+  .map-search-item {
+    padding:
+      13px
+      16px;
+
+    font-size: 14px;
+  }
+
+  .map-search-item:hover {
+    padding-left: 16px;
+  }
+}
+
+/* ========================================
+   TOUCH DEVICES
+======================================== */
+
+@media (hover: none) {
+
+  .map-search-item:hover {
+    background: transparent;
+
+    padding-left: 18px;
+  }
+
+  .map-search-input:hover {
+    transform: none;
+  }
+}

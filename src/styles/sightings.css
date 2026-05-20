@@ -169,26 +169,124 @@
   backdrop-filter: blur(10px);
 }
 
-/* ===== MOBILE ===== */
+/* ========================================
+   MOBILE
+======================================== */
 
 @media (max-width: 768px) {
+
+  .sightings-section {
+    margin-top: 48px;
+  }
+
+  .sightings-section p {
+    margin-bottom: 20px;
+
+    font-size: 0.95rem;
+
+    line-height: 1.5;
+  }
+
+  .sightings-list {
+    gap: 12px;
+  }
+
   .sighting-row {
     grid-template-columns: 1fr;
 
-    gap: 18px;
+    gap: 14px;
+
+    padding: 14px;
+
+    border-radius: 16px;
+  }
+
+  .sighting-main {
+    gap: 4px;
+  }
+
+  .sighting-place {
+    font-size: 0.95rem;
+  }
+
+  .sighting-time {
+    font-size: 0.82rem;
   }
 
   .sighting-meta {
     width: 100%;
 
     justify-content: space-between;
+
+    gap: 10px;
   }
 
   .sighting-item {
     flex: 1;
+
+    min-width: 0;
   }
 
-  .sightings-section {
-    margin-top: 56px;
+  .sighting-item .label {
+    font-size: 8px;
+
+    margin-bottom: 4px;
+
+    letter-spacing: 0.1em;
+  }
+
+  .sighting-item .value {
+    font-size: 0.85rem;
+  }
+
+  .sightings-empty {
+    padding: 18px 14px;
+
+    border-radius: 16px;
+
+    font-size: 0.9rem;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE
+======================================== */
+
+@media (max-width: 520px) {
+
+  .sighting-row {
+    padding: 12px;
+
+    gap: 12px;
+  }
+
+  .sighting-place {
+    font-size: 0.9rem;
+  }
+
+  .sighting-time {
+    font-size: 0.78rem;
+  }
+
+  .sighting-meta {
+    gap: 6px;
+  }
+
+  .sighting-item .label {
+    font-size: 7px;
+  }
+
+  .sighting-item .value {
+    font-size: 0.8rem;
+  }
+}
+
+/* ========================================
+   TOUCH DEVICES
+======================================== */
+
+@media (hover: none) {
+  .sighting-row:hover {
+    transform: none;
   }
 }

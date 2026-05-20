@@ -227,34 +227,91 @@
 }
 
 /* =========================
-   TABLET
-========================= */
-
-@media (max-width: 980px) {
-  .blog-grid,
-  .home-articles {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* =========================
    MOBILE
 ========================= */
 
 @media (max-width: 768px) {
+
   .blog-grid,
   .home-articles {
     grid-template-columns: 1fr;
 
-    gap: 18px;
+    gap: 16px;
+
+    margin-top: 18px;
   }
 
   .blog-card {
-    padding: 20px;
+    padding: 18px;
+
+    border-radius: 18px;
+  }
+
+  .blog-card h2 {
+    font-size: 1.15rem;
+
+    line-height: 1.35;
+  }
+
+  .blog-card p {
+    font-size: 0.92rem;
+
+    line-height: 1.65;
+  }
+
+  .blog-card-tag {
+    font-size: 9px;
+
+    padding: 5px 9px;
+  }
+
+  .blog-card-read {
+    font-size: 0.88rem;
+  }
+
+  .article {
+    max-width: 100%;
   }
 
   .article h1 {
+    font-size: 2rem;
+
     line-height: 1.15;
+
+    margin:
+      18px
+      0
+      14px;
+  }
+
+  .article h2 {
+    font-size: 1.35rem;
+
+    margin:
+      32px
+      0
+      12px;
+  }
+
+  .article p,
+  .article li {
+    font-size: 0.96rem;
+
+    line-height: 1.75;
+  }
+
+  .article-cta {
+    padding: 20px;
+
+    border-radius: 18px;
+  }
+}
+
+/* touch devices */
+
+@media (hover: none) {
+
+  .blog-card:hover {
+    transform: none;
   }
 }

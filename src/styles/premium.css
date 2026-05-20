@@ -220,11 +220,121 @@
 }
 
 @media (max-width: 768px) {
+
+  .premium-page {
+    padding-top: 36px;
+    padding-bottom: 56px;
+  }
+
+  .premium-hero {
+    margin-bottom: 40px;
+  }
+
   .premium-hero h1 {
-    font-size: 42px;
+    font-size: 34px;
+
+    line-height: 1.1;
+  }
+
+  .premium-sub {
+    margin-top: 14px;
+
+    font-size: 15px;
+
+    line-height: 1.65;
+
+    padding: 0 4px;
+  }
+
+  .premium-active,
+  .premium-error {
+    font-size: 14px;
   }
 
   .pricing-grid {
     grid-template-columns: 1fr;
+
+    gap: 18px;
+  }
+
+  .pricing-card {
+    padding:
+      24px
+      18px;
+
+    border-radius: 20px;
+  }
+
+  .pricing-card h3 {
+    font-size: 21px;
+
+    margin-bottom: 10px;
+  }
+
+  .price {
+    font-size: 30px;
+
+    margin-bottom: 8px;
+  }
+
+  .price span {
+    font-size: 42px;
+  }
+
+  .meta {
+    margin-bottom: 20px;
+
+    font-size: 13px;
+  }
+
+  .pricing-card ul {
+    gap: 10px;
+
+    margin-bottom: 22px;
+  }
+
+  .pricing-card li {
+    font-size: 14px;
+
+    line-height: 1.5;
+  }
+
+  .buy-btn {
+    min-height: 50px;
+
+    border-radius: 14px;
+
+    font-size: 15px;
+  }
+
+  .badge {
+    top: 14px;
+    right: 14px;
+
+    font-size: 10px;
+
+    padding:
+      5px
+      9px;
+  }
+
+  .premium-footer {
+    margin-top: 44px;
+
+    font-size: 13px;
+
+    line-height: 1.7;
+  }
+}
+
+/* ========================================
+   TOUCH DEVICES
+======================================== */
+
+@media (hover: none) {
+
+  .pricing-card:hover,
+  .buy-btn:hover {
+    transform: none;
   }
 }

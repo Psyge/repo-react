@@ -361,3 +361,101 @@
 .leaflet-popup-content {
   padding: 15px;
 }
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 768px) {
+
+  .leaflet-popup {
+    margin-bottom: 12px;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 18px !important;
+  }
+
+  .aurora-popup {
+    min-width: 0;
+    max-width: 240px;
+
+    padding:
+      16px
+      16px
+      14px;
+  }
+
+  .ap-name {
+    font-size: 10px;
+
+    margin-bottom: 14px;
+  }
+
+  .ap-prob {
+    font-size: 44px;
+
+    margin-bottom: 6px;
+  }
+
+  .ap-level {
+    font-size: 11px;
+
+    margin-bottom: 14px;
+  }
+
+  .ap-quick {
+    gap: 8px;
+
+    padding:
+      12px
+      10px;
+  }
+
+  .ap-quick strong {
+    font-size: 14px;
+  }
+
+  .ap-toggle {
+    margin-top: 14px;
+
+    padding:
+      11px
+      14px;
+
+    font-size: 12px;
+  }
+
+  .ap-details {
+    margin-top: 14px;
+
+    gap: 8px;
+  }
+
+  .ap-details > div {
+    font-size: 12px;
+  }
+
+  .ap-desc {
+    font-size: 12px;
+
+    margin-top: 12px;
+  }
+
+  .leaflet-popup-close-button {
+    top: 8px !important;
+    right: 8px !important;
+
+    font-size: 16px !important;
+  }
+}
+
+/* ========================================
+   TOUCH DEVICES
+======================================== */
+
+@media (hover: none) {
+
+  .ap-toggle:hover {
+    transform: none;
+  }
+}

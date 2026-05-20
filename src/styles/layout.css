@@ -33,3 +33,62 @@ section.block {
 
   font-size: 14px;
 }
+/* ========================================
+   MOBILE LAYOUT
+======================================== */
+
+@media (max-width: 768px) {
+
+  .container {
+    padding: 0 16px;
+  }
+
+  section.block {
+    padding:
+      40px
+      16px;
+  }
+
+  .section-head {
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+  }
+
+  .section-head h2 {
+    line-height: 1.2;
+  }
+
+  .section-head p {
+    font-size: 0.92rem;
+
+    line-height: 1.5;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE
+======================================== */
+
+@media (max-width: 520px) {
+
+  section.block {
+    padding:
+      32px
+      14px;
+  }
+
+  .container {
+    padding: 0 14px;
+  }
+
+  .section-head {
+    margin-bottom: 18px;
+  }
+
+  .section-head p {
+    font-size: 0.88rem;
+  }
+}

@@ -130,3 +130,107 @@ nav a:hover {
 
   border-color: var(--accent);
 }
+/* ========================================
+   MOBILE HEADER
+======================================== */
+
+@media (max-width: 768px) {
+
+  header {
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .header-inner {
+    padding: 12px 14px;
+
+    flex-wrap: wrap;
+
+    gap: 12px;
+  }
+
+  /* TOP ROW */
+
+  .brand {
+    font-size: 1.45rem;
+
+    flex: 1;
+  }
+
+  /* NAVIGATION */
+
+  nav {
+    width: 100%;
+
+    justify-content: center;
+
+    gap: 14px;
+
+    order: 3;
+
+    padding-top: 2px;
+  }
+
+  nav a {
+    font-size: 0.9rem;
+  }
+
+  /* RIGHT SIDE */
+
+  .header-socials {
+    gap: 8px;
+  }
+
+  .header-socials a {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* LANGUAGE */
+
+  .lang-switcher {
+    gap: 6px;
+  }
+
+  .lang-switcher button {
+    padding: 4px 10px;
+
+    font-size: 11px;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE
+======================================== */
+
+@media (max-width: 520px) {
+
+  .header-inner {
+    padding: 10px 12px;
+  }
+
+  .brand {
+    font-size: 1.3rem;
+  }
+
+  nav {
+    gap: 10px;
+
+    justify-content: space-between;
+  }
+
+  nav a {
+    font-size: 0.82rem;
+  }
+
+  .header-socials a {
+    width: 30px;
+    height: 30px;
+  }
+
+  .lang-switcher button {
+    padding: 3px 8px;
+
+    font-size: 10px;
+  }
+}

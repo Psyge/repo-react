@@ -65,3 +65,51 @@
 
   color: var(--fg-muted);
 }
+/* ========================================
+   FAQ MOBILE
+======================================== */
+
+@media (max-width: 768px) {
+  .faq-list {
+    gap: 12px;
+
+    margin-top: 18px;
+  }
+
+  .faq-item {
+    border-radius: 18px;
+  }
+
+  .faq-item summary {
+    padding: 16px 18px;
+
+    font-size: 0.95rem;
+
+    line-height: 1.4;
+  }
+
+  .faq-item summary::after {
+    font-size: 20px;
+  }
+
+  .faq-body {
+    padding:
+      0
+      18px
+      18px;
+
+    font-size: 0.94rem;
+
+    line-height: 1.7;
+  }
+}
+
+/* ========================================
+   TOUCH DEVICES
+======================================== */
+
+@media (hover: none) {
+  .faq-item:hover {
+    box-shadow: none;
+  }
+}
