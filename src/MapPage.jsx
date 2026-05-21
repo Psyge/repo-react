@@ -127,7 +127,7 @@ export default function MapPage() {
         autoClose: true,
         closeOnClick: true,  // korjattu: ei enää estä kartan klikkausta
       })
-        .setLatLng([64.8, 26])
+        .setLatLng([66.5, 25.7])
         .setContent(`
           <div class="map-hint-popup">
             <strong>Explore aurora forecast</strong>
