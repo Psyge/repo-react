@@ -167,9 +167,7 @@ export default function Forecast({ data, tier: tierProp = "free", genAt, current
               pointerEvents: "none",
               background:
                 "linear-gradient(90deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0.65) 35%, rgba(15,23,42,0.85) 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+             
             }}
           >
           </div>
