@@ -186,56 +186,44 @@ nav a:hover {
 @media (max-width: 768px) {
 
   header {
-    height: 72px;
+    min-height: 96px;
 
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
 
   .header-inner {
-    height: 72px;
-
-    padding: 0 14px;
-
     display: flex;
+
+    flex-wrap: wrap;
 
     align-items: center;
 
     justify-content: space-between;
 
-    gap: 10px;
+    padding: 10px 14px;
 
-    overflow: hidden;
+    gap: 10px;
   }
+
+  /* TOP ROW */
 
   .brand {
     font-size: 1.2rem;
 
-    flex-shrink: 0;
-  }
+    white-space: nowrap;
 
-  nav {
     flex: 1;
-
-    justify-content: center;
-
-    gap: 10px;
-
-    min-width: 0;
-  }
-
-  nav a {
-    font-size: 0.8rem;
-  }
-
-  .header-actions {
-    flex-shrink: 0;
-
-    gap: 6px;
   }
 
   .header-socials {
-    gap: 6px;
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    flex-shrink: 0;
   }
 
   .header-socials a {
@@ -244,7 +232,9 @@ nav a:hover {
   }
 
   .lang-switcher {
-    gap: 4px;
+    display: flex;
+
+    gap: 6px;
   }
 
   .lang-switcher button {
@@ -252,40 +242,28 @@ nav a:hover {
 
     font-size: 10px;
   }
-}
 
-/* ========================================
-   SMALL MOBILE
-======================================== */
-
-@media (max-width: 520px) {
-
-  header {
-    height: 68px;
-  }
-
-  .header-inner {
-    height: 68px;
-
-    padding: 0 10px;
-  }
+  /* SECOND ROW NAV */
 
   nav {
-    gap: 8px;
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 14px;
+
+    flex-wrap: nowrap;
+
+    padding-top: 2px;
   }
 
   nav a {
-    font-size: 0.74rem;
-  }
+    font-size: 0.82rem;
 
-  .header-socials a {
-    width: 28px;
-    height: 28px;
-  }
-
-  .lang-switcher button {
-    padding: 2px 6px;
-
-    font-size: 9px;
+    white-space: nowrap;
   }
 }
