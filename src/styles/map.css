@@ -208,7 +208,19 @@
 
     margin: 0;
   }
+  /* leaflet controls */
 
+.leaflet-top {
+  top: 82px;
+}
+
+.leaflet-left {
+  left: 12px;
+}
+
+.leaflet-control-zoom {
+  margin: 0 !important;
+}
 
   .leaflet-touch .leaflet-bar a {
     width: 38px;
