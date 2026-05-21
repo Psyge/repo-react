@@ -201,7 +201,13 @@ export default function HomePage() {
                         : "--"}
                     </span>
                   </div>
-
+                   <div className="kp-level">
+  {aurora?.level === "veryhigh" && <span style={{ color: "#00ffcc" }}>🟢 {t("level.veryhigh") || "Excellent chance"}</span>}
+  {aurora?.level === "high"     && <span style={{ color: "#a8ff78" }}>🟡 {t("level.high")     || "Good chance"}</span>}
+  {aurora?.level === "medium"   && <span style={{ color: "#ffd166" }}>🟠 {t("level.medium")   || "Possible"}</span>}
+  {aurora?.level === "low"      && <span style={{ color: "#9aa3b2" }}>⚫ {t("level.low")      || "Unlikely tonight"}</span>}
+  {aurora?.level == null        && <span style={{ color: "#9aa3b2" }}>--</span>}
+</div>       
                   <div className="kp-meta">
                     <span>
                       {t("kp.label")}:

@@ -1,4 +1,8 @@
 {
+  "level.veryhigh": "Excellent chance",
+"level.high":     "Good chance",
+"level.medium":   "Possible",
+"level.low":      "Unlikely tonight",
   "forecast.popup_full": "Unlock full forecast",
   "forecast.free_hint": "Free view shows tonight's Kp-based estimate. Premium adds OVATION + cloud cover for 3 days.",
   "forecast.unlock_full": "Unlock 3-day forecast",
