@@ -206,7 +206,7 @@ export default function MapPage() {
   L.popup({
     closeButton: true,
 
-    autoClose: false,
+    autoClose: true,
 
     closeOnClick: false,
 
