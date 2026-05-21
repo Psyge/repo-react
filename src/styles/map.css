@@ -209,33 +209,6 @@
     margin: 0;
   }
 
-  /* leaflet controls */
-
- .leaflet-control-container,
-.leaflet-top,
-.leaflet-bottom {
-  position: relative;
-
-  z-index: 1200 !important;
-
-  transform: translateZ(0);
-
-  will-change: transform;
-}
-
-.leaflet-control-zoom {
-  position: relative;
-
-  z-index: 1200 !important;
-
-  margin-top: 90px !important;
-
-  margin-left: 12px !important;
-
-  transform: translateZ(0);
-
-  will-change: transform;
-}
 
   .leaflet-touch .leaflet-bar a {
     width: 38px;

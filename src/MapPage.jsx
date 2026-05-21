@@ -195,6 +195,31 @@ export default function MapPage() {
       9
     );
 
+    if (window.innerWidth <= 768) {
+  L.popup({
+    closeButton: true,
+
+    autoClose: false,
+
+    closeOnClick: false,
+
+    className: "mobile-map-hint",
+
+    offset: L.point(0, -12),
+  })
+    .setLatLng([64.8, 26])
+    .setContent(`
+      <div class="map-hint-popup">
+        <strong>Explore aurora forecast</strong>
+
+        <p>
+          Tap any location on the map to view live aurora probability and weather conditions.
+        </p>
+      </div>
+    `)
+    .openOn(map);
+}
+
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     ).addTo(map);
@@ -386,10 +411,6 @@ export default function MapPage() {
             handleSearchSelect
           }
         />
-      </div>
-
-      <div className="map-hint">
-        {t("map.click_hint")}
       </div>
 
       <div

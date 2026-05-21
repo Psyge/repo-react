@@ -459,3 +459,60 @@
     transform: none;
   }
 }
+/* ========================================
+   MOBILE MAP HINT POPUP
+======================================== */
+
+.mobile-map-hint .leaflet-popup-content-wrapper {
+  border-radius: 18px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(7,12,28,0.96),
+      rgba(5,8,20,0.98)
+    ) !important;
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.35);
+}
+
+.mobile-map-hint .leaflet-popup-content {
+  margin: 0 !important;
+
+  padding: 0 !important;
+}
+
+.map-hint-popup {
+  padding: 18px 16px;
+
+  text-align: center;
+
+  max-width: 240px;
+}
+
+.map-hint-popup strong {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: var(--fg);
+
+  font-size: 14px;
+
+  font-weight: 700;
+}
+
+.map-hint-popup p {
+  margin: 0;
+
+  color: var(--fg-muted);
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
