@@ -139,14 +139,13 @@ nav a:hover {
 
   border-color: var(--accent);
 }
-/* ========================================
-   MOBILE HEADER
-======================================== */
 
+   MOBILE HEADER
 @media (max-width: 768px) {
 
   header {
     height: 64px;
+
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
@@ -154,84 +153,55 @@ nav a:hover {
   .header-inner {
     height: 64px;
 
-    padding: 10px 14px;
+    padding: 0 14px;
+
+    display: flex;
 
     align-items: center;
-    justify-content: space-between;
-  }
 
-  /* TOP ROW */
+    justify-content: space-between;
+
+    gap: 12px;
+
+    box-sizing: border-box;
+  }
 
   .brand {
-    font-size: 1.45rem;
+    font-size: 1.2rem;
 
-    flex: 1;
+    flex: 0 0 auto;
+
+    white-space: nowrap;
   }
 
-  /* NAVIGATION */
-
   nav {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    flex-wrap: nowrap;
+
     width: auto;
-
-  justify-content: center;
-
-  gap: 12px;
-
-  padding-top: 0;
-
-  flex-wrap: nowrap;
-  }
-
-  nav a {
-    font-size: 0.9rem;
-  }
-
-  /* RIGHT SIDE */
-
-  .header-socials {
-    gap: 8px;
-  }
-
-  .header-socials a {
-    width: 32px;
-    height: 32px;
-  }
-
-  /* LANGUAGE */
-
-  .lang-switcher {
-    gap: 6px;
-  }
-
-  .lang-switcher button {
-    padding: 4px 10px;
-
-    font-size: 11px;
-  }
-}
-
-/* ========================================
-   SMALL MOBILE
-======================================== */
-
-@media (max-width: 520px) {
-
-  .header-inner {
-    padding: 10px 12px;
-  }
-
-  .brand {
-    font-size: 1.3rem;
-  }
-
-  nav {
-    gap: 10px;
-
-    justify-content: space-between;
   }
 
   nav a {
     font-size: 0.82rem;
+
+    white-space: nowrap;
+  }
+
+  .header-socials {
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    flex: 0 0 auto;
   }
 
   .header-socials a {
@@ -239,9 +209,8 @@ nav a:hover {
     height: 30px;
   }
 
-  .lang-switcher button {
-    padding: 3px 8px;
-
-    font-size: 10px;
+  .lang-switcher {
+    display: none;
   }
+
 }
