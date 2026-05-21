@@ -127,7 +127,7 @@
   }
 
   #map {
-    height: calc(100dvh - 92px);
+    height: calc(var(--vh, 1vh) * 100 - 92px);
 
     min-height: unset;
 
@@ -249,7 +249,7 @@
 @media (max-width: 520px) {
 
   #map {
-    height: calc(100dvh - 84px);
+    height: calc(var(--vh, 1vh) * 100 - 84px);
   }
 
   .map-preview {

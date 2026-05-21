@@ -138,7 +138,7 @@ export default function MapPage() {
 
       popup.setContent(container);
 
-      popup.openOn(map);
+      popup.addTo(map);
 
       const root =
         createRoot(container);
@@ -183,7 +183,22 @@ export default function MapPage() {
     },
     []
   );
+useEffect(() => {
+  const setVH = () => {
+    document.documentElement.style.setProperty(
+      "--vh",
+      `${window.innerHeight * 0.01}px`
+    );
+  };
 
+  setVH();
+
+  window.addEventListener("resize", setVH);
+
+  return () => {
+    window.removeEventListener("resize", setVH);
+  };
+}, []);
   useEffect(() => {
     if (mapInstance.current)
       return;
