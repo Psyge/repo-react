@@ -1,5 +1,5 @@
 header {
- position: fixed;
+  position: fixed;
 
   top: 0;
   left: 0;
@@ -15,27 +15,35 @@ header {
   -webkit-backdrop-filter: blur(12px);
 
   border-bottom: 1px solid var(--border-soft);
-
-   
 }
 
+/* ========================================
+   DESKTOP
+======================================== */
+
 .header-inner {
-  position: relative;
   max-width: 1100px;
+
   margin: 0 auto;
 
-  padding: 16px;
+  padding: 16px 20px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
 
-  gap: 16px;
+  gap: 18px;
+
+  box-sizing: border-box;
 }
 
 .brand {
   font-family: var(--font-display);
+
   font-weight: 700;
+
   font-size: 20px;
 
   letter-spacing: -0.02em;
@@ -46,11 +54,15 @@ header {
   background-clip: text;
 
   color: transparent;
+
+  white-space: nowrap;
 }
 
 nav {
   display: flex;
+
   align-items: center;
+
   gap: 16px;
 
   flex-wrap: nowrap;
@@ -60,7 +72,10 @@ nav a {
   color: var(--fg-muted);
 
   font-size: 14px;
+
   font-weight: 500;
+
+  white-space: nowrap;
 
   transition: color .15s ease;
 }
@@ -69,8 +84,25 @@ nav a:hover {
   color: var(--fg);
 }
 
+/* ========================================
+   RIGHT SIDE
+======================================== */
+
+.header-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-left: auto;
+}
+
 .lang-switcher {
   display: flex;
+
+  align-items: center;
+
   gap: 4px;
 }
 
@@ -88,6 +120,7 @@ nav a:hover {
   cursor: pointer;
 
   font-size: 12px;
+
   font-weight: 600;
 
   transition: all .15s ease;
@@ -102,17 +135,23 @@ nav a:hover {
   border-color: var(--accent);
 }
 
-/* social buttons */
+/* ========================================
+   SOCIALS
+======================================== */
 
 .header-socials {
   display: flex;
+
   align-items: center;
-  gap: 10px;
+
+  gap: 8px;
 }
 
 .header-socials a {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   width: 36px;
@@ -140,18 +179,21 @@ nav a:hover {
   border-color: var(--accent);
 }
 
-   MOBILE HEADER
+/* ========================================
+   MOBILE
+======================================== */
+
 @media (max-width: 768px) {
 
   header {
-    height: 64px;
+    height: 72px;
 
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
 
   .header-inner {
-    height: 64px;
+    height: 72px;
 
     padding: 0 14px;
 
@@ -161,47 +203,39 @@ nav a:hover {
 
     justify-content: space-between;
 
-    gap: 12px;
+    gap: 10px;
 
-    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .brand {
     font-size: 1.2rem;
 
-    flex: 0 0 auto;
-
-    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   nav {
-    display: flex;
-
-    align-items: center;
+    flex: 1;
 
     justify-content: center;
 
-    gap: 12px;
+    gap: 10px;
 
-    flex-wrap: nowrap;
-
-    width: auto;
+    min-width: 0;
   }
 
   nav a {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
+  }
 
-    white-space: nowrap;
+  .header-actions {
+    flex-shrink: 0;
+
+    gap: 6px;
   }
 
   .header-socials {
-    display: flex;
-
-    align-items: center;
-
     gap: 6px;
-
-    flex: 0 0 auto;
   }
 
   .header-socials a {
@@ -210,7 +244,48 @@ nav a:hover {
   }
 
   .lang-switcher {
-    display: none;
+    gap: 4px;
   }
 
+  .lang-switcher button {
+    padding: 3px 8px;
+
+    font-size: 10px;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE
+======================================== */
+
+@media (max-width: 520px) {
+
+  header {
+    height: 68px;
+  }
+
+  .header-inner {
+    height: 68px;
+
+    padding: 0 10px;
+  }
+
+  nav {
+    gap: 8px;
+  }
+
+  nav a {
+    font-size: 0.74rem;
+  }
+
+  .header-socials a {
+    width: 28px;
+    height: 28px;
+  }
+
+  .lang-switcher button {
+    padding: 2px 6px;
+
+    font-size: 9px;
+  }
 }

@@ -9,59 +9,79 @@ export default function Header() {
   const { premium } = usePremium();
 
   return (
-    <header className="header">
-      <div className="header-inner">
-        <Link to="/" className="brand">
-          RepoTracker
-        </Link>
+   <header className="header">
+  <div className="header-inner">
 
-        <nav className="main-nav">
-          <Link to="/">{t("nav.home")}</Link>
-          <Link to="/map">{t("nav.map")}</Link>
-          <Link to="/blog">{t("nav.blog")}</Link>
-          <Link to="/faq">{t("nav.faq")}</Link>
+    <Link to="/" className="brand">
+      RepoTracker
+    </Link>
 
-          <Link
-  to="/premium"
-  className={
-    premium.active
-      ? "premium-link active"
-      : "premium-link"
-  }
->
-  {premium.active
-    ? "✨ Premium Active"
-    : "Premium"}
-</Link>
-        </nav>
+    <nav className="main-nav">
+      <Link to="/">
+        {t("nav.home")}
+      </Link>
 
-        <div className="header-socials">
-          <div className="social-links">
-            <a
-              href="https://instagram.com/repotracker_"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Instagram"
-            >
-              <FaInstagram />
-            </a>
+      <Link to="/map">
+        {t("nav.map")}
+      </Link>
 
-            <a
-              href="https://tiktok.com/@repotracker"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="TikTok"
-            >
-              <FaTiktok />
-            </a>
-          </div>
+      <Link to="/blog">
+        {t("nav.blog")}
+      </Link>
 
-          <div className="lang-switcher">
-            <button onClick={() => setLang("en")}>EN</button>
-            <button onClick={() => setLang("fi")}>FI</button>
-          </div>
-        </div>
+      <Link to="/faq">
+        {t("nav.faq")}
+      </Link>
+
+      <Link
+        to="/premium"
+        className={
+          premium.active
+            ? "premium-link active"
+            : "premium-link"
+        }
+      >
+        {premium.active
+          ? "✨ Premium"
+          : "Premium"}
+      </Link>
+    </nav>
+
+    <div className="header-actions">
+
+      <div className="header-socials">
+        <a
+          href="https://instagram.com/repotracker_"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Instagram"
+        >
+          <FaInstagram />
+        </a>
+
+        <a
+          href="https://tiktok.com/@repotracker"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="TikTok"
+        >
+          <FaTiktok />
+        </a>
       </div>
-    </header>
+
+      <div className="lang-switcher">
+        <button onClick={() => setLang("en")}>
+          EN
+        </button>
+
+        <button onClick={() => setLang("fi")}>
+          FI
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</header>
   );
 }
