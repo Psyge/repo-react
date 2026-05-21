@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, } from "react";
+import { useCallback, } from "react";
 import { useNavigate } from "react-router-dom";
 
 import useTranslation from "../hooks/useTranslation";
@@ -66,7 +66,7 @@ export default function Sightings() {
       console.error(e);
     }
   },
-  [premium]
+  []
 );
 
   useEffect(() => {
