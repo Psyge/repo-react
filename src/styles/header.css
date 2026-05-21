@@ -193,37 +193,37 @@ nav a:hover {
   }
 
   .header-inner {
-    display: flex;
+    display: grid;
 
-    flex-wrap: wrap;
+    grid-template-columns: 1fr auto;
+
+    grid-template-areas:
+      "brand socials"
+      "nav nav";
 
     align-items: center;
 
-    justify-content: space-between;
+    gap: 10px;
 
     padding: 10px 14px;
-
-    gap: 10px;
   }
 
   /* TOP ROW */
 
-  .brand {
+ .brand {
+    grid-area: brand;
+
     font-size: 1.2rem;
-
-    white-space: nowrap;
-
-    flex: 1;
   }
 
-  .header-socials {
+   .header-socials {
+    grid-area: socials;
+
     display: flex;
 
     align-items: center;
 
     gap: 8px;
-
-    flex-shrink: 0;
   }
 
   .header-socials a {
@@ -245,20 +245,16 @@ nav a:hover {
 
   /* SECOND ROW NAV */
 
-  nav {
-    width: 100%;
+ nav {
+    grid-area: nav;
 
     display: flex;
-
-    align-items: center;
 
     justify-content: center;
 
     gap: 14px;
 
-    flex-wrap: nowrap;
-
-    padding-top: 2px;
+    width: 100%;
   }
 
   nav a {
