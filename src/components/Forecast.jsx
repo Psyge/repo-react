@@ -172,21 +172,6 @@ export default function Forecast({ data, tier: tierProp = "free", genAt, current
               justifyContent: "center",
             }}
           >
-            <Link
-              to="/premium"
-              style={{
-                pointerEvents: "auto",
-                background: "linear-gradient(135deg,#2EF2D0,#60a5fa)",
-                color: "#0f172a",
-                padding: "10px 18px",
-                borderRadius: 999,
-                fontWeight: 700,
-                textDecoration: "none",
-                boxShadow: "0 8px 24px rgba(46,242,208,0.25)",
-              }}
-            >
-              🔒 {t("forecast.unlock_full") || "Unlock 3-day forecast"}
-            </Link>
           </div>
         )}
       </div>
