@@ -1,7 +1,13 @@
 header {
-  position: sticky;
+ position: fixed;
+
   top: 0;
-  z-index: 9999;
+  left: 0;
+  right: 0;
+
+  width: 100%;
+
+  z-index: 3000;
 
   background: rgba(7, 7, 13, 0.75);
 
@@ -10,14 +16,11 @@ header {
 
   border-bottom: 1px solid var(--border-soft);
 
-   transform: translateZ(0);
-
-  will-change: transform;
-
-  backface-visibility: hidden;
+   
 }
 
 .header-inner {
+  position: relative;
   max-width: 1100px;
   margin: 0 auto;
 
@@ -50,7 +53,7 @@ nav {
   align-items: center;
   gap: 16px;
 
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 nav a {
@@ -143,16 +146,18 @@ nav a:hover {
 @media (max-width: 768px) {
 
   header {
+    height: 64px;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
 
   .header-inner {
-    padding: 12px 14px;
+    height: 64px;
 
-    flex-wrap: wrap;
+    padding: 10px 14px;
 
-    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
   }
 
   /* TOP ROW */
@@ -166,15 +171,15 @@ nav a:hover {
   /* NAVIGATION */
 
   nav {
-    width: 100%;
+    width: auto;
 
-    justify-content: center;
+  justify-content: center;
 
-    gap: 14px;
+  gap: 12px;
 
-    order: 3;
+  padding-top: 0;
 
-    padding-top: 2px;
+  flex-wrap: nowrap;
   }
 
   nav a {

@@ -94,18 +94,16 @@
 @media (max-width: 768px) {
 
      .map-search {
-  position: absolute;
+  position: fixed;
 
-  top: 118px;
+  top: 78px;
 
-  left: 54px;
-  
+  left: 12px;
+  right: 12px;
 
   width: auto;
 
-  transform: none;
-
-  z-index: 1200;
+  z-index: 2000;
 }
 
 

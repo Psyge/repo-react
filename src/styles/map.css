@@ -1,13 +1,14 @@
 #map {
-  height: calc(100dvh - 140px);
+  position: fixed;
+
+  top: 72px;
+  left: 0;
+  right: 0;
+  bottom: 0;
 
   width: 100%;
 
-  border-radius: 0;
-
-  overflow: hidden;
-
-  border: none;
+  z-index: 1;
 }
 
 .map-preview {
@@ -127,15 +128,7 @@
   }
 
   #map {
-    height: calc(var(--vh, 1vh) * 100 - 92px);
-
-    min-height: unset;
-
-    width: 100%;
-
-    border-radius: 0;
-
-    margin-top: 0;
+   top: 64px;
   }
 
   /* preview */
@@ -248,9 +241,7 @@
 
 @media (max-width: 520px) {
 
-  #map {
-    height: calc(var(--vh, 1vh) * 100 - 84px);
-  }
+ 
 
   .map-preview {
     height: 200px;

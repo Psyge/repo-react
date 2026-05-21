@@ -56,8 +56,6 @@ export default function MapPage() {
 
   const markerRef = useRef(null);
 
-  
-
   const [searchParams] =
     useSearchParams();
 
@@ -70,8 +68,54 @@ export default function MapPage() {
     parseFloat(
       searchParams.get("lon")
     ) || 26;
+
   const isSighting =
-  searchParams.get("sighting");
+    searchParams.get("sighting");
+
+  /*
+   ========================================
+   FIX MOBILE VIEWPORT
+   ========================================
+  */
+
+  useEffect(() => {
+    const setVH = () => {
+      document.documentElement.style.setProperty(
+        "--vh",
+        `${window.innerHeight * 0.01}px`
+      );
+    };
+
+    setVH();
+
+    window.addEventListener(
+      "resize",
+      setVH
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        setVH
+      );
+    };
+  }, []);
+
+  /*
+   ========================================
+   DISABLE BODY SCROLL
+   ========================================
+  */
+
+  useEffect(() => {
+    document.body.style.overflow =
+      "hidden";
+
+    return () => {
+      document.body.style.overflow =
+        "";
+    };
+  }, []);
 
   const auroraIcon = L.divIcon({
     className: "",
@@ -117,14 +161,18 @@ export default function MapPage() {
       return res.json();
     };
 
+  /*
+   ========================================
+   POPUP
+   ========================================
+  */
+
   const openPopup = useCallback(
     async (map, lat, lng) => {
       if (!map) return;
 
       const popup = L.popup({
         maxWidth: 320,
-
-        offset: L.point(-120, 0),
 
         autoPanPadding:
           L.point(24, 24),
@@ -183,70 +231,74 @@ export default function MapPage() {
     },
     []
   );
-useEffect(() => {
-  const setVH = () => {
-    document.documentElement.style.setProperty(
-      "--vh",
-      `${window.innerHeight * 0.01}px`
-    );
-  };
 
-  setVH();
+  /*
+   ========================================
+   MAP INIT
+   ========================================
+  */
 
-  window.addEventListener("resize", setVH);
-
-  return () => {
-    window.removeEventListener("resize", setVH);
-  };
-}, []);
   useEffect(() => {
     if (mapInstance.current)
       return;
 
-   const map = L.map(
-  mapRef.current,
-  {
-    zoomAnimation: false,
+    const map = L.map(
+      mapRef.current,
+      {
+        zoomAnimation: false,
 
-    fadeAnimation: false,
+        fadeAnimation: false,
 
-    markerZoomAnimation: false,
-  }
-).setView(
-  [initialLat, initialLon],
-  9
-);
+        markerZoomAnimation: false,
+      }
+    ).setView(
+      [initialLat, initialLon],
+      9
+    );
 
-    if (window.innerWidth <= 768) {
-  L.popup({
-    closeButton: true,
+    /*
+     MOBILE HINT
+    */
 
-    autoClose: true,
+    if (
+      window.innerWidth <= 768
+    ) {
+      L.popup({
+        closeButton: true,
 
-    closeOnClick: false,
+        autoClose: true,
 
-    className: "mobile-map-hint",
+        closeOnClick: false,
 
-    offset: L.point(0, -12),
-  })
-    .setLatLng([64.8, 26])
-    .setContent(`
-      <div class="map-hint-popup">
-        <strong>Explore aurora forecast</strong>
+        className:
+          "mobile-map-hint",
+      })
+        .setLatLng([64.8, 26])
+        .setContent(`
+          <div class="map-hint-popup">
+            <strong>
+              Explore aurora forecast
+            </strong>
 
-        <p>
-          Tap any location on the map to view live aurora probability and weather conditions.
-        </p>
-      </div>
-    `)
-    .openOn(map);
-}
+            <p>
+              Tap anywhere on the map to view live aurora probability and conditions.
+            </p>
+          </div>
+        `)
+        .addTo(map);
+    }
+
+    /*
+     TILE
+    */
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     ).addTo(map);
 
-    // ===== Aurora overlay
+    /*
+     OVERLAY
+    */
 
     const overlay =
       createAuroraOverlay();
@@ -273,7 +325,9 @@ useEffect(() => {
         60000
       );
 
-    // ===== Sightings layer
+    /*
+     SIGHTINGS
+    */
 
     const premium =
       readPremium();
@@ -281,7 +335,8 @@ useEffect(() => {
     const sightingsLayer =
       L.layerGroup().addTo(map);
 
-    let sightingsInterval = null;
+    let sightingsInterval =
+      null;
 
     if (premium) {
       loadSightingsLayer(
@@ -296,7 +351,9 @@ useEffect(() => {
         }, 60000);
     }
 
-    // ===== Click popup
+    /*
+     CLICK
+    */
 
     map.on("click", (e) => {
       openPopup(
@@ -308,65 +365,70 @@ useEffect(() => {
 
     mapInstance.current = map;
 
-    // ===== Initial marker
+    /*
+     INITIAL MARKER
+    */
 
     if (
-  searchParams.get("lat") &&
-  searchParams.get("lon")
-) {
-  map.flyTo(
-    [initialLat, initialLon],
-    isSighting ? 11 : 7,
-    {
-      duration: 1.5,
-    }
-  );
-
-  openPopup(
-    map,
-    initialLat,
-    initialLon
-  );
-
-  const marker = L.marker(
-    [initialLat, initialLon],
-    {
-      icon: auroraIcon,
-    }
-  ).addTo(map);
-
-  markerRef.current = marker;
-
-  setTimeout(() => {
-    const el =
-      marker.getElement();
-
-    if (
-      el &&
-      el.firstChild
+      searchParams.get("lat") &&
+      searchParams.get("lon")
     ) {
-      el.firstChild.classList.add(
-        isSighting
-          ? "map-marker-sighting"
-          : "map-marker-active"
+      map.flyTo(
+        [initialLat, initialLon],
+        isSighting ? 11 : 7,
+        {
+          duration: 1.5,
+        }
       );
+
+      openPopup(
+        map,
+        initialLat,
+        initialLon
+      );
+
+      const marker = L.marker(
+        [initialLat, initialLon],
+        {
+          icon: auroraIcon,
+        }
+      ).addTo(map);
+
+      markerRef.current = marker;
+
+      setTimeout(() => {
+        const el =
+          marker.getElement();
+
+        if (
+          el &&
+          el.firstChild
+        ) {
+          el.firstChild.classList.add(
+            isSighting
+              ? "map-marker-sighting"
+              : "map-marker-active"
+          );
+        }
+      }, 0);
     }
-  }, 0);
-}
 
-   return () => {
-  clearInterval(
-    auroraInterval
-  );
+    return () => {
+      clearInterval(
+        auroraInterval
+      );
 
-  if (sightingsInterval) {
-    clearInterval(
-      sightingsInterval
-    );
-  }
-};
+      if (
+        sightingsInterval
+      ) {
+        clearInterval(
+          sightingsInterval
+        );
+      }
 
-}, [
+      map.remove();
+    };
+  }, [
     openPopup,
     initialLat,
     initialLon,
@@ -374,6 +436,10 @@ useEffect(() => {
     searchParams,
     isSighting,
   ]);
+
+  /*
+   SEARCH
+  */
 
   const handleSearchSelect = (
     place
@@ -436,11 +502,8 @@ useEffect(() => {
       </div>
 
       <div
+        id="map"
         ref={mapRef}
-        style={{
-          height: "100vh",
-          width: "100%",
-        }}
       />
     </div>
   );
