@@ -188,12 +188,19 @@ export default function MapPage() {
     if (mapInstance.current)
       return;
 
-    const map = L.map(
-      mapRef.current
-    ).setView(
-      [initialLat, initialLon],
-      9
-    );
+   const map = L.map(
+  mapRef.current,
+  {
+    zoomAnimation: false,
+
+    fadeAnimation: false,
+
+    markerZoomAnimation: false,
+  }
+).setView(
+  [initialLat, initialLon],
+  9
+);
 
     if (window.innerWidth <= 768) {
   L.popup({
