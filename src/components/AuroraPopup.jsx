@@ -95,7 +95,7 @@ if (!isPremium) {
           locked
         />
 
-        
+        <a
           href="/premium"
           style={{
             display: "block",
