@@ -93,30 +93,29 @@
 
 @media (max-width: 768px) {
 
-     .map-search {
-  position: fixed;
+  .map-search {
+    position: fixed;
 
-  top: 78px;
+    top: 78px;
 
-  left: 12px;
-  right: 12px;
+    left: 58px;
+    right: 12px;
 
-  width: auto;
+    width: auto;
 
-  z-index: 2000;
-}
-
+    z-index: 2000;
+  }
 
   .map-search-input {
     width: 100%;
 
-    height: 50px;
+    height: 42px;
 
-    border-radius: 18px;
+    border-radius: 14px;
 
     font-size: 14px;
 
-    padding: 0 16px 0 46px;
+    padding: 0 16px 0 42px;
 
     background: rgba(8,12,28,0.92);
 
@@ -139,13 +138,4 @@
     font-size: 14px;
   }
 
-  /* map height mobile */
-
-  #map {
-    height: calc(100vh - 92px);
-
-    min-height: unset;
-
-    border-radius: 0;
-  }
 }
