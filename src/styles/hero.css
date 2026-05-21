@@ -3,11 +3,12 @@
 ======================================== */
 
 .hero-split {
-  position: relative;
+ position: relative;
+
   overflow: hidden;
 
   padding:
-    calc(var(--space-lg) + var(--nav-h) + 20px)
+    140px
     var(--space-md)
     var(--space-lg);
 
@@ -277,8 +278,8 @@
   /* HERO LAYOUT */
 
    .hero-split {
-    padding:
-      calc(var(--nav-h) + 34px)
+   padding:
+      110px
       0
       8px;
   }
