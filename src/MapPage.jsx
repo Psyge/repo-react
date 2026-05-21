@@ -7,7 +7,7 @@ import AuroraPopup from "./components/AuroraPopup";
 import Header from "./components/Header";
 import SearchBox from "./components/SearchBox";
 
-import useTranslation from "./hooks/useTranslation";
+
 
 import { useSearchParams } from "react-router-dom";
 
@@ -56,7 +56,7 @@ export default function MapPage() {
 
   const markerRef = useRef(null);
 
-  const { t } = useTranslation();
+  
 
   const [searchParams] =
     useSearchParams();
