@@ -1,4 +1,7 @@
 {
+  "popup.premiumIncludes": "Premium unlocks:",
+  "sightings.reportsActive": "aurora report(s) active right now",
+"sightings.unlockDetails": "Unlock Premium to see locations",
   "level.veryhigh": "Excellent chance",
 "level.high":     "Good chance",
 "level.medium":   "Possible",

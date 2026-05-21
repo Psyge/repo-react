@@ -12,40 +12,12 @@ import {
   Legend,
 } from "recharts";
 
-/**
- * Premium-tieto luetaan localStoragesta (sama avain kuin v2-puolella).
- * Jos puuttuu / vanhentunut → free.
- */
-function readPremium() {
-  try {
-    const p = JSON.parse(localStorage.getItem("aurora_premium") || "null");
-    if (!p || !p.deviceKey || !p.expiresAt) return null;
-    if (p.expiresAt < Date.now()) return null;
-    return p;
-  } catch {
-    return null;
-  }
-}
-
-/** Yksinkertainen ilmaisversion score: Kp + yöbonus */
-function freeAuroraScore(kp, hour) {
-  let score = (kp / 9) * 100;
-  if (hour >= 22 || hour <= 1) score += 10;
-  if (hour >= 3 && hour <= 5) score -= 10;
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
 
 const HOURS = ["18:00", "21:00", "00:00", "03:00"];
 
-export default function Forecast({ data }) {
+export default function Forecast({ data, tier: tierProp = "free", genAt, current }) {
   const { t } = useTranslation();
-  const [tier, setTier] = useState("free");
-
-  // Päivitä premium-tila kun komponentti mountataan / kun data muuttuu
-  useEffect(() => {
-    const p = readPremium();
-    setTier(p ? "premium" : "free");
-  }, [data]);
+  const tier = tierProp;
 
   if (!data || data.length === 0) {
     return (
@@ -72,9 +44,9 @@ export default function Forecast({ data }) {
     // Premium käyttää workerin todellista probabilityä (sis. OVATION+pilvet),
     // free fallbackaa yksinkertaiseen Kp-skooriin.
     const prob =
-      tier === "premium" && slot.probability != null
-        ? slot.probability
-        : freeAuroraScore(slot.kp ?? 0, d.getUTCHours());
+  tier === "premium" && slot.probability != null
+    ? slot.probability
+    : Math.round(((slot.kp ?? 0) / 9) * 100);
 
     grouped[dayKey][hour] = {
       prob,
@@ -101,16 +73,22 @@ export default function Forecast({ data }) {
       <div className="forecast-head" >
         <h2>{t("forecast.title")}</h2>
         {isPremium ? (
-          <span className="fc-badge" style={{ color: "#2EF2D0", fontWeight: 600 }}>
-            ★ Premium
-          </span>
-        ) : (
-          <Link to="/premium" className="fc-badge" style={{ color: "#f59e0b", fontWeight: 600, textDecoration: "none" }}>
-            🔒 {t("forecast.unlock") || "Unlock 3 days"}
-          </Link>
-        )}
+  <span className="fc-badge fc-badge--premium">
+    ★ Premium
+  </span>
+) : (
+  <Link to="/premium" className="fc-badge">
+    🔒 {t("forecast.unlock")}
+  </Link>
+)}
       </div>
-
+  {isPremium && current && (
+  <div className="fc-current">
+    <span>↑ {t("wind.speed")}: <strong>{current.speed != null ? `${Math.round(current.speed)} km/s` : "–"}</strong></span>
+    <span>Bz: <strong>{current.bz != null ? current.bz.toFixed(1) : "–"}</strong></span>
+    <span>{t("wind.density")}: <strong>{current.density != null ? current.density.toFixed(1) : "–"}</strong></span>
+  </div>
+)}
       <div className="forecast-chart" style={{ position: "relative" }}>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>
@@ -146,7 +124,7 @@ export default function Forecast({ data }) {
               stroke="#2EF2D0"
               strokeWidth={3}
               connectNulls
-              name={t("forecast.tonight") || "Tonight"}
+              name={t("forecast.tonight")}
               dot={{ r: 4 }}
             />
 
@@ -159,7 +137,7 @@ export default function Forecast({ data }) {
               strokeDasharray={isPremium ? "0" : "6 6"}
               strokeOpacity={isPremium ? 1 : 0.35}
               connectNulls
-              name={t("forecast.tomorrow") || "Tomorrow"}
+              name={t("forecast.tomorrow")}
               dot={isPremium}
             />
             <Line
@@ -170,7 +148,7 @@ export default function Forecast({ data }) {
               strokeDasharray={isPremium ? "0" : "6 6"}
               strokeOpacity={isPremium ? 1 : 0.35}
               connectNulls
-              name={t("forecast.dayafter") || "Day after"}
+              name={t("forecast.dayafter")}
               dot={isPremium}
             />
           </LineChart>

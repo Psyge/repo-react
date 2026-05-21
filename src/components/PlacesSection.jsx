@@ -5,6 +5,13 @@ import useTranslation from "../hooks/useTranslation";
 
 const BASE = "https://report.masto84.workers.dev";
 
+function kpClass(kp) {
+  if (kp == null) return "";
+  if (kp >= 5) return "kp-high";
+  if (kp >= 3) return "kp-mid";
+  return "kp-low";
+}
+
 export default function PlacesSection({ kp }) {
   const [placeData, setPlaceData] = useState({});
   const [randomPlaces, setRandomPlaces] = useState([]);
@@ -97,9 +104,9 @@ useEffect(() => {
               <div className="data-group">
                 <div className="data-item">
                   <span className="label">KP</span>
-                  <span className="value kp-val kp-mid">
-                    {data?.kp ?? "--"}
-                  </span>
+                  <span className={`value kp-val ${kpClass(data?.kp)}`}>
+  {data != null ? (data.kp ?? 0) : "--"}
+</span>
                 </div>
 
                 <div className="data-item">

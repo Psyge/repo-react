@@ -18,9 +18,7 @@
   backdrop-filter: blur(14px);
 }
 
-.forecast-head {
-  margin-bottom: 24px;
-}
+
 
 .forecast-head h2 {
   font-size: 28px;
@@ -232,6 +230,53 @@
 
   margin-bottom: 32px;
 }
+.fc-current {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  background: rgba(46, 242, 208, 0.06);
+  border: 1px solid rgba(46, 242, 208, 0.15);
+  border-radius: 12px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.fc-current strong {
+  color: #e6e9ef;
+  margin-left: 4px;
+}
+.fc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.fc-badge:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+.fc-badge--premium {
+  background: rgba(46, 242, 208, 0.1);
+  border: 1px solid rgba(46, 242, 208, 0.25);
+  color: #2EF2D0;
+}
+
+.fc-badge--premium:hover {
+  background: rgba(46, 242, 208, 0.18);
+  border-color: rgba(46, 242, 208, 0.4);
+}
 /* ========================================
    MOBILE FORECAST
 /* ========================================
@@ -239,6 +284,12 @@
 ======================================== */
 
 @media (max-width: 768px) {
+
+  .fc-current {
+    gap: 12px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
 
   .forecast-modern {
     margin-top: 18px;

@@ -42,53 +42,80 @@ export default function AuroraPopup({ lat, lng, data, error }) {
   const levelLabel = t(`probability.${level}`, level);
 
   // ---- FREE: vain Kp + level + locked teaser
-  if (!isPremium) {
-    return (
-      <div style={{ minWidth: 240, color: "#fff" }}>
-        <Loc lat={lat} lng={lng} />
+ // ---- FREE: vain Kp + level + locked teaser
+if (!isPremium) {
+  return (
+    <div style={{ minWidth: 240, color: "#fff" }}>
+      <Loc lat={lat} lng={lng} />
 
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
-          <div style={{ fontSize: 12, opacity: 0.7 }}>{t("kp.label", "Kp")}</div>
-          <div style={{ fontSize: 28, fontWeight: 700 }}>{fmt(data.kp)}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
+        <div style={{ fontSize: 12, opacity: 0.7 }}>{t("kp.label", "Kp")}</div>
+        <div style={{ fontSize: 28, fontWeight: 700 }}>{fmt(data.kp)}</div>
+      </div>
+
+      <div style={{ fontSize: 13, color, marginTop: 2 }}>{levelLabel}</div>
+
+      {/* Pilvisyys näytetään ilmaiseksi — konkreettinen arvo houkuttelee */}
+      <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
+        {t("row.clouds", "Clouds")}: <strong>{data.clouds != null ? `${data.clouds}%` : "–"}</strong>
+      </div>
+
+      <div
+        style={{
+          marginTop: 10,
+          padding: 10,
+          background: "rgba(255,255,255,0.05)",
+          border: "1px dashed rgba(255,255,255,0.15)",
+          borderRadius: 8,
+        }}
+      >
+        {/* Näytetään mitä premium sisältää — ei pelkkä lukko */}
+        <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 6 }}>
+          {t("popup.premiumIncludes", "Premium unlocks:")}
         </div>
 
-        <div style={{ fontSize: 13, color, marginTop: 2 }}>{levelLabel}</div>
+        <Row
+          label={t("probability.label", "Aurora probability")}
+          value={<span style={{ color: "#00ffcc" }}>— %</span>}
+          locked
+        />
+        <Row
+          label={t("wind.speed", "Solar wind")}
+          value="—"
+          locked
+        />
+        <Row
+          label={t("bz.label", "Bz")}
+          value="—"
+          locked
+        />
+        <Row
+          label={t("wind.density", "Density")}
+          value="—"
+          locked
+        />
 
-        <div
+        
+          href="/premium"
           style={{
+            display: "block",
             marginTop: 10,
-            padding: 10,
-            background: "rgba(255,255,255,0.05)",
-            border: "1px dashed rgba(255,255,255,0.15)",
-            borderRadius: 8,
+            padding: "8px 10px",
+            textAlign: "center",
+            background: "linear-gradient(135deg,#ff3b7f,#ffe600)",
+            color: "#000",
+            fontWeight: 700,
+            borderRadius: 6,
+            textDecoration: "none",
+            fontSize: 12,
           }}
         >
-          <div style={{ fontSize: 22, fontWeight: 700, opacity: 0.85 }}>🔒 — %</div>
-          <Row label={t("row.clouds", "Clouds")} value={data.clouds != null ? `${data.clouds}%` : "–"} />
-          <Row label={t("wind.speed", "Solar wind")} value="🔒" />
-          <Row label={t("bz.label", "Bz")} value="🔒" />
-
-          <a
-            href="/premium"
-            style={{
-              display: "block",
-              marginTop: 10,
-              padding: "8px 10px",
-              textAlign: "center",
-              background: "linear-gradient(135deg,#ff3b7f,#ffe600)",
-              color: "#000",
-              fontWeight: 700,
-              borderRadius: 6,
-              textDecoration: "none",
-              fontSize: 12,
-            }}
-          >
-            🔒 {t("forecast.popup_full", "Unlock full forecast — from 2,99 €")}
-          </a>
-        </div>
+          🔒 {t("forecast.popup_full", "Unlock full forecast — from 2,99 €")}
+        </a>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // ---- PREMIUM
 return (
@@ -175,11 +202,13 @@ function Loc({ lat, lng }) {
     </div>
   );
 }
-function Row({ label, value }) {
+function Row({ label, value, locked = false }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
       <span style={{ opacity: 0.7 }}>{label}</span>
-      <strong>{value}</strong>
+      <strong style={{ opacity: locked ? 0.5 : 1 }}>
+        {locked ? "🔒" : value}
+      </strong>
     </div>
   );
 }

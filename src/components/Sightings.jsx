@@ -47,10 +47,7 @@ export default function Sightings() {
  const loadClusters = useCallback(
   async () => {
     // FREE users ei näe sightings-listaa
-    if (!premium) {
-      setClusters([]);
-      return;
-    }
+   
 
     try {
       const res = await fetch(
@@ -93,13 +90,16 @@ export default function Sightings() {
 
   // FREE upsell
   if (!premium) {
-    return (
-      <div className="sightings-empty">
-        🔒 Premium required to view
-        live aurora sightings
-      </div>
-    );
-  }
+  const totalReports = clusters.reduce((sum, c) => sum + c.count, 0);
+  return (
+    <div className="sightings-empty">
+      {totalReports > 0
+        ? `🌌 ${totalReports} ${t("sightings.reportsActive") || "aurora report(s) active right now"} — 🔒 ${t("sightings.unlockDetails") || "Unlock Premium to see locations"}`
+        : `🔒 ${t("sightings.premiumRequired") || "Premium required to view live aurora sightings"}`
+      }
+    </div>
+  );
+}
 
   return (
     <div className="sightings-list">

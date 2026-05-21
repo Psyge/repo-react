@@ -1,4 +1,7 @@
 {
+  "popup.premiumIncludes": "Premium avaa:",
+  "sightings.reportsActive": "aktiivista revontuliraporttia juuri nyt",
+"sightings.unlockDetails": "Avaa Premium nähdäksesi sijainnit",
   "level.veryhigh": "Erinomainen mahdollisuus",
 "level.high":     "Hyvä mahdollisuus",
 "level.medium":   "Mahdollinen",
