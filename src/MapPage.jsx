@@ -121,7 +121,7 @@ export default function MapPage() {
     }).setView([initialLat, initialLon], 9);
 
     // Mobile hint
-    if (window.innerWidth <= 768) {
+    
       L.popup({
         closeButton: true,
         autoClose: true,
@@ -135,7 +135,7 @@ export default function MapPage() {
           </div>
         `)
         .addTo(map);
-    }
+    
 
     // Tile
     L.tileLayer(
@@ -195,12 +195,7 @@ export default function MapPage() {
         }
       }, 0);
 
-    } else {
-      // Desktop: avaa popup oletussijainnissa kun ei URL-parametreja
-      if (window.innerWidth > 768) {
-        openPopup(map, initialLat, initialLon);
-      }
-    }
+    } 
 
     return () => {
       clearInterval(auroraInterval);
