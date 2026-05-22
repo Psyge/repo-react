@@ -1,104 +1,212 @@
 .midnight-scene {
+  position: relative;
+
   min-height: 100vh;
 
-  padding: 120px 20px 40px;
+  overflow: hidden;
+
+  background: #050816;
+
+  color: white;
+}
+
+/* =========================
+   TOGGLE
+========================= */
+
+.view-toggle {
+  position: absolute;
+
+  top: 20px;
+  left: 20px;
+
+  z-index: 50;
+
+  display: flex;
+
+  gap: 10px;
+}
+
+.view-toggle button {
+  border: none;
+
+  padding: 10px 16px;
+
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.08);
+
+  color: white;
+
+  cursor: pointer;
+}
+
+.view-toggle button.active {
+  background: #00ffcc;
+
+  color: black;
+}
+
+/* =========================
+   HUD
+========================= */
+
+.hud {
+  position: absolute;
+
+  top: 20px;
+  right: 20px;
+
+  z-index: 50;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+/* =========================
+   SCENE
+========================= */
+
+.scene-wrap {
+  position: relative;
+
+  width: 100%;
+  height: 100vh;
+}
+
+.map-view,
+.horizon-view {
+  position: absolute;
+
+  inset: 0;
+
+  opacity: 0;
 
   transition:
-    background 1s ease;
-
-  overflow: hidden;
+    opacity .8s ease,
+    transform .8s ease;
 }
 
-.midnight-scene.day {
+/* visible state */
+
+.visible {
+  opacity: 1;
+
+  z-index: 2;
+}
+
+/* =========================
+   MAP
+========================= */
+
+.fake-map {
+  width: 100%;
+  height: 100%;
+
   background:
     linear-gradient(
       180deg,
-      #73c7ff,
-      #d8efff
+      #0c1327,
+      #071018
     );
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.midnight-scene.night {
-  background:
-    linear-gradient(
-      180deg,
-      #050814,
-      #0d1324
-    );
+.map-label {
+  font-size: 4rem;
+
+  opacity: 0.2;
 }
+
+/* =========================
+   HORIZON
+========================= */
 
 .sky {
   position: relative;
 
-  height: 420px;
+  width: 100%;
+  height: 100%;
 
   overflow: hidden;
+}
 
-  border-radius: 32px;
+.horizon {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 30%;
 
   background:
-    rgba(255,255,255,0.03);
-
-  border:
-    1px solid rgba(
-      255,
-      255,
-      255,
-      0.08
+    linear-gradient(
+      180deg,
+      #16271d,
+      #09110b
     );
 }
 
-/* ohut aurinkokaari */
+/* =========================
+   SUN ARC
+========================= */
 
-.sky::before {
-  content: "";
-
+.sun-arc {
   position: absolute;
 
   left: 5%;
   right: 5%;
-  top: 50%;
+  bottom: 20%;
 
   height: 1px;
 
   border-top:
-    1px dashed
-    rgba(255,255,255,.2);
+    1px solid
+    rgba(255,255,255,0.15);
 
-  border-radius: 999px;
+  border-radius: 50%;
 }
 
-/* aurinko */
+/* =========================
+   SUN
+========================= */
 
 .sun {
   position: absolute;
 
-  width: 64px;
-  height: 64px;
+  width: 70px;
+  height: 70px;
 
   border-radius: 50%;
 
   background:
     radial-gradient(
       circle,
-      #fff7b0,
-      #ffd43b
+      #ffe27a,
+      #ffae00
     );
 
   box-shadow:
-    0 0 60px
-    rgba(255,212,59,.5);
+    0 0 80px rgba(255,200,0,0.7);
 
   transform:
     translate(-50%, -50%);
 
   transition:
-    top .5s ease,
-    left .5s ease,
-    opacity .5s ease;
+    left .25s linear,
+    top .25s linear,
+    opacity .4s ease;
 }
 
-/* aurora */
+/* =========================
+   AURORA
+========================= */
 
 .aurora {
   position: absolute;
@@ -107,57 +215,51 @@
 
   background:
     radial-gradient(
-      ellipse at center,
-      rgba(0,255,180,.15),
-      transparent 70%
+      circle at 50% 20%,
+      rgba(0,255,180,0.25),
+      transparent 60%
     );
 
+  filter: blur(40px);
+
   animation:
-    auroraMove
-    8s infinite
-    alternate;
+    auroraFlow 6s ease-in-out infinite alternate;
 }
 
-@keyframes auroraMove {
+@keyframes auroraFlow {
   from {
     transform:
-      translateX(-20px);
+      translateX(-40px);
   }
 
   to {
     transform:
-      translateX(20px);
+      translateX(40px);
   }
 }
 
-.hud {
-  display: flex;
-
-  gap: 18px;
-
-  margin-bottom: 20px;
-
-  flex-wrap: wrap;
-}
-
-.hud div {
-  background:
-    rgba(255,255,255,.08);
-
-  padding:
-    12px 18px;
-
-  border-radius: 18px;
-}
+/* =========================
+   SLIDERS
+========================= */
 
 .sliders {
-  margin-top: 24px;
+  position: absolute;
 
-  display: grid;
+  left: 50%;
+  bottom: 24px;
 
-  gap: 16px;
+  transform: translateX(-50%);
+
+  width: min(600px, 90vw);
+
+  z-index: 50;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
 }
 
-input[type="range"] {
+.sliders input {
   width: 100%;
 }

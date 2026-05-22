@@ -10,7 +10,11 @@ const MONTHS = [
 
 export default function MidnightSun() {
   const [month, setMonth] = useState(0);
+
   const [hour, setHour] = useState(12);
+
+  const [mode, setMode] =
+    useState("map");
 
   const scene = useMemo(() => {
     const season =
@@ -22,36 +26,47 @@ export default function MidnightSun() {
     const arcHeight =
       40 + season * 220;
 
-    // kuinka paljon rata on näkyvissä
-    const seasonOffset =
-      -120 + season * 180;
+    // päivän pituus vuodenajan mukaan
+    const daylightHours =
+      2 + season * 22;
 
-    // kellon aika → 0..1
-    const progress =
-      hour / 24;
+    const sunrise =
+      12 - daylightHours / 2;
 
-    const angle =
-      progress * Math.PI * 2;
-
-    const x =
-      progress * 100;
-
-    const y =
-      50 -
-      Math.sin(angle) *
-        arcHeight /
-        10 -
-      seasonOffset / 10;
+    const sunset =
+      12 + daylightHours / 2;
 
     const isDay =
-      y < 52;
+      hour >= sunrise &&
+      hour <= sunset;
+
+    // päivän eteneminen
+    const dayProgress =
+      (hour - sunrise) /
+      (sunset - sunrise);
+
+    const clamped =
+      Math.max(
+        0,
+        Math.min(1, dayProgress)
+      );
+
+    const x =
+      clamped * 100;
+
+    // aurinkokaari
+    const y =
+      78 -
+      Math.sin(clamped * Math.PI) *
+        (arcHeight / 4);
 
     return {
       x,
       y,
       season,
       isDay,
-      arcHeight
+      sunrise,
+      sunset,
     };
   }, [month, hour]);
 
@@ -63,6 +78,38 @@ export default function MidnightSun() {
           : "night"
       }`}
     >
+      {/* TOP CONTROLS */}
+
+      <div className="view-toggle">
+        <button
+          className={
+            mode === "map"
+              ? "active"
+              : ""
+          }
+          onClick={() =>
+            setMode("map")
+          }
+        >
+          Aurora Map
+        </button>
+
+        <button
+          className={
+            mode === "horizon"
+              ? "active"
+              : ""
+          }
+          onClick={() =>
+            setMode("horizon")
+          }
+        >
+          Midnight Sun
+        </button>
+      </div>
+
+      {/* HUD */}
+
       <div className="hud">
         <div>
           Month:
@@ -85,23 +132,59 @@ export default function MidnightSun() {
         </div>
       </div>
 
-      <div className="sky">
-        {!scene.isDay && (
-          <div className="aurora" />
-        )}
+      {/* SCENE */}
+
+      <div className="scene-wrap">
+        {/* MAP VIEW */}
 
         <div
-          className="sun"
-          style={{
-            left: `${scene.x}%`,
-            top: `${scene.y}%`,
-            opacity:
-              scene.y > 58
-                ? 0
-                : 1,
-          }}
-        />
+          className={`map-view ${
+            mode === "map"
+              ? "visible"
+              : ""
+          }`}
+        >
+          <div className="fake-map">
+            <div className="map-label">
+              Aurora Map
+            </div>
+          </div>
+        </div>
+
+        {/* HORIZON VIEW */}
+
+        <div
+          className={`horizon-view ${
+            mode === "horizon"
+              ? "visible"
+              : ""
+          }`}
+        >
+          <div className="sky">
+            {!scene.isDay && (
+              <div className="aurora" />
+            )}
+
+            <div className="sun-arc" />
+
+            <div
+              className="sun"
+              style={{
+                left: `${scene.x}%`,
+                top: `${scene.y}%`,
+                opacity:
+                  scene.isDay
+                    ? 1
+                    : 0,
+              }}
+            />
+
+            <div className="horizon" />
+          </div>
+        </div>
       </div>
+
+      {/* SLIDERS */}
 
       <div className="sliders">
         <div>
