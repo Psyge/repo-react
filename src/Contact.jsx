@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import useTranslation from "./hooks/useTranslation";
+import Header from "./components/Header";
 
 const BASE = "https://report.masto84.workers.dev";
 
