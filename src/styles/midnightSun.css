@@ -1,0 +1,163 @@
+.midnight-scene {
+  min-height: 100vh;
+
+  padding: 120px 20px 40px;
+
+  transition:
+    background 1s ease;
+
+  overflow: hidden;
+}
+
+.midnight-scene.day {
+  background:
+    linear-gradient(
+      180deg,
+      #73c7ff,
+      #d8efff
+    );
+}
+
+.midnight-scene.night {
+  background:
+    linear-gradient(
+      180deg,
+      #050814,
+      #0d1324
+    );
+}
+
+.sky {
+  position: relative;
+
+  height: 420px;
+
+  overflow: hidden;
+
+  border-radius: 32px;
+
+  background:
+    rgba(255,255,255,0.03);
+
+  border:
+    1px solid rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+}
+
+/* ohut aurinkokaari */
+
+.sky::before {
+  content: "";
+
+  position: absolute;
+
+  left: 5%;
+  right: 5%;
+  top: 50%;
+
+  height: 1px;
+
+  border-top:
+    1px dashed
+    rgba(255,255,255,.2);
+
+  border-radius: 999px;
+}
+
+/* aurinko */
+
+.sun {
+  position: absolute;
+
+  width: 64px;
+  height: 64px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      #fff7b0,
+      #ffd43b
+    );
+
+  box-shadow:
+    0 0 60px
+    rgba(255,212,59,.5);
+
+  transform:
+    translate(-50%, -50%);
+
+  transition:
+    top .5s ease,
+    left .5s ease,
+    opacity .5s ease;
+}
+
+/* aurora */
+
+.aurora {
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(0,255,180,.15),
+      transparent 70%
+    );
+
+  animation:
+    auroraMove
+    8s infinite
+    alternate;
+}
+
+@keyframes auroraMove {
+  from {
+    transform:
+      translateX(-20px);
+  }
+
+  to {
+    transform:
+      translateX(20px);
+  }
+}
+
+.hud {
+  display: flex;
+
+  gap: 18px;
+
+  margin-bottom: 20px;
+
+  flex-wrap: wrap;
+}
+
+.hud div {
+  background:
+    rgba(255,255,255,.08);
+
+  padding:
+    12px 18px;
+
+  border-radius: 18px;
+}
+
+.sliders {
+  margin-top: 24px;
+
+  display: grid;
+
+  gap: 16px;
+}
+
+input[type="range"] {
+  width: 100%;
+}

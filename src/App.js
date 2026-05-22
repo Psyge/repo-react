@@ -9,6 +9,7 @@ import TermsPage from './TermsPage';
 import PremiumPage from './PremiumPage';
 import PremiumSuccessPage from './PremiumSuccessPage';
 import Contact from "./Contact"; 
+import MidnightSun from "./components/MidnightSun";
 
 function App() {
   return (
@@ -24,6 +25,10 @@ function App() {
         <Route path="/premium" element={<PremiumPage />} />
 <Route path="/premium-success" element={<PremiumSuccessPage />} />
 <Route path="/contact" element={<Contact />} />
+<Route
+  path="/midnightsun"
+  element={<MidnightSun />}
+/>
       </Routes>
     </BrowserRouter>
   );
