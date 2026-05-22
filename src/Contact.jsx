@@ -27,7 +27,7 @@ export default function Contact() {
       if (!turnstileRef.current || !window.turnstile) return;
       if (widgetId.current) return;
       widgetId.current = window.turnstile.render(turnstileRef.current, {
-        sitekey: "YOUR_TURNSTILE_SITE_KEY", // sama avain kuin muualla
+        sitekey: "0x4AAAAAADF29-_iSqwRQWf2", // sama avain kuin muualla
         callback: (token) => setTurnstileToken(token),
         "expired-callback": () => setTurnstileToken(""),
       });
