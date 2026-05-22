@@ -65,6 +65,8 @@ export default function Contact() {
   };
 
   return (
+    <div>
+          <Header />
     <div className="contact-wrap">
       <h2>{t("contact.title") || "Contact us"}</h2>
       <p>{t("contact.sub") || "Have a question or feedback? We'll get back to you."}</p>
@@ -133,6 +135,7 @@ export default function Contact() {
           </button>
         </form>
       )}
+    </div>
     </div>
   );
 }
