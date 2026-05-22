@@ -1,12 +1,15 @@
 /* ============================================================
  * CONTACT PAGE
  * ============================================================ */
+.contact-page {
+  padding-top: 110px;
 
+  min-height: 100vh;
+}
 .contact-wrap {
   max-width: 600px;
 
-  margin:
-    140px auto 60px;
+  
 
   padding: 40px;
 
@@ -134,9 +137,13 @@
  * ============================================================ */
 
 @media (max-width: 768px) {
+
+     .contact-page {
+    padding-top: 95px;
+  }
+
     .contact-wrap {
-    margin:
-      110px 16px 60px;
+    
 
     padding: 24px 20px;
 

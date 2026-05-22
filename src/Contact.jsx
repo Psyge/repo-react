@@ -78,7 +78,7 @@ export default function Contact() {
   };
 
   return (
-    <div>
+    <div className="contact-page">
           <Header />
     <div className="contact-wrap">
       <h2>{t("contact.title") || "Contact us"}</h2>
