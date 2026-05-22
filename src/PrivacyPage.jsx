@@ -1,5 +1,6 @@
 import useTranslation from "./hooks/useTranslation";
 import { useEffect } from 'react';
+import Header from "./components/Header";
 
 const SECTIONS = [
   { q: 'privacy.q.about', body: ['privacy.a.about1', 'privacy.a.about2'] },
@@ -22,6 +23,8 @@ export default function PrivacyPage() {
   }, [t]);
 
   return (
+    <div>
+      <Header />
     <main className="container" style={{ padding: '32px 16px', maxWidth: 860, margin: '0 auto' }}>
       <section className="hero" style={{ padding: '24px 0 16px' }}>
         <h1>{t('privacy.title')}</h1>
@@ -51,5 +54,6 @@ export default function PrivacyPage() {
         ))}
       </section>
     </main>
+    </div>
   );
 }

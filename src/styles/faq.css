@@ -1,3 +1,8 @@
+.faq-page {
+  padding-top: 110px;
+
+  min-height: 100vh;
+}
 .faq-list {
   display: flex;
   flex-direction: column;
