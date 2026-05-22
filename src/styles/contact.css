@@ -4,7 +4,7 @@
 
 .contact-wrap {
   max-width: 600px;
-  margin: 80px auto;
+  margin: calc(var(--header-height, 70px) + 32px) auto 60px;
   padding: 40px;
   background:
     radial-gradient(
