@@ -9,7 +9,8 @@
 .contact-wrap {
   max-width: 600px;
 
-  
+  margin:
+    0px auto 60px;
 
   padding: 40px;
 
@@ -143,7 +144,8 @@
   }
 
     .contact-wrap {
-    
+    margin:
+      0px 16px 60px;
 
     padding: 24px 20px;
 
