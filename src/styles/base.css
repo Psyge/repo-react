@@ -3,9 +3,7 @@
   margin: 0;
   padding: 0;
 }
-main {
-  padding-top: 64px;
-}
+
 html,
 body 
 #root {
@@ -49,9 +47,7 @@ a {
 ======================================== */
 
 @media (max-width: 768px) {
-  main {
-    padding-top: 96px;
-  }
+  
   html {
     font-size: 15px;
   }
