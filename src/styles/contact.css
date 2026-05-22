@@ -5,7 +5,7 @@
 .contact-wrap {
    max-width: 600px;
   margin: 0 auto 60px;
-  margin-top: 96px; /* headerin korkeus + pieni rako */
+  
   padding: 40px;
   background:
     radial-gradient(
@@ -129,7 +129,7 @@
 
 @media (max-width: 768px) {
   .contact-wrap {
-    margin: 114px 16px;
+    margin: 0 16px 60px; /* ← ei margin-top tarvita */
     padding: 24px 20px;
     border-radius: 20px;
   }
