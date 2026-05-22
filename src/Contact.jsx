@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import useTranslation from "./hooks/useTranslation";
+
+const BASE = "https://report.masto84.workers.dev";
 
 export default function Contact() {
   const { t } = useTranslation();
