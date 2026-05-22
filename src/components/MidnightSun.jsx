@@ -1,3 +1,4 @@
+```jsx
 import { useMemo, useState } from "react";
 import "../styles/midnightSun.css";
 
@@ -10,23 +11,17 @@ const MONTHS = [
 
 export default function MidnightSun() {
   const [month, setMonth] = useState(0);
-
   const [hour, setHour] = useState(12);
 
-  const [mode, setMode] =
-    useState("map");
-
   const scene = useMemo(() => {
+    // 0 → talvi
+    // 1 → kesä
     const season =
       Math.sin(
         (month / 11) * Math.PI
       );
 
-    // kuinka korkealle aurinko nousee
-    const arcHeight =
-      40 + season * 220;
-
-    // päivän pituus vuodenajan mukaan
+    // päivän pituus
     const daylightHours =
       2 + season * 22;
 
@@ -36,77 +31,103 @@ export default function MidnightSun() {
     const sunset =
       12 + daylightHours / 2;
 
-    const isDay =
-      hour >= sunrise &&
-      hour <= sunset;
+    const polarNight =
+      season < 0.12;
 
-    // päivän eteneminen
-    const dayProgress =
-      (hour - sunrise) /
-      (sunset - sunrise);
+    const midnightSun =
+      season > 0.9;
 
+    // onko päivä
+    let isDay =
+      polarNight
+        ? false
+        : hour >= sunrise &&
+          hour <= sunset;
+
+    if (midnightSun) {
+      isDay = true;
+    }
+
+    // auringon sijainti päivän aikana
     const clamped =
+      (hour - sunrise) /
       Math.max(
-        0,
-        Math.min(1, dayProgress)
+        sunset - sunrise,
+        0.1
       );
 
-    const x =
-      clamped * 100;
+    // kuinka korkealle aurinko nousee
+    const arcHeight =
+      40 + season * 180;
 
-    // aurinkokaari
-    const y =
-      78 -
-      Math.sin(clamped * Math.PI) *
-        (arcHeight / 4);
+    // pehmeämpi liike
+    const curve =
+      Math.sin(clamped * Math.PI);
+
+    // X
+    let x = clamped * 100;
+
+    // Y
+    let y =
+      82 -
+      curve *
+        (arcHeight / 5);
+
+    // keskiyön aurinko
+    if (midnightSun) {
+      const loop =
+        Math.sin(
+          (hour / 24) *
+            Math.PI *
+            2
+        );
+
+      y =
+        38 -
+        loop * 6;
+    }
+
+    // piilota horisontin alle
+    const visible =
+      y < 82;
+
+    // revontulet vain talvella
+    const auroraVisible =
+      !isDay &&
+      season < 0.45;
+
+    // taivaan sävy
+    const skyHue =
+      220 - season * 70;
+
+    // päivän kirkkaus
+    const daylightStrength =
+      isDay
+        ? Math.max(
+            0.25,
+            curve
+          )
+        : 0;
 
     return {
       x,
       y,
-      season,
+      visible,
       isDay,
-      sunrise,
-      sunset,
+      auroraVisible,
+      skyHue,
+      daylightHours:
+        Math.round(
+          daylightHours
+        ),
+      polarNight,
+      midnightSun,
+      daylightStrength
     };
   }, [month, hour]);
 
   return (
-    <section
-      className={`midnight-scene ${
-        scene.isDay
-          ? "day"
-          : "night"
-      }`}
-    >
-      {/* TOP CONTROLS */}
-
-      <div className="view-toggle">
-        <button
-          className={
-            mode === "map"
-              ? "active"
-              : ""
-          }
-          onClick={() =>
-            setMode("map")
-          }
-        >
-          Aurora Map
-        </button>
-
-        <button
-          className={
-            mode === "horizon"
-              ? "active"
-              : ""
-          }
-          onClick={() =>
-            setMode("horizon")
-          }
-        >
-          Midnight Sun
-        </button>
-      </div>
+    <section className="midnight-scene">
 
       {/* HUD */}
 
@@ -126,67 +147,98 @@ export default function MidnightSun() {
         </div>
 
         <div>
-          {scene.isDay
+          {scene.polarNight
+            ? "🌑 Polar Night"
+            : scene.midnightSun
+            ? "☀️ Midnight Sun"
+            : scene.isDay
             ? "☀️ Daylight"
             : "🌌 Night"}
         </div>
-      </div>
 
-      {/* SCENE */}
-
-      <div className="scene-wrap">
-        {/* MAP VIEW */}
-
-        <div
-          className={`map-view ${
-            mode === "map"
-              ? "visible"
-              : ""
-          }`}
-        >
-          <div className="fake-map">
-            <div className="map-label">
-              Aurora Map
-            </div>
-          </div>
-        </div>
-
-        {/* HORIZON VIEW */}
-
-        <div
-          className={`horizon-view ${
-            mode === "horizon"
-              ? "visible"
-              : ""
-          }`}
-        >
-          <div className="sky">
-            {!scene.isDay && (
-              <div className="aurora" />
-            )}
-
-            <div className="sun-arc" />
-
-            <div
-              className="sun"
-              style={{
-                left: `${scene.x}%`,
-                top: `${scene.y}%`,
-                opacity:
-                  scene.isDay
-                    ? 1
-                    : 0,
-              }}
-            />
-
-            <div className="horizon" />
-          </div>
+        <div>
+          Daylight:
+          <strong>
+            {scene.daylightHours}h
+          </strong>
         </div>
       </div>
 
-      {/* SLIDERS */}
+      {/* SKY */}
+
+      <div
+        className={`sky ${
+          scene.isDay
+            ? "day"
+            : "night"
+        }`}
+        style={{
+          background: scene.isDay
+            ? `
+              linear-gradient(
+                180deg,
+                hsl(${scene.skyHue}, 70%, ${
+                  22 +
+                  scene.daylightStrength *
+                    30
+                }%),
+                hsl(${scene.skyHue}, 65%, ${
+                  10 +
+                  scene.daylightStrength *
+                    20
+                }%)
+              )
+            `
+            : `
+              linear-gradient(
+                180deg,
+                #02040a 0%,
+                #050814 40%,
+                #0a1020 100%
+              )
+            `
+        }}
+      >
+
+        {/* STARS */}
+
+        {!scene.isDay && (
+          <div className="stars" />
+        )}
+
+        {/* AURORA */}
+
+        {scene.auroraVisible && (
+          <div className="aurora" />
+        )}
+
+        {/* SUN PATH */}
+
+        <div className="sun-arc" />
+
+        {/* SUN */}
+
+        <div
+          className="sun"
+          style={{
+            left: `${scene.x}%`,
+            top: `${scene.y}%`,
+            opacity:
+              scene.visible
+                ? 1
+                : 0
+          }}
+        />
+
+        {/* HORIZON */}
+
+        <div className="horizon" />
+      </div>
+
+      {/* CONTROLS */}
 
       <div className="sliders">
+
         <div>
           <label>
             Month
@@ -226,7 +278,9 @@ export default function MidnightSun() {
             }
           />
         </div>
+
       </div>
     </section>
   );
 }
+```
