@@ -14,30 +14,42 @@ export default function Contact() {
 
   // Lataa Turnstile-skripti
   useEffect(() => {
-    if (document.getElementById("cf-turnstile-script")) return;
-    const script = document.createElement("script");
-    script.id = "cf-turnstile-script";
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    document.head.appendChild(script);
-  }, []);
+  // Tarkista onko skripti jo ladattu
+  if (document.getElementById("cf-turnstile-script")) {
+    // Skripti jo olemassa, vain renderöi widget
+    return;
+  }
+  const script = document.createElement("script");
+  script.id = "cf-turnstile-script";
+  script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+  script.async = true;
+  document.head.appendChild(script);
+}, []);
 
   // Renderöi widget kun skripti latautunut
   useEffect(() => {
-    const render = () => {
-      if (!turnstileRef.current || !window.turnstile) return;
-      if (widgetId.current) return;
-      widgetId.current = window.turnstile.render(turnstileRef.current, {
-        sitekey: "0x4AAAAAADF29-_iSqwRQWf2", // sama avain kuin muualla
-        callback: (token) => setTurnstileToken(token),
-        "expired-callback": () => setTurnstileToken(""),
-      });
-    };
-    const interval = setInterval(() => {
-      if (window.turnstile) { render(); clearInterval(interval); }
-    }, 200);
-    return () => clearInterval(interval);
-  }, []);
+  const render = () => {
+    if (!turnstileRef.current || !window.turnstile) return;
+    if (widgetId.current != null) return;
+    widgetId.current = window.turnstile.render(turnstileRef.current, {
+      sitekey: "YOUR_SITE_KEY",
+      callback: (token) => setTurnstileToken(token),
+      "expired-callback": () => setTurnstileToken(""),
+    });
+  };
+  const interval = setInterval(() => {
+    if (window.turnstile) { render(); clearInterval(interval); }
+  }, 200);
+
+  return () => {
+    clearInterval(interval);
+    // Poista widget kun komponentti unmountataan
+    if (widgetId.current != null && window.turnstile) {
+      window.turnstile.remove(widgetId.current);
+      widgetId.current = null;
+    }
+  };
+}, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

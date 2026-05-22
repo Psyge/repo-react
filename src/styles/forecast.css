@@ -285,6 +285,11 @@
 
 @media (max-width: 768px) {
 
+  .fc-badge {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+
   .fc-current {
     gap: 12px;
     padding: 8px 12px;
@@ -299,20 +304,15 @@
     border-radius: 20px;
   }
 
-  .forecast-head {
+.forecast-head {
+    flex-direction: column;
     align-items: flex-start;
-
-    gap: 10px;
-
-    margin-bottom: 14px;
+    gap: 8px;
+    margin-bottom: 16px;
   }
 
   .forecast-head h2 {
-    font-size: 1.8rem;
-
-    line-height: 1.05;
-
-    letter-spacing: 0;
+    font-size: 1.6rem;
   }
 
   /* chart smaller */
