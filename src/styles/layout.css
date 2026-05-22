@@ -1,6 +1,4 @@
-main {
-  padding-top: 64px;
-}
+
 .container {
   max-width: 1100px;
 
@@ -42,9 +40,7 @@ section.block {
 
 @media (max-width: 768px) {
 
-   main {
-    padding-top: 96px;
-  }
+ 
   .container {
     padding: 0 16px;
   }
