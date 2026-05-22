@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import "./midnightSun.css";
+import "./style/midnightSun.css";
 
 const MONTHS = [
   "Jan", "Feb", "Mar",
