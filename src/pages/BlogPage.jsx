@@ -6,7 +6,7 @@ export default function BlogPage() {
   const { t } = useTranslation();
 
   return (
-    <div>
+    <div className="blog-page">
     <Header />
     <main className="container">
       <h1>{t("blog.title")}</h1>

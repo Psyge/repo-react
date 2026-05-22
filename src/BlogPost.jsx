@@ -20,10 +20,10 @@ export default function BlogPost() {
   }
 
   return (
-    <div className="blog-page">
+    
     <div className="container">
       <h1>Article not found</h1>
     </div>
-    </div>
+    
   );
 }
