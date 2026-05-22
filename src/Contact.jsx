@@ -1,0 +1,135 @@
+import { useEffect, useRef, useState } from "react";
+
+export default function Contact() {
+  const { t } = useTranslation();
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [status, setStatus] = useState(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef(null);
+  const widgetId = useRef(null);
+
+  // Lataa Turnstile-skripti
+  useEffect(() => {
+    if (document.getElementById("cf-turnstile-script")) return;
+    const script = document.createElement("script");
+    script.id = "cf-turnstile-script";
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    document.head.appendChild(script);
+  }, []);
+
+  // Renderöi widget kun skripti latautunut
+  useEffect(() => {
+    const render = () => {
+      if (!turnstileRef.current || !window.turnstile) return;
+      if (widgetId.current) return;
+      widgetId.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: "YOUR_TURNSTILE_SITE_KEY", // sama avain kuin muualla
+        callback: (token) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(""),
+      });
+    };
+    const interval = setInterval(() => {
+      if (window.turnstile) { render(); clearInterval(interval); }
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!turnstileToken) {
+      setStatus("captcha");
+      return;
+    }
+    setStatus("sending");
+    try {
+      const res = await fetch(`${BASE}/api/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, turnstileToken }),
+      });
+      if (res.ok) {
+        setStatus("ok");
+        setForm({ name: "", email: "", message: "" });
+        // Reset captcha
+        if (widgetId.current != null) window.turnstile.reset(widgetId.current);
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  return (
+    <div className="contact-wrap">
+      <h2>{t("contact.title") || "Contact us"}</h2>
+      <p>{t("contact.sub") || "Have a question or feedback? We'll get back to you."}</p>
+
+      {status === "ok" ? (
+        <div className="contact-success">
+          ✅ {t("contact.success") || "Message sent! We'll be in touch soon."}
+        </div>
+      ) : (
+        <form className="contact-form" onSubmit={handleSubmit}>
+          <div className="contact-field">
+            <label>{t("contact.name") || "Name"}</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              required
+              maxLength={100}
+            />
+          </div>
+
+          <div className="contact-field">
+            <label>{t("contact.email") || "Email"}</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              required
+              maxLength={200}
+            />
+          </div>
+
+          <div className="contact-field">
+            <label>{t("contact.message") || "Message"}</label>
+            <textarea
+              value={form.message}
+              onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+              required
+              maxLength={2000}
+              rows={5}
+            />
+          </div>
+
+          {/* Turnstile widget */}
+          <div ref={turnstileRef} style={{ margin: "12px 0" }} />
+
+          {status === "captcha" && (
+            <div className="contact-error">
+              ⚠️ {t("contact.captcha") || "Please complete the captcha first."}
+            </div>
+          )}
+          {status === "error" && (
+            <div className="contact-error">
+              ❌ {t("contact.error") || "Something went wrong, please try again."}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="contact-submit"
+            disabled={status === "sending" || !turnstileToken}
+          >
+            {status === "sending"
+              ? t("contact.sending") || "Sending…"
+              : t("contact.send") || "Send message"}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}

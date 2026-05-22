@@ -352,18 +352,24 @@ export default function HomePage() {
       </main>
 
       <footer className="footer">
-        <p>© RepoTracker</p>
+  <p>© RepoTracker</p>
 
-        <Link to="/privacy">
-          {t("footer.privacy")}
-        </Link>
+  <Link to="/privacy">
+    {t("footer.privacy")}
+  </Link>
 
-        {" - "}
+  {" - "}
 
-        <Link to="/terms">
-          {t("privacy.q.terms")}
-        </Link>
-      </footer>
+  <Link to="/terms">
+    {t("privacy.q.terms")}
+  </Link>
+
+  {" - "}
+
+  <Link to="/contact">
+    {t("footer.contact") || "Contact"}
+  </Link>
+</footer>
     </div>
   );
 }

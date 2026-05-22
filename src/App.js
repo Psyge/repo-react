@@ -8,6 +8,7 @@ import PrivacyPage from './PrivacyPage';
 import TermsPage from './TermsPage';
 import PremiumPage from './PremiumPage';
 import PremiumSuccessPage from './PremiumSuccessPage';
+import Contact from "./Contact"; 
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/premium" element={<PremiumPage />} />
 <Route path="/premium-success" element={<PremiumSuccessPage />} />
+<Route path="/contact" element={<Contact />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,0 +1,144 @@
+/* ============================================================
+ * CONTACT PAGE
+ * ============================================================ */
+
+.contact-wrap {
+  max-width: 600px;
+  margin: 60px auto;
+  padding: 40px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0,255,200,0.06),
+      transparent 40%
+    ),
+    rgba(10,12,20,0.92);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  backdrop-filter: blur(14px);
+}
+
+.contact-wrap h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.contact-wrap p {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 28px;
+}
+
+/* ---- Kentät ---- */
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contact-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.03em;
+}
+
+.contact-field input,
+.contact-field textarea {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #e6e9ef;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+
+.contact-field input:focus,
+.contact-field textarea:focus {
+  border-color: rgba(46,242,208,0.4);
+}
+
+.contact-field input::placeholder,
+.contact-field textarea::placeholder {
+  color: #4b5563;
+}
+
+/* ---- Nappi ---- */
+
+.contact-submit {
+  margin-top: 4px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #2EF2D0, #60a5fa);
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  align-self: flex-start;
+}
+
+.contact-submit:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.contact-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---- Viestit ---- */
+
+.contact-success {
+  padding: 16px 20px;
+  background: rgba(46,242,208,0.08);
+  border: 1px solid rgba(46,242,208,0.25);
+  border-radius: 12px;
+  color: #2EF2D0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.contact-error {
+  padding: 12px 16px;
+  background: rgba(255,59,127,0.08);
+  border: 1px solid rgba(255,59,127,0.25);
+  border-radius: 10px;
+  color: #ff6b6b;
+  font-size: 13px;
+}
+
+/* ============================================================
+ * MOBILE
+ * ============================================================ */
+
+@media (max-width: 768px) {
+  .contact-wrap {
+    margin: 24px 16px;
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+
+  .contact-wrap h2 {
+    font-size: 22px;
+  }
+
+  .contact-submit {
+    width: 100%;
+    text-align: center;
+  }
+}
