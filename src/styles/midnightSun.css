@@ -251,3 +251,37 @@
     padding: 14px;
   }
 }
+/* TWILIGHT */
+.sun--twilight {
+  background: radial-gradient(
+    circle at center,
+    #ffcca0 0%,
+    #ff7a30 50%,
+    #cc3300 100%
+  );
+  box-shadow:
+    0 0 60px rgba(255,120,50,0.4),
+    0 0 120px rgba(200,80,0,0.2);
+}
+
+/* INFO TEKSTI */
+.sun-info {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: min(700px, 92vw);
+  text-align: center;
+  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .sun-info {
+    bottom: 160px;
+    font-size: 12px;
+    padding: 0 8px;
+  }
+}

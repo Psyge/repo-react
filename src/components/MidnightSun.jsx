@@ -1,286 +1,213 @@
-```jsx
 import { useMemo, useState } from "react";
+import SunCalc from "suncalc";
+import useTranslation from "../hooks/useTranslation";
 import "../styles/midnightSun.css";
 
+const LAT = 66.5; // Napapiiri
+const LON = 26;   // Rovaniemi
+
 const MONTHS = [
-  "Jan", "Feb", "Mar",
-  "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep",
-  "Oct", "Nov", "Dec"
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
 export default function MidnightSun() {
   const [month, setMonth] = useState(0);
   const [hour, setHour] = useState(12);
+  const { t } = useTranslation();
 
   const scene = useMemo(() => {
-    // 0 → talvi
-    // 1 → kesä
-    const season =
-      Math.sin(
-        (month / 11) * Math.PI
-      );
+    // Käytä kuukauden puoliväliä laskentaan
+    const date = new Date(2025, month, 15, hour, 0, 0);
 
-    // päivän pituus
-    const daylightHours =
-      2 + season * 22;
+    // SunCalc: auringon asema radiaaneina
+    const pos = SunCalc.getPosition(date, LAT, LON);
+    const altitudeDeg = pos.altitude * (180 / Math.PI);
 
-    const sunrise =
-      12 - daylightHours / 2;
+    // SunCalc: nousu/lasku
+    const times = SunCalc.getTimes(date, LAT, LON);
+    const sunriseH = isNaN(times.sunrise)
+      ? null
+      : times.sunrise.getHours() + times.sunrise.getMinutes() / 60;
+    const sunsetH = isNaN(times.sunset)
+      ? null
+      : times.sunset.getHours() + times.sunset.getMinutes() / 60;
 
-    const sunset =
-      12 + daylightHours / 2;
+    // Aurinko näkyvissä jos altitude > 0
+    const isDay = altitudeDeg > 0;
 
-    const polarNight =
-      season < 0.12;
+    // Hämärä (-6° - 0°)
+    const isTwilight = altitudeDeg > -6 && altitudeDeg <= 0;
 
-    const midnightSun =
-      season > 0.9;
+    // Kaamos: aurinko ei nouse ollenkaan
+    const polarNight = sunriseH === null && !isDay;
 
-    // onko päivä
-    let isDay =
-      polarNight
-        ? false
-        : hour >= sunrise &&
-          hour <= sunset;
+    // Yöttömän yön aika: aurinko ei laske ollenkaan
+    const midnightSun = sunsetH === null && isDay;
 
-    if (midnightSun) {
-      isDay = true;
-    }
+    // Auringon X-asema (0-100%) kellonajan mukaan
+    const x = (hour / 24) * 100;
 
-    // auringon sijainti päivän aikana
-    const clamped =
-      (hour - sunrise) /
-      Math.max(
-        sunset - sunrise,
-        0.1
-      );
+    // Auringon Y-asema — korkeampi altitude = korkeammalla taivaalla
+    // altitude vaihtelee noin -90° - +90°, normalisoidaan 0-100% sky-alueelle
+    const maxAlt = 47; // Napapiirillä kesäkuussa max ~47°
+    const normalizedAlt = altitudeDeg / maxAlt; // -1 - 1
+    // Y: 82% = horisontti, 10% = taivaan huippu
+    const y = 82 - normalizedAlt * 72;
 
-    // kuinka korkealle aurinko nousee
-    const arcHeight =
-      40 + season * 180;
+    // Aurinko näkyy vain horisontinlähellä tai sen yläpuolella
+    const visible = altitudeDeg > -5;
 
-    // pehmeämpi liike
-    const curve =
-      Math.sin(clamped * Math.PI);
-
-    // X
-    let x = clamped * 100;
-
-    // Y
-    let y =
-      82 -
-      curve *
-        (arcHeight / 5);
-
-    // keskiyön aurinko
-    if (midnightSun) {
-      const loop =
-        Math.sin(
-          (hour / 24) *
-            Math.PI *
-            2
-        );
-
-      y =
-        38 -
-        loop * 6;
-    }
-
-    // piilota horisontin alle
-    const visible =
-      y < 82;
-
-    // revontulet vain talvella
+    // Revontulet: pimeä yö, ei hämärää, sesonki elo-huhtikuu
+    const auroraSeasonMonths = [0, 1, 2, 3, 7, 8, 9, 10, 11];
     const auroraVisible =
       !isDay &&
-      season < 0.45;
+      !isTwilight &&
+      auroraSeasonMonths.includes(month);
 
-    // taivaan sävy
-    const skyHue =
-      220 - season * 70;
+    // Taivaan sävy päiväsaikaan
+    const skyHue = isDay ? 210 - (altitudeDeg / maxAlt) * 30 : 220;
+    const skyLightness = isDay ? 15 + (altitudeDeg / maxAlt) * 35 : 3;
 
-    // päivän kirkkaus
-    const daylightStrength =
-      isDay
-        ? Math.max(
-            0.25,
-            curve
-          )
-        : 0;
+    // Päivänpituus
+    const daylightHours = sunriseH !== null && sunsetH !== null
+      ? Math.max(0, sunsetH - sunriseH)
+      : polarNight ? 0 : 24;
 
     return {
       x,
       y,
       visible,
       isDay,
+      isTwilight,
       auroraVisible,
       skyHue,
-      daylightHours:
-        Math.round(
-          daylightHours
-        ),
+      skyLightness,
+      daylightHours: Math.round(daylightHours * 10) / 10,
       polarNight,
       midnightSun,
-      daylightStrength
+      altitudeDeg: Math.round(altitudeDeg * 10) / 10,
+      sunriseH,
+      sunsetH,
     };
   }, [month, hour]);
+
+  const formatH = (h) => {
+    if (h === null) return "–";
+    const hh = Math.floor(h);
+    const mm = Math.round((h - hh) * 60);
+    return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  };
+
+  const skyBg = scene.isDay
+    ? `linear-gradient(180deg,
+        hsl(${scene.skyHue}, 70%, ${scene.skyLightness}%),
+        hsl(${scene.skyHue}, 65%, ${scene.skyLightness * 0.6}%)
+      )`
+    : scene.isTwilight
+    ? `linear-gradient(180deg, #1a0a2e 0%, #0d0618 50%, #050810 100%)`
+    : `linear-gradient(180deg, #02040a 0%, #050814 40%, #0a1020 100%)`;
+
+  const statusLabel = scene.polarNight
+    ? `🌑 ${t("sun.polarNight") || "Polar Night"}`
+    : scene.midnightSun
+    ? `☀️ ${t("sun.midnightSun") || "Midnight Sun"}`
+    : scene.isDay
+    ? `☀️ ${t("sun.daylight") || "Daylight"}`
+    : scene.isTwilight
+    ? `🌆 ${t("sun.twilight") || "Twilight"}`
+    : `🌌 ${t("sun.night") || "Night"}`;
 
   return (
     <section className="midnight-scene">
 
       {/* HUD */}
-
       <div className="hud">
         <div>
-          Month:
-          <strong>
-            {MONTHS[month]}
-          </strong>
+          {t("sun.month") || "Month"}:
+          <strong> {MONTHS[month]}</strong>
         </div>
-
         <div>
-          Time:
-          <strong>
-            {hour}:00
-          </strong>
+          {t("sun.time") || "Time"}:
+          <strong> {String(hour).padStart(2, "0")}:00</strong>
         </div>
-
+        <div>{statusLabel}</div>
         <div>
-          {scene.polarNight
-            ? "🌑 Polar Night"
-            : scene.midnightSun
-            ? "☀️ Midnight Sun"
-            : scene.isDay
-            ? "☀️ Daylight"
-            : "🌌 Night"}
+          {t("sun.daylight") || "Daylight"}:
+          <strong> {scene.daylightHours}h</strong>
         </div>
-
         <div>
-          Daylight:
-          <strong>
-            {scene.daylightHours}h
-          </strong>
+          {t("sun.sunrise") || "Sunrise"}:
+          <strong> {formatH(scene.sunriseH)}</strong>
+        </div>
+        <div>
+          {t("sun.sunset") || "Sunset"}:
+          <strong> {formatH(scene.sunsetH)}</strong>
+        </div>
+        <div>
+          {t("sun.altitude") || "Sun altitude"}:
+          <strong> {scene.altitudeDeg}°</strong>
         </div>
       </div>
 
       {/* SKY */}
-
-      <div
-        className={`sky ${
-          scene.isDay
-            ? "day"
-            : "night"
-        }`}
-        style={{
-          background: scene.isDay
-            ? `
-              linear-gradient(
-                180deg,
-                hsl(${scene.skyHue}, 70%, ${
-                  22 +
-                  scene.daylightStrength *
-                    30
-                }%),
-                hsl(${scene.skyHue}, 65%, ${
-                  10 +
-                  scene.daylightStrength *
-                    20
-                }%)
-              )
-            `
-            : `
-              linear-gradient(
-                180deg,
-                #02040a 0%,
-                #050814 40%,
-                #0a1020 100%
-              )
-            `
-        }}
-      >
+      <div className="sky" style={{ background: skyBg }}>
 
         {/* STARS */}
-
-        {!scene.isDay && (
+        {!scene.isDay && !scene.isTwilight && (
           <div className="stars" />
         )}
 
         {/* AURORA */}
-
         {scene.auroraVisible && (
           <div className="aurora" />
         )}
 
-        {/* SUN PATH */}
-
-        <div className="sun-arc" />
-
         {/* SUN */}
-
         <div
-          className="sun"
+          className={`sun ${scene.isTwilight ? "sun--twilight" : ""}`}
           style={{
             left: `${scene.x}%`,
             top: `${scene.y}%`,
-            opacity:
-              scene.visible
-                ? 1
-                : 0
+            opacity: scene.visible ? 1 : 0,
           }}
         />
 
         {/* HORIZON */}
-
         <div className="horizon" />
       </div>
 
-      {/* CONTROLS */}
-
-      <div className="sliders">
-
-        <div>
-          <label>
-            Month
-          </label>
-
-          <input
-            type="range"
-            min="0"
-            max="11"
-            value={month}
-            onChange={(e) =>
-              setMonth(
-                Number(
-                  e.target.value
-                )
-              )
-            }
-          />
-        </div>
-
-        <div>
-          <label>
-            Time
-          </label>
-
-          <input
-            type="range"
-            min="0"
-            max="23"
-            value={hour}
-            onChange={(e) =>
-              setHour(
-                Number(
-                  e.target.value
-                )
-              )
-            }
-          />
-        </div>
-
+      {/* INFO */}
+      <div className="sun-info">
+        {scene.polarNight && (
+          <p>{t("sun.polarNightInfo") || "During polar night the sun stays below the horizon. Perfect conditions for northern lights!"}</p>
+        )}
+        {scene.midnightSun && (
+          <p>{t("sun.midnightSunInfo") || "During midnight sun the sun never sets — northern lights are invisible even if they occur."}</p>
+        )}
+        {scene.auroraVisible && (
+          <p>{t("sun.auroraInfo") || "🌌 Dark skies — good conditions for aurora hunting!"}</p>
+        )}
       </div>
+
+      {/* CONTROLS */}
+      <div className="sliders">
+        <div>
+          <label>{t("sun.month") || "Month"}: <strong>{MONTHS[month]}</strong></label>
+          <input
+            type="range" min="0" max="11" value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+          />
+        </div>
+        <div>
+          <label>{t("sun.time") || "Time"}: <strong>{String(hour).padStart(2, "0")}:00</strong></label>
+          <input
+            type="range" min="0" max="23" value={hour}
+            onChange={(e) => setHour(Number(e.target.value))}
+          />
+        </div>
+      </div>
+
     </section>
   );
 }
-```
