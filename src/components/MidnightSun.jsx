@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import SunCalc from "suncalc";
 import useTranslation from "../hooks/useTranslation";
 import "../styles/midnightSun.css";
 
-const LAT = 66.5; // Napapiiri
-const LON = 26;   // Rovaniemi
+const LAT = 66.5;
+const LON = 26;
 
 const MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -14,17 +14,35 @@ const MONTHS = [
 export default function MidnightSun() {
   const [month, setMonth] = useState(0);
   const [hour, setHour] = useState(12);
+  const [kp, setKp] = useState(null);
   const { t } = useTranslation();
 
+  // ===== KP FETCH
+  useEffect(() => {
+    const fetchKp = async () => {
+      try {
+        const res = await fetch(
+          "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json"
+        );
+        const data = await res.json();
+        const last = data[data.length - 1];
+        setKp(parseFloat(last[1]));
+      } catch (e) {
+        console.warn("Kp fetch failed", e);
+      }
+    };
+    fetchKp();
+    const interval = setInterval(fetchKp, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ===== SCENE CALC
   const scene = useMemo(() => {
-    // Käytä kuukauden puoliväliä laskentaan
     const date = new Date(2025, month, 15, hour, 0, 0);
 
-    // SunCalc: auringon asema radiaaneina
     const pos = SunCalc.getPosition(date, LAT, LON);
     const altitudeDeg = pos.altitude * (180 / Math.PI);
 
-    // SunCalc: nousu/lasku
     const times = SunCalc.getTimes(date, LAT, LON);
     const sunriseH = isNaN(times.sunrise)
       ? null
@@ -33,45 +51,30 @@ export default function MidnightSun() {
       ? null
       : times.sunset.getHours() + times.sunset.getMinutes() / 60;
 
-    // Aurinko näkyvissä jos altitude > 0
     const isDay = altitudeDeg > 0;
-
-    // Hämärä (-6° - 0°)
     const isTwilight = altitudeDeg > -6 && altitudeDeg <= 0;
-
-    // Kaamos: aurinko ei nouse ollenkaan
     const polarNight = sunriseH === null && !isDay;
-
-    // Yöttömän yön aika: aurinko ei laske ollenkaan
     const midnightSun = sunsetH === null && isDay;
 
-    // Auringon X-asema (0-100%) kellonajan mukaan
     const x = (hour / 24) * 100;
-
-    // Auringon Y-asema — korkeampi altitude = korkeammalla taivaalla
-    // altitude vaihtelee noin -90° - +90°, normalisoidaan 0-100% sky-alueelle
-    const maxAlt = 47; // Napapiirillä kesäkuussa max ~47°
-    const normalizedAlt = altitudeDeg / maxAlt; // -1 - 1
-    // Y: 82% = horisontti, 10% = taivaan huippu
+    const maxAlt = 47;
+    const normalizedAlt = altitudeDeg / maxAlt;
     const y = 82 - normalizedAlt * 72;
-
-    // Aurinko näkyy vain horisontinlähellä tai sen yläpuolella
     const visible = altitudeDeg > -5;
 
-    // Revontulet: pimeä yö, ei hämärää, sesonki elo-huhtikuu
-    const auroraSeasonMonths = [10, 11, 0, 1, 2, 3]; // marras-huhtikuu
-const auroraVisible =
-  !isDay &&
-  !isTwilight &&
-  !midnightSun &&
-  auroraSeasonMonths.includes(month) &&
-  altitudeDeg < -6; // aurinko tarpeeksi syvällä horisontin alla
+    // Revontulet: sesonki loka-huhtikuu + Kp >= 2 + pimeä taivas
+    const auroraSeasonMonths = [10, 11, 0, 1, 2,];
+    const auroraVisible =
+      !isDay &&
+      !isTwilight &&
+      altitudeDeg < -6 &&
+      auroraSeasonMonths.includes(month) &&
+      kp !== null &&
+      kp >= 2;
 
-    // Taivaan sävy päiväsaikaan
     const skyHue = isDay ? 210 - (altitudeDeg / maxAlt) * 30 : 220;
     const skyLightness = isDay ? 15 + (altitudeDeg / maxAlt) * 35 : 3;
 
-    // Päivänpituus
     const daylightHours = sunriseH !== null && sunsetH !== null
       ? Math.max(0, sunsetH - sunriseH)
       : polarNight ? 0 : 24;
@@ -92,7 +95,7 @@ const auroraVisible =
       sunriseH,
       sunsetH,
     };
-  }, [month, hour]);
+  }, [month, hour, kp]);
 
   const formatH = (h) => {
     if (h === null) return "–";
@@ -150,6 +153,15 @@ const auroraVisible =
           {t("sun.altitude") || "Sun altitude"}:
           <strong> {scene.altitudeDeg}°</strong>
         </div>
+        {kp !== null && (
+          <div>
+            Kp: <strong style={{
+              color: kp >= 5 ? "#00ffcc" : kp >= 3 ? "#a8ff78" : "#9ca3af"
+            }}>
+              {kp}
+            </strong>
+          </div>
+        )}
       </div>
 
       {/* SKY */}
@@ -195,14 +207,18 @@ const auroraVisible =
       {/* CONTROLS */}
       <div className="sliders">
         <div>
-          <label>{t("sun.month") || "Month"}: <strong>{MONTHS[month]}</strong></label>
+          <label>
+            {t("sun.month") || "Month"}: <strong>{MONTHS[month]}</strong>
+          </label>
           <input
             type="range" min="0" max="11" value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
           />
         </div>
         <div>
-          <label>{t("sun.time") || "Time"}: <strong>{String(hour).padStart(2, "0")}:00</strong></label>
+          <label>
+            {t("sun.time") || "Time"}: <strong>{String(hour).padStart(2, "0")}:00</strong>
+          </label>
           <input
             type="range" min="0" max="23" value={hour}
             onChange={(e) => setHour(Number(e.target.value))}
