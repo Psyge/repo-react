@@ -59,11 +59,13 @@ export default function MidnightSun() {
     const visible = altitudeDeg > -5;
 
     // Revontulet: pimeä yö, ei hämärää, sesonki elo-huhtikuu
-    const auroraSeasonMonths = [0, 1, 2, 3, 7, 8, 9, 10, 11];
-    const auroraVisible =
-      !isDay &&
-      !isTwilight &&
-      auroraSeasonMonths.includes(month);
+    const auroraSeasonMonths = [10, 11, 0, 1, 2, 3]; // marras-huhtikuu
+const auroraVisible =
+  !isDay &&
+  !isTwilight &&
+  !midnightSun &&
+  auroraSeasonMonths.includes(month) &&
+  altitudeDeg < -6; // aurinko tarpeeksi syvällä horisontin alla
 
     // Taivaan sävy päiväsaikaan
     const skyHue = isDay ? 210 - (altitudeDeg / maxAlt) * 30 : 220;
