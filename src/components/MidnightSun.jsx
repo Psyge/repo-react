@@ -39,6 +39,20 @@ const [hour, setHour] = useState(new Date().getHours());
   // ===== SCENE CALC
   const scene = useMemo(() => {
     const date = new Date(2025, month, 15, hour, 0, 0);
+    
+     const horizonColor = (() => {
+      if (month === 11 || month === 0 || month === 1) {
+        return { top: "#c8d8e8", mid: "#a0b8cc", bot: "#6a8599" };
+      } else if (month === 2 || month === 3) {
+        return { top: "#8a7a6a", mid: "#6a5a4a", bot: "#3a2a1a" };
+      } else if (month === 4 || month === 5 || month === 6 || month === 7) {
+        return { top: "#2d5a27", mid: "#1a3d16", bot: "#0a1f09" };
+      } else if (month === 8 || month === 9) {
+        return { top: "#8b4a1a", mid: "#5a2d0a", bot: "#2a1205" };
+      } else {
+        return { top: "#3a3a3a", mid: "#222222", bot: "#0f0f0f" };
+      }
+    })();
 
     const pos = SunCalc.getPosition(date, LAT, LON);
     const altitudeDeg = pos.altitude * (180 / Math.PI);
@@ -107,44 +121,7 @@ const [hour, setHour] = useState(new Date().getHours());
   };
   
   // Lisää scene useMemo:on paluuarvoon:
-const horizonColor = (() => {
-  if (month === 11 || month === 0 || month === 1) {
-    // Talvi: lumi, valkoinen/sinertävä
-    return {
-      top: "#c8d8e8",
-      mid: "#a0b8cc",
-      bot: "#6a8599",
-    };
-  } else if (month === 2 || month === 3) {
-    // Kevät: lumi sulaa, ruskea/harmaa
-    return {
-      top: "#8a7a6a",
-      mid: "#6a5a4a",
-      bot: "#3a2a1a",
-    };
-  } else if (month === 4 || month === 5 || month === 6 || month === 7) {
-    // Kesä: vihreä
-    return {
-      top: "#2d5a27",
-      mid: "#1a3d16",
-      bot: "#0a1f09",
-    };
-  } else if (month === 8 || month === 9) {
-    // Syksy: oranssi/punaruskea
-    return {
-      top: "#8b4a1a",
-      mid: "#5a2d0a",
-      bot: "#2a1205",
-    };
-  } else {
-    // Marraskuu: harmaa, pimeys laskee
-    return {
-      top: "#3a3a3a",
-      mid: "#222222",
-      bot: "#0f0f0f",
-    };
-  }
-})();
+
   const skyBg = scene.isDay
     ? `linear-gradient(180deg,
         hsl(${scene.skyHue}, 70%, ${scene.skyLightness}%),
