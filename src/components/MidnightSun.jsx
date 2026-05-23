@@ -12,8 +12,8 @@ const MONTHS = [
 ];
 
 export default function MidnightSun() {
-  const [month, setMonth] = useState(0);
-  const [hour, setHour] = useState(12);
+  const [month, setMonth] = useState(new Date().getMonth());
+const [hour, setHour] = useState(new Date().getHours());
   const [kp, setKp] = useState(null);
   const { t } = useTranslation();
 
@@ -94,8 +94,10 @@ export default function MidnightSun() {
       altitudeDeg: Math.round(altitudeDeg * 10) / 10,
       sunriseH,
       sunsetH,
+      horizonColor,
     };
   }, [month, hour, kp]);
+
 
   const formatH = (h) => {
     if (h === null) return "–";
@@ -103,7 +105,46 @@ export default function MidnightSun() {
     const mm = Math.round((h - hh) * 60);
     return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
   };
-
+  
+  // Lisää scene useMemo:on paluuarvoon:
+const horizonColor = (() => {
+  if (month === 11 || month === 0 || month === 1) {
+    // Talvi: lumi, valkoinen/sinertävä
+    return {
+      top: "#c8d8e8",
+      mid: "#a0b8cc",
+      bot: "#6a8599",
+    };
+  } else if (month === 2 || month === 3) {
+    // Kevät: lumi sulaa, ruskea/harmaa
+    return {
+      top: "#8a7a6a",
+      mid: "#6a5a4a",
+      bot: "#3a2a1a",
+    };
+  } else if (month === 4 || month === 5 || month === 6 || month === 7) {
+    // Kesä: vihreä
+    return {
+      top: "#2d5a27",
+      mid: "#1a3d16",
+      bot: "#0a1f09",
+    };
+  } else if (month === 8 || month === 9) {
+    // Syksy: oranssi/punaruskea
+    return {
+      top: "#8b4a1a",
+      mid: "#5a2d0a",
+      bot: "#2a1205",
+    };
+  } else {
+    // Marraskuu: harmaa, pimeys laskee
+    return {
+      top: "#3a3a3a",
+      mid: "#222222",
+      bot: "#0f0f0f",
+    };
+  }
+})();
   const skyBg = scene.isDay
     ? `linear-gradient(180deg,
         hsl(${scene.skyHue}, 70%, ${scene.skyLightness}%),
@@ -188,7 +229,18 @@ export default function MidnightSun() {
         />
 
         {/* HORIZON */}
-        <div className="horizon" />
+        <div
+  className="horizon"
+  style={{
+    background: `linear-gradient(
+      180deg,
+      ${scene.horizonColor.top} 0%,
+      ${scene.horizonColor.mid} 35%,
+      ${scene.horizonColor.bot} 100%
+    )`,
+    transition: "background 1.5s ease",
+  }}
+/>
       </div>
 
       {/* INFO */}

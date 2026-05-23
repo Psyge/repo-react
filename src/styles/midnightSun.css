@@ -1,4 +1,4 @@
-```css
+
 .midnight-scene {
   position: relative;
 
@@ -226,6 +226,15 @@
 
 .sliders input {
   width: 100%;
+}
+.horizon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32%;
+  /* background poistettu — tulee nyt dynaamisesti */
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
 
 /* MOBILE */
