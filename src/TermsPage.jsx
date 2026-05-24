@@ -8,6 +8,8 @@ const TERMS = [
   'privacy.a.terms3',
   'privacy.a.terms4',
   'privacy.a.terms5',
+  'privacy.a.safety1',
+  'privacy.a.safety2',
 ];
 
 export default function TermsPage() {

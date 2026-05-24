@@ -10,6 +10,16 @@ const SECTIONS = [
     list: ['privacy.a.data2', 'privacy.a.data3', 'privacy.a.data4'],
     after: ['privacy.a.data5'],
   },
+
+   {
+    q: 'privacy.q.email',
+    body: [
+      'privacy.a.email1',
+      'privacy.a.email2',
+      'privacy.a.email3'
+    ]
+  },
+
   { q: 'privacy.q.ads', body: ['privacy.a.ads1', 'privacy.a.ads2', 'privacy.a.ads3'] },
   { q: 'privacy.q.cookies', body: ['privacy.a.cookies'] },
   { q: 'privacy.q.contact', body: ['privacy.a.contact'] },
