@@ -1,6 +1,26 @@
+```jsx
 import useTranslation from "./hooks/useTranslation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Header from "./components/Header";
+
+function EmailLink() {
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    const user = "info.repotracker";
+    const domain = "gmail.com";
+
+    setEmail(`${user}@${domain}`);
+  }, []);
+
+  if (!email) return null;
+
+  return (
+    <a href={`mailto:${email}`}>
+      {email}
+    </a>
+  );
+}
 
 const SECTIONS = [
   {
@@ -49,7 +69,6 @@ const SECTIONS = [
     body: [
       "terms.a.seller1",
       "terms.a.seller2",
-      "terms.a.seller3",
     ],
   },
 ];
@@ -110,6 +129,13 @@ export default function TermsPage() {
               {s.body.map((k) => (
                 <p key={k}>{t(k)}</p>
               ))}
+
+              {s.q === "terms.q.seller" && (
+                <p>
+                  {t("terms.a.seller3")}{" "}
+                  <EmailLink />
+                </p>
+              )}
             </article>
           ))}
         </section>
@@ -117,3 +143,4 @@ export default function TermsPage() {
     </div>
   );
 }
+```
