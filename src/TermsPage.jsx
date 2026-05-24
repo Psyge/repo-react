@@ -1,4 +1,4 @@
-```jsx
+
 import useTranslation from "./hooks/useTranslation";
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
@@ -143,4 +143,4 @@ export default function TermsPage() {
     </div>
   );
 }
-```
+
