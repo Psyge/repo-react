@@ -10,6 +10,7 @@ import PremiumPage from './PremiumPage';
 import PremiumSuccessPage from './PremiumSuccessPage';
 import Contact from "./Contact"; 
 import MidnightSun from "./components/MidnightSun";
+import CookieBanner from "./components/CookieBanner";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
   element={<MidnightSun />}
 />
       </Routes>
+      <CookieBanner />
     </BrowserRouter>
   );
 }
