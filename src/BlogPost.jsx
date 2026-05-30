@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import BlogPost1 from "./pages/BlogPost1";
 import BlogPost2 from "./pages/BlogPost2";
@@ -20,11 +21,13 @@ export default function BlogPost() {
   }
 
   return (
+   <di>
     
+   
     <div className="container">
       <h1>Article not found</h1>
     </div>
-    <footer className="footer">
+     <footer className="footer">
   <p>© RepoTracker</p>
 
   <Link to="/privacy">
@@ -43,5 +46,6 @@ export default function BlogPost() {
     {t("footer.contact") || "Contact"}
   </Link>
 </footer>
+</di> 
   );
 }
