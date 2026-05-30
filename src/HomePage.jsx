@@ -330,7 +330,7 @@ export default function HomePage() {
                 </div>
               </Link>
 
-              <Link to="/blog/timing" className="blog-card">
+              <Link to="/blog/best-time" className="blog-card">
                 <div className="blog-card-tag">
                   GUIDE
                 </div>
