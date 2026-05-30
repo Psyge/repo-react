@@ -1,5 +1,24 @@
 {
-  
+   "contact.privacy": "Lomakkeen kautta lähetettyjä tietoja käytetään ainoastaan yhteydenottoosi vastaamiseen eikä niitä luovuteta kolmansille osapuolille.",
+  "contact.privacyLink": "Tietosuojaseloste",
+  "contact.termsLink": "Käyttöehdot",
+  "privacy.a.contact": "Tietosuojaan liittyvissä kysymyksissä voit ottaa yhteyttä yhteydenottolomakkeella tai sähköpostitse.",
+  "privacy.q.cookies": "Evästeet",
+  "privacy.a.cookies1": "RepoTracker käyttää evästeitä ja vastaavia teknologioita sivuston toiminnan parantamiseen, kävijätilastointiin sekä mahdollisten mainospalveluiden toteuttamiseen.",
+  "privacy.a.cookies2": "Voit hyväksyä tai hylätä ei-välttämättömät evästeet sivuston evästebannerin kautta.",
+
+  "privacy.q.retention": "Tietojen säilytysaika",
+  "privacy.a.retention1": "Henkilötietoja säilytetään vain niin kauan kuin on tarpeen tässä tietosuojaselosteessa kuvattujen tarkoitusten toteuttamiseksi tai lain vaatimalla tavalla.",
+
+  "privacy.q.rights": "Käyttäjän oikeudet",
+  "privacy.a.rights1": "Sinulla on oikeus pyytää pääsyä sinua koskeviin henkilötietoihin.",
+  "privacy.a.rights2": "Voit pyytää henkilötietojesi korjaamista tai poistamista soveltuvan lainsäädännön mukaisesti.",
+  "privacy.a.rights3": "Voit vastustaa tietojen käsittelyä tai peruuttaa antamasi suostumuksen silloin, kun käsittely perustuu suostumukseen.",
+
+  "privacy.q.controller": "Rekisterinpitäjä",
+  "privacy.a.controller1": "RepoTracker toimii tällä verkkosivustolla käsiteltävien henkilötietojen rekisterinpitäjänä.",
+  "privacy.a.controller2": "Tietosuojaan liittyvissä kysymyksissä voit ottaa yhteyttä alla olevien yhteystietojen kautta.",
+
   "privacy.q.email": "Sähköpostit ja yhteydenotot",
 
 "privacy.a.email1": "Kun otat yhteyttä lomakkeella tai ostat Northern Lights Premium -palvelun, voimme tallentaa sähköpostiosoitteesi asiakaspalvelua, premium-pääsyn toimittamista ja teknisiä ilmoituksia varten.",

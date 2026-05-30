@@ -3,15 +3,26 @@ import { useEffect } from 'react';
 import Header from "./components/Header";
 
 const SECTIONS = [
-  { q: 'privacy.q.about', body: ['privacy.a.about1', 'privacy.a.about2'] },
+  {
+    q: 'privacy.q.about',
+    body: [
+      'privacy.a.about1',
+      'privacy.a.about2'
+    ]
+  },
+
   {
     q: 'privacy.q.data',
     body: ['privacy.a.data1'],
-    list: ['privacy.a.data2', 'privacy.a.data3', 'privacy.a.data4'],
-    after: ['privacy.a.data5'],
+    list: [
+      'privacy.a.data2',
+      'privacy.a.data3',
+      'privacy.a.data4'
+    ],
+    after: ['privacy.a.data5']
   },
 
-   {
+  {
     q: 'privacy.q.email',
     body: [
       'privacy.a.email1',
@@ -20,9 +31,53 @@ const SECTIONS = [
     ]
   },
 
-  { q: 'privacy.q.ads', body: ['privacy.a.ads1', 'privacy.a.ads2', 'privacy.a.ads3'] },
-  { q: 'privacy.q.cookies', body: ['privacy.a.cookies'] },
-  { q: 'privacy.q.contact', body: ['privacy.a.contact'] },
+  {
+    q: 'privacy.q.ads',
+    body: [
+      'privacy.a.ads1',
+      'privacy.a.ads2',
+      'privacy.a.ads3'
+    ]
+  },
+
+  {
+    q: 'privacy.q.cookies',
+    body: [
+      'privacy.a.cookies1',
+      'privacy.a.cookies2'
+    ]
+  },
+
+  {
+    q: 'privacy.q.retention',
+    body: [
+      'privacy.a.retention1'
+    ]
+  },
+
+  {
+    q: 'privacy.q.rights',
+    body: [
+      'privacy.a.rights1',
+      'privacy.a.rights2',
+      'privacy.a.rights3'
+    ]
+  },
+
+  {
+    q: 'privacy.q.controller',
+    body: [
+      'privacy.a.controller1',
+      'privacy.a.controller2'
+    ]
+  },
+
+  {
+    q: 'privacy.q.contact',
+    body: [
+      'privacy.a.contact'
+    ]
+  }
 ];
 
 export default function PrivacyPage() {

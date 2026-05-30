@@ -1,4 +1,24 @@
 {
+   "contact.privacy": "Information submitted through this form is used solely for responding to your inquiry and is not shared with third parties.",
+  "contact.privacyLink": "Privacy Policy",
+  "contact.termsLink": "Terms of Service",
+  "privacy.a.contact": "Privacy-related questions can be sent through the Contact page or by email.",
+  "privacy.q.cookies": "Cookies",
+  "privacy.a.cookies1": "RepoTracker uses cookies and similar technologies to improve site functionality, analyze traffic, and support advertising services.",
+  "privacy.a.cookies2": "You can accept or reject non-essential cookies through the cookie banner displayed when visiting the website.",
+
+  "privacy.q.retention": "Data Retention",
+  "privacy.a.retention1": "Personal data is retained only as long as necessary for the purposes described in this policy or as required by applicable law.",
+
+  "privacy.q.rights": "Your Rights",
+  "privacy.a.rights1": "You have the right to request access to personal data concerning you.",
+  "privacy.a.rights2": "You may request correction or deletion of your personal data where applicable.",
+  "privacy.a.rights3": "You may object to certain processing activities or withdraw consent where consent is the legal basis for processing.",
+
+  "privacy.q.controller": "Data Controller",
+  "privacy.a.controller1": "RepoTracker acts as the data controller for personal data processed through this website.",
+  "privacy.a.controller2": "For privacy-related requests, please use the contact information provided below.",
+
   
   "privacy.q.email": "Emails and Contact",
 

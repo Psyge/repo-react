@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
+import { Link } from "react-router-dom";
 
 const BASE = "https://report.masto84.workers.dev";
 
@@ -78,15 +80,21 @@ export default function Contact() {
   };
 
   return (
-    <div className="contact-page">
-          <Header />
+  <div className="contact-page">
+    <Header />
+
     <div className="contact-wrap">
       <h2>{t("contact.title") || "Contact us"}</h2>
-      <p>{t("contact.sub") || "Have a question or feedback? We'll get back to you."}</p>
+
+      <p>
+        {t("contact.sub") ||
+          "Have a question or feedback? We'll get back to you."}
+      </p>
 
       {status === "ok" ? (
         <div className="contact-success">
-          ✅ {t("contact.success") || "Message sent! We'll be in touch soon."}
+          ✅ {t("contact.success") ||
+            "Message sent! We'll be in touch soon."}
         </div>
       ) : (
         <form className="contact-form" onSubmit={handleSubmit}>
@@ -95,7 +103,12 @@ export default function Contact() {
             <input
               type="text"
               value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  name: e.target.value,
+                }))
+              }
               required
               maxLength={100}
             />
@@ -106,7 +119,12 @@ export default function Contact() {
             <input
               type="email"
               value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  email: e.target.value,
+                }))
+              }
               required
               maxLength={200}
             />
@@ -116,39 +134,75 @@ export default function Contact() {
             <label>{t("contact.message") || "Message"}</label>
             <textarea
               value={form.message}
-              onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  message: e.target.value,
+                }))
+              }
               required
               maxLength={2000}
               rows={5}
             />
           </div>
 
-          {/* Turnstile widget */}
-          <div ref={turnstileRef} style={{ margin: "12px 0" }} />
+          <div
+            ref={turnstileRef}
+            style={{ margin: "12px 0" }}
+          />
 
           {status === "captcha" && (
             <div className="contact-error">
-              ⚠️ {t("contact.captcha") || "Please complete the captcha first."}
+              ⚠️ {t("contact.captcha") ||
+                "Please complete the captcha first."}
             </div>
           )}
+
           {status === "error" && (
             <div className="contact-error">
-              ❌ {t("contact.error") || "Something went wrong, please try again."}
+              ❌ {t("contact.error") ||
+                "Something went wrong, please try again."}
             </div>
           )}
 
           <button
             type="submit"
             className="contact-submit"
-            disabled={status === "sending" || !turnstileToken}
+            disabled={
+              status === "sending" ||
+              !turnstileToken
+            }
           >
             {status === "sending"
-              ? t("contact.sending") || "Sending…"
-              : t("contact.send") || "Send message"}
+              ? t("contact.sending") ||
+                "Sending..."
+              : t("contact.send") ||
+                "Send message"}
           </button>
         </form>
       )}
+
+      <div className="contact-privacy">
+        <p>
+          {t("contact.privacy") ||
+            "Information submitted through this form is used solely for responding to your inquiry and is not shared with third parties."}
+        </p>
+
+        <p>
+          <Link to="/privacy">
+            {t("contact.privacyLink") ||
+              "Privacy Policy"}
+          </Link>
+          {" • "}
+          <Link to="/terms">
+            {t("contact.termsLink") ||
+              "Terms of Service"}
+          </Link>
+        </p>
+      </div>
     </div>
-    </div>
-  );
+
+    <Footer />
+  </div>
+);
 }
