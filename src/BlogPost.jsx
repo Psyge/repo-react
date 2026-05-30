@@ -23,7 +23,7 @@ const { t } = useTranslation();
   }
 
   return (
-   <di>
+   <div>
     
    
     <div className="container">
@@ -48,6 +48,6 @@ const { t } = useTranslation();
     {t("footer.contact") || "Contact"}
   </Link>
 </footer>
-</di> 
+</div> 
   );
 }
