@@ -5,7 +5,7 @@ import Header from "./components/Header";
 import { Link } from "react-router-dom";
 
 export default function PremiumPage() {
-  const { lang } = useTranslation();
+  const { t, lang } = useTranslation();
   const fi = lang === "fi";
 
   const [activeDays, setActiveDays] = useState(null);

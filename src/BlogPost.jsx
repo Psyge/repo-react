@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
+import useTranslation from "./hooks/useTranslation";
 
 import BlogPost1 from "./pages/BlogPost1";
 import BlogPost2 from "./pages/BlogPost2";
@@ -7,6 +8,7 @@ import BlogPost3 from "./pages/BlogPost3";
 
 export default function BlogPost() {
   const { slug } = useParams();
+const { t } = useTranslation();
 
   if (slug === "photography") {
     return <BlogPost1 />;
