@@ -26,9 +26,7 @@ export default function CookieBanner() {
 
   function acceptCookies() {
     localStorage.setItem("cookie-consent", "accepted");
-
     enableAnalytics();
-
     setVisible(false);
   }
 
@@ -50,75 +48,34 @@ export default function CookieBanner() {
   if (!visible) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 20,
-        left: 20,
-        right: 20,
-        maxWidth: 520,
-        margin: "0 auto",
-        background: "#111",
-        border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: 14,
-        padding: 20,
-        zIndex: 99999,
-        color: "white",
-        boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
-      }}
-    >
-      <h3 style={{ marginTop: 0 }}>
-        Cookies & Privacy
-      </h3>
+    <div className="cookie-banner">
+      <h3>Cookies & Privacy</h3>
 
-      <p
-        style={{
-          opacity: 0.85,
-          lineHeight: 1.5,
-        }}
-      >
-        RepoTracker uses analytics cookies to improve the
-        service and optional advertising cookies for
-        personalized ads.
+      <p>
+        RepoTracker uses analytics cookies to improve the service and
+        optional advertising cookies for personalized ads.
       </p>
 
-      <div
-  style={{
-    marginTop: 12,
-    display: "flex",
-    gap: 12,
-  }}
->
-  <a href="/privacy">Privacy Policy</a>
-  <a href="/terms">Terms</a>
-</div>
+      <div className="cookie-links">
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms</a>
+      </div>
+
+      <div className="cookie-actions">
         <button
+          className="cookie-btn cookie-btn-primary"
           onClick={acceptCookies}
-          style={{
-            padding: "10px 16px",
-            borderRadius: 8,
-            border: "none",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
         >
           Accept
         </button>
 
         <button
+          className="cookie-btn cookie-btn-secondary"
           onClick={declineCookies}
-          style={{
-            padding: "10px 16px",
-            borderRadius: 8,
-            border: "1px solid rgba(255,255,255,0.2)",
-            background: "transparent",
-            color: "white",
-            cursor: "pointer",
-          }}
         >
           Decline
         </button>
       </div>
-    
+    </div>
   );
 }
