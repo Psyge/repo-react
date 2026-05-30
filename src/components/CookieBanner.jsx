@@ -119,6 +119,6 @@ export default function CookieBanner() {
           Decline
         </button>
       </div>
-    </div>
+    
   );
 }
