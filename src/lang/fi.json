@@ -214,6 +214,15 @@
 "post2.h2.combine": "Arvojen yhdistäminen",
 "post2.p.combine1": "Voimakkaat revontulet syntyvät yleensä silloin, kun Kp on koholla, aurinkotuuli nopea ja Bz negatiivinen.",
 "post2.cta": "Tarkista reaaliaikainen aurinkodata ennen kuin lähdet ulos.",
+
+  "post2.h2.ovation": "Ovation-revontuliennuste",
+
+  "post2.p.ovation1": "Ovation-malli arvioi alueet, joilla revontulia voidaan nähdä nykyisten aurinkotuuliolosuhteiden ja satelliittimittausten perusteella.",
+
+  "post2.li.c1": "Tarkista Kp-indeksi geomagneettisen aktiivisuuden arvioimiseksi.",
+  "post2.li.c2": "Seuraa erityisesti negatiivista Bz-arvoa.",
+  "post2.li.c3": "Yhdistä aurinkotuulen nopeus, pilvisyystiedot ja Ovation-data parhaan ennusteen saamiseksi.",
+
   "blog.post3.title": "Parhaat kuukaudet ja kellonajat revontulille",
   "blog.post3.excerpt": "Milloin lähteä revontulijahtiin Lapissa — parhaat kuukaudet, parhaat tunnit, kuun vaihe ja sääikkunat.",
   "blog.post3.date": "2026-04-10",

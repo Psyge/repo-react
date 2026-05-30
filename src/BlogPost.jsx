@@ -8,7 +8,7 @@ import BlogPost3 from "./pages/BlogPost3";
 
 export default function BlogPost() {
   const { slug } = useParams();
-const { t } = useTranslation();
+  const { t } = useTranslation();
 
   if (slug === "photography") {
     return <BlogPost1 />;
@@ -18,36 +18,41 @@ const { t } = useTranslation();
     return <BlogPost2 />;
   }
 
-  if (slug === "timing") {
+  if (slug === "best-time") {
     return <BlogPost3 />;
   }
 
   return (
-   <div>
-    
-   
-    <div className="container">
-      <h1>Article not found</h1>
+    <div>
+      <div className="container">
+        <h1>Article not found</h1>
+
+        <p>
+          <Link to="/blog">
+            Back to blog
+          </Link>
+        </p>
+      </div>
+
+      <footer className="footer">
+        <p>© RepoTracker</p>
+
+        <Link to="/privacy">
+          {t("footer.privacy")}
+        </Link>
+
+        {" - "}
+
+        <Link to="/terms">
+          {t("footer.terms")}
+        </Link>
+
+        {" - "}
+
+        <Link to="/contact">
+          {t("footer.contact")}
+        </Link>
+      </footer>
     </div>
-     <footer className="footer">
-  <p>© RepoTracker</p>
-
-  <Link to="/privacy">
-    {t("footer.privacy")}
-  </Link>
-
-  {" - "}
-
-  <Link to="/terms">
-    {t("privacy.q.terms")}
-  </Link>
-
-  {" - "}
-
-  <Link to="/contact">
-    {t("footer.contact") || "Contact"}
-  </Link>
-</footer>
-</div> 
   );
 }

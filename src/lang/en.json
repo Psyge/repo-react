@@ -216,6 +216,13 @@
 "post2.h2.combine": "Combining the values",
 "post2.p.combine1": "Strong Northern Lights activity usually requires a combination of elevated Kp, strong solar wind and negative Bz.",
 "post2.cta": "Watch live solar data before heading outside.",
+ "post2.h2.ovation": "Ovation Aurora Forecast",
+
+  "post2.p.ovation1": "The Ovation model estimates where auroras are likely to be visible based on current solar wind conditions and satellite measurements.",
+
+  "post2.li.c1": "Check the Kp index for overall geomagnetic activity.",
+  "post2.li.c2": "Watch for a negative Bz value.",
+  "post2.li.c3": "Combine solar wind speed, cloud cover and Ovation data for the best forecast.",
   "blog.post3.title": "Best months and hours for the Northern Lights",
   "blog.post3.excerpt": "When to chase the Northern Lights in Lapland — peak months, best hours of the night, moon phase and weather windows.",
   "blog.post3.date": "2026-04-10",
