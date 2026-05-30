@@ -1,6 +1,7 @@
 import useTranslation from "./hooks/useTranslation";
 import { useEffect } from 'react';
 import Header from "./components/Header";
+import { Link } from "react-router-dom";
 
 const SECTIONS = [
   {

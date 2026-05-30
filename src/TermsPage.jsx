@@ -2,6 +2,7 @@
 import useTranslation from "./hooks/useTranslation";
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
+import { Link } from "react-router-dom";
 
 function EmailLink() {
   const [email, setEmail] = useState("");

@@ -1,6 +1,7 @@
 import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
 import { useEffect } from 'react';
+import { Link } from "react-router-dom";
 
 const QUESTIONS = [
   { q: 'faq.q.about', body: ['faq.a.about1', 'faq.a.about2', 'faq.a.about3'] },
