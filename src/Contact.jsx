@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
-import Footer from "./components/Footer";
+
 import { Link } from "react-router-dom";
 
 const BASE = "https://report.masto84.workers.dev";
@@ -202,7 +202,25 @@ export default function Contact() {
       </div>
     </div>
 
-    <Footer />
+    <footer className="footer">
+  <p>© RepoTracker</p>
+
+  <Link to="/privacy">
+    {t("footer.privacy")}
+  </Link>
+
+  {" - "}
+
+  <Link to="/terms">
+    {t("privacy.q.terms")}
+  </Link>
+
+  {" - "}
+
+  <Link to="/contact">
+    {t("footer.contact") || "Contact"}
+  </Link>
+</footer>
   </div>
 );
 }
