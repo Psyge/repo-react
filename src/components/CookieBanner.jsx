@@ -83,12 +83,15 @@ export default function CookieBanner() {
       </p>
 
       <div
-        style={{
-          display: "flex",
-          gap: 10,
-          marginTop: 16,
-        }}
-      >
+  style={{
+    marginTop: 12,
+    display: "flex",
+    gap: 12,
+  }}
+>
+  <a href="/privacy">Privacy Policy</a>
+  <a href="/terms">Terms</a>
+</div>
         <button
           onClick={acceptCookies}
           style={{
