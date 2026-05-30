@@ -11,7 +11,9 @@ import { calculateAurora } from "./utils/auroraEngine";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const BASE = "https://report.masto84.workers.dev";
+const BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://report.masto84.workers.dev";
 
 /** Lue premium deviceKey localStoragesta */
 function readDeviceKey() {
@@ -31,7 +33,38 @@ function readDeviceKey() {
     return "";
   }
 }
+async function fetchJsonSafe(url, label) {
+  const res = await fetch(url, {
+    cache: "no-store",
+  });
 
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`${label} ${res.status}: ${text.slice(0, 120)}`);
+  }
+
+  if (!text.trim()) {
+    throw new Error(`${label}: empty response`);
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`${label}: invalid JSON`);
+  }
+}
+
+function lastValidRow(rows, colIndex) {
+  if (!Array.isArray(rows)) return null;
+
+  for (let i = rows.length - 1; i >= 1; i--) {
+    const value = parseFloat(rows[i]?.[colIndex]);
+    if (!Number.isNaN(value)) return rows[i];
+  }
+
+  return null;
+}
 export default function HomePage() {
   const [kp, setKp] = useState(null);
   const [wind, setWind] = useState(null);
@@ -61,73 +94,96 @@ export default function HomePage() {
 
   // ===== SOLAR + FORECAST
   useEffect(() => {
-    const fetchSolar = async () => {
-      try {
-        const [kpRes, plasmaRes, magRes] = await Promise.all([
-          fetch(
-            "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json"
-          ),
-          fetch(
-            "https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json"
-          ),
-          fetch(
-            "https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json"
-          ),
-        ]);
+   const fetchSolar = async () => {
+  try {
+    const kpUrl = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
+    const plasmaUrl = "https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json";
+    const magUrl = "https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json";
 
-        const kpData = await kpRes.json();
-        const plasmaData = await plasmaRes.json();
-        const magData = await magRes.json();
+    const [kpData, plasmaData, magData] = await Promise.all([
+      fetchJsonSafe(kpUrl, "NOAA Kp").catch((e) => {
+        console.warn("NOAA Kp failed:", e);
+        return null;
+      }),
+      fetchJsonSafe(plasmaUrl, "NOAA plasma").catch((e) => {
+        console.warn("NOAA plasma failed:", e);
+        return null;
+      }),
+      fetchJsonSafe(magUrl, "NOAA mag").catch((e) => {
+        console.warn("NOAA mag failed:", e);
+        return null;
+      }),
+    ]);
 
-        const kpLast = kpData[kpData.length - 1];
-        const plasmaLast = plasmaData[plasmaData.length - 1];
-        const magLast = magData[magData.length - 1];
+    const kpLast = lastValidRow(kpData, 1);
+    const plasmaLast = lastValidRow(plasmaData, 2);
+    const magLast = lastValidRow(magData, 3);
 
-        const parsedKp = parseFloat(kpLast[1]);
+    if (kpLast) {
+      const parsedKp = parseFloat(kpLast[1]);
+      setKp(Number.isNaN(parsedKp) ? 0 : parsedKp);
+    }
 
-        setKp(isNaN(parsedKp) ? 0 : parsedKp);
-        setWind(parseFloat(plasmaLast[2]));
-        setBz(parseFloat(magLast[3]));
-      } catch (e) {
-        console.error("SOLAR ERROR:", e);
-      }
-    };
+    if (plasmaLast) {
+      const parsedWind = parseFloat(plasmaLast[2]);
+      if (!Number.isNaN(parsedWind)) setWind(parsedWind);
+    }
+
+    if (magLast) {
+      const parsedBz = parseFloat(magLast[3]);
+      if (!Number.isNaN(parsedBz)) setBz(parsedBz);
+    }
+  } catch (e) {
+    console.warn("SOLAR ERROR:", e);
+  }
+};
 
     const fetchForecast = async () => {
-      try {
-        const deviceKey = readDeviceKey();
+  try {
+    const deviceKey = readDeviceKey();
 
-        const res = await fetch(`${BASE}/api/aurora/forecast`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lat: 67.5,
-            lon: 26,
-            deviceKey,
-          }),
-        });
+    const res = await fetch(`${BASE}/api/aurora/forecast`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        lat: 67.5,
+        lon: 26,
+        deviceKey,
+      }),
+    });
 
-        const data = await res.json();
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Forecast ${res.status}: ${text.slice(0, 120)}`);
+    }
 
-        setForecast({
-          tier: data?.tier || "free",
-          slots: Array.isArray(data?.slots) ? data.slots : [],
-          genAt: data?.genAt || null,
-          current: data?.current || null,
-        });
-      } catch (e) {
-        console.error("FORECAST ERROR:", e);
+    const data = await res.json().catch(() => {
+      throw new Error("Forecast: invalid JSON");
+    });
 
-        setForecast({
-          tier: "free",
-          slots: [],
-          genAt: null,
-          current: null,
-        });
-      }
-    };
+    setForecast({
+      tier: data?.tier || "free",
+      slots: Array.isArray(data?.slots) ? data.slots : [],
+      genAt: data?.genAt || null,
+      current: data?.current || null,
+    });
+  } catch (e) {
+    console.error("FORECAST ERROR:", e);
+
+    setForecast((prev) => {
+  if (prev.slots.length) return prev;
+
+  return {
+    tier: "free",
+    slots: [],
+    genAt: null,
+    current: null,
+  };
+});
+  }
+};
 
     fetchSolar();
     fetchForecast();
