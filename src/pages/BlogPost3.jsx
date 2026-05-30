@@ -55,8 +55,24 @@ export default function BlogPost3() {
         </p>
       </main>
 
-      <footer className="footer">
+     <footer className="footer">
         <p>© RepoTracker</p>
+
+        <Link to="/privacy">
+          {t("footer.privacy")}
+        </Link>
+
+        {" - "}
+
+        <Link to="/terms">
+          {t("footer.terms")}
+        </Link>
+
+        {" - "}
+
+        <Link to="/contact">
+          {t("footer.contact")}
+        </Link>
       </footer>
     </div>
   );
