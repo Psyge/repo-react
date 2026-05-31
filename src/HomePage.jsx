@@ -51,7 +51,7 @@ async function fetchJsonSafe(url, label) {
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error(`${label}: invalid JSON`);
+    throw new Error(`${label}: invalid JSON`); 
   }
 }
 
