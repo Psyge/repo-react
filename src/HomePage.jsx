@@ -239,7 +239,7 @@ export default function HomePage() {
           <div className="container">
 <div className="hero-banner">
   <img
-    src="/images/aurora-banner.jpg"
+    src="/images/revontulet.png"
     alt="Northern Lights over Lapland"
   />
 </div>
