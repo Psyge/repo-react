@@ -240,10 +240,9 @@ export default function HomePage() {
           <div className="container">
 <div className="hero-banner">
   <img
-  src={revontulet}
-  alt="Northern Lights"
-  className="hero-banner"
-/>
+    src={revontulet}
+    alt="Northern Lights"
+  />
 </div>
             <div className="hero-split">
               <div className="hero-text">
