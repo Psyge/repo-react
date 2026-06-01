@@ -237,7 +237,12 @@ export default function HomePage() {
         {/* HERO */}
         <section className="block">
           <div className="container">
-
+<div className="hero-banner">
+  <img
+    src="/images/aurora-banner.jpg"
+    alt="Northern Lights over Lapland"
+  />
+</div>
             <div className="hero-split">
               <div className="hero-text">
                 <h1>{t("hero.title")}</h1>
