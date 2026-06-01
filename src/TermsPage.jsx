@@ -3,6 +3,7 @@ import useTranslation from "./hooks/useTranslation";
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import { Link } from "react-router-dom";
+import SEO from "./components/SEO";
 
 function EmailLink() {
   const [email, setEmail] = useState("");
@@ -83,6 +84,11 @@ export default function TermsPage() {
 
   return (
     <div>
+      <SEO
+  title="Terms of Service | RepoTracker"
+  description="Terms and conditions for using RepoTracker services and forecasts."
+  canonical="https://repotracker.fi/terms"
+/>
       <Header />
 
       <main

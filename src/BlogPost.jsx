@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import useTranslation from "./hooks/useTranslation";
+import SEO from "./components/SEO";
 
 import BlogPost1 from "./pages/BlogPost1";
 import BlogPost2 from "./pages/BlogPost2";
@@ -24,6 +25,11 @@ export default function BlogPost() {
 
   return (
     <div>
+      <SEO
+  title="Northern Lights Blog"
+  description="Aurora guides, photography tips and northern lights forecasting articles."
+  canonical="https://repotracker.fi/blog"
+/>
       <div className="container">
         <h1>Article not found</h1>
 

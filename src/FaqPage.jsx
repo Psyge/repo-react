@@ -2,6 +2,7 @@ import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
 import { useEffect } from 'react';
 import { Link } from "react-router-dom";
+import SEO from "./components/SEO";
 
 const QUESTIONS = [
   { q: 'faq.q.about', body: ['faq.a.about1', 'faq.a.about2', 'faq.a.about3'] },
@@ -25,6 +26,11 @@ export default function FaqPage() {
 
   return (
     <div className="faq-page">
+     <SEO
+  title="Northern Lights FAQ Finland | Aurora Questions"
+  description="Frequently asked questions about Northern Lights in Finland and Lapland. Learn the best viewing times, KP index, weather conditions and aurora forecasts."
+  canonical="https://repotracker.fi/faq"
+/>
       <Header />
     <main className="container" style={{ padding: '32px 16px', maxWidth: 860, margin: '0 auto' }}>
       <section className="hero" style={{ padding: '24px 0 16px' }}>

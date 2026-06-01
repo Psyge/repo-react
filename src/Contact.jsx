@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
+import SEO from "./components/SEO";
 
 import { Link } from "react-router-dom";
 
@@ -81,6 +82,11 @@ export default function Contact() {
 
   return (
   <div className="contact-page">
+    <SEO
+  title="Contact | RepoTracker"
+  description="Contact RepoTracker for support, feedback and business inquiries."
+  canonical="https://repotracker.fi/contact"
+/>
     <Header />
 
     <div className="contact-wrap">

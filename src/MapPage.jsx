@@ -9,6 +9,8 @@ import SearchBox from "./components/SearchBox";
 
 import { useSearchParams } from "react-router-dom";
 
+import SEO from "./components/SEO";
+
 import {
   createAuroraOverlay,
   fetchAuroraData,
@@ -232,6 +234,12 @@ export default function MapPage() {
 
   return (
     <div>
+      <SEO
+  title="Northern Lights Map Finland | RepoTracker"
+  description="Interactive Northern Lights map showing current northern lights conditions across Finland."
+  keywords="aurora map, northern lights map Finland"
+  canonical="https://repotracker.fi/map"
+/>
       <Header />
       <div className="map-search-wrap">
         <SearchBox onSelect={handleSearchSelect} />

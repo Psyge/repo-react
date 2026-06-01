@@ -4,6 +4,8 @@ import { isActive, read, openCheckout } from "./lib/premium";
 import Header from "./components/Header";
 import { Link } from "react-router-dom";
 
+import SEO from "./components/SEO";
+
 export default function PremiumPage() {
   const { t, lang } = useTranslation();
   const fi = lang === "fi";
@@ -131,6 +133,12 @@ export default function PremiumPage() {
 
   return (
     <div>
+      <SEO
+  title="Premium Northern Light Forecast | RepoTracker"
+  description="Unlock 72-hour aurora forecasts and advanced northern lights tracking."
+  keywords="aurora premium, northern lights forecast"
+  canonical="https://repotracker.fi/premium"
+/>
           <Header />
     <main className="premium-page container">
       <section className="premium-hero">

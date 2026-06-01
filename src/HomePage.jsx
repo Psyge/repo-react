@@ -6,6 +6,7 @@ import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
 import PlacesSection from "./components/PlacesSection";
+import SEO from "./components/SEO";
 import revontulet from "./images/revontulet.png";
 
 import { calculateAurora } from "./utils/auroraEngine";
@@ -231,6 +232,12 @@ export default function HomePage() {
 
   return (
     <div>
+      <SEO
+  title="Northern Lights Forecast Finland | RepoTracker"
+  description="Live Northern Lights forecast, KP index, solar wind and northern lights map for Finland and Lapland."
+  keywords="northern lights, aurora forecast, Finland, Lapland, KP index"
+  canonical="https://repotracker.fi/"
+/>
       <Header />
 
       <main>
