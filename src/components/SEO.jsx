@@ -4,7 +4,7 @@ export default function SEO({
   title,
   description,
   keywords,
-  image = "/og-image.jpg",
+  image = "images/reposet.png",
   canonical,
 }) {
   return (
