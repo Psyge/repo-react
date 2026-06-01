@@ -6,6 +6,7 @@ import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
 import PlacesSection from "./components/PlacesSection";
+import revontulet from "../images/revontulet.png";
 
 import { calculateAurora } from "./utils/auroraEngine";
 import L from "leaflet";
@@ -239,9 +240,10 @@ export default function HomePage() {
           <div className="container">
 <div className="hero-banner">
   <img
-    src="/images/revontulet.png"
-    alt="Northern Lights over Lapland"
-  />
+  src={revontulet}
+  alt="Northern Lights"
+  className="hero-banner"
+/>
 </div>
             <div className="hero-split">
               <div className="hero-text">
