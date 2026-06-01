@@ -4,11 +4,12 @@ export default function SEO({
   title,
   description,
   keywords,
-  image = "images/reposet.png",
+  image = "https://repotracker.fi/images/reposet.png",
   canonical,
 }) {
   return (
     <Helmet>
+      {/* Basic SEO */}
       <title>{title}</title>
 
       <meta
@@ -21,11 +22,19 @@ export default function SEO({
         content={keywords}
       />
 
-      <link
-        rel="canonical"
-        href={canonical}
+      <meta
+        name="robots"
+        content="index,follow"
       />
 
+      {canonical && (
+        <link
+          rel="canonical"
+          href={canonical}
+        />
+      )}
+
+      {/* Open Graph */}
       <meta
         property="og:title"
         content={title}
@@ -49,6 +58,37 @@ export default function SEO({
       <meta
         property="og:type"
         content="website"
+      />
+
+      <meta
+        property="og:site_name"
+        content="RepoTracker"
+      />
+
+      <meta
+        property="og:locale"
+        content="en_US"
+      />
+
+      {/* Twitter / X */}
+      <meta
+        name="twitter:card"
+        content="summary_large_image"
+      />
+
+      <meta
+        name="twitter:title"
+        content={title}
+      />
+
+      <meta
+        name="twitter:description"
+        content={description}
+      />
+
+      <meta
+        name="twitter:image"
+        content={image}
       />
     </Helmet>
   );

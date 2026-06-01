@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<urlset
+ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://repotracker.fi/</loc>
+  </url>
+
+  <url>
+    <loc>https://repotracker.fi/map</loc>
+  </url>
+
+  <url>
+    <loc>https://repotracker.fi/blog</loc>
+  </url>
+
+  <url>
+  <loc>https://repotracker.fi/blog/photography</loc>
+</url>
+
+<url>
+  <loc>https://repotracker.fi/blog/forecast</loc>
+</url>
+
+<url>
+  <loc>https://repotracker.fi/blog/best-time</loc>
+</url>
+
+  <url>
+    <loc>https://repotracker.fi/faq</loc>
+  </url>
+
+  <url>
+    <loc>https://repotracker.fi/premium</loc>
+  </url>
+
+  <url>
+    <loc>https://repotracker.fi/contact</loc>
+  </url>
+
+  <url>
+    <loc>https://repotracker.fi/privacy</loc>
+  </url>
+  
+  <url>
+    <loc>https://repotracker.fi/terms</loc>
+  </url>
+
+
+</urlset>
