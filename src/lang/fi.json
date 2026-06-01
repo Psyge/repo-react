@@ -255,6 +255,7 @@
   "sightings.cooldown": "Voit raportoida vain kerran 30 minuutissa.",
   "sightings.thanks": "Kiitos! Havaintosi on tallennettu.",
   "sightings.error": "Raportin lähetys epäonnistui. Yritä myöhemmin.",
+  "sightings.premiumRequired": "Premium-jäsenyys vaaditaan tämän havainnon katseluun",
   "terms.pagetitle": "Käyttöehdot — RepoTracker",
   "terms.title": "Käyttöehdot",
   "terms.intro": "Maksut, palautukset ja käyttöehdot RepoTracker-palvelussa.",

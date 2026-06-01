@@ -256,6 +256,7 @@
   "sightings.cooldown": "You can only report once every 30 minutes.",
   "sightings.thanks": "Thanks! Your sighting was reported.",
   "sightings.error": "Could not send report. Try again later.","terms.pagetitle": "Terms of Service — RepoTracker",
+  "sightings.premiumRequired": "Premium membership required to view this sighting",
   "terms.title": "Terms of Service",
   "terms.intro": "Payments, refunds, and usage terms for RepoTracker.",
   "terms.q.service": "1. About the Service",
