@@ -6,7 +6,7 @@ import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
 import PlacesSection from "./components/PlacesSection";
-import revontulet from "../images/revontulet.png";
+import revontulet from "./images/revontulet.png";
 
 import { calculateAurora } from "./utils/auroraEngine";
 import L from "leaflet";
