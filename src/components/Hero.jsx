@@ -255,6 +255,6 @@ export default function Hero({ kp: kpProp = null, wind: windProp = null, bz: bzP
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
