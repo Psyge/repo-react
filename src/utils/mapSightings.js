@@ -1,20 +1,77 @@
 import L from "leaflet";
 
 const BASE =
+  import.meta.env.VITE_API_BASE ||
   "https://report.masto84.workers.dev";
 
-export async function loadSightingsLayer(
-  layer
-) {
-  try {
-    const res = await fetch(
-      `${BASE}/api/sightings/clusters`,
-      {
-        cache: "no-cache",
-      }
-    );
+const SIGHTINGS_CACHE_KEY = "aurora_session_cache:sightings:clusters:v1";
+const SIGHTINGS_TTL_MS = 10 * 60 * 1000; // 10 min
 
-    const data = await res.json();
+function readSessionCache(key, ttlMs) {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+
+    const cached = JSON.parse(raw);
+
+    if (!cached || typeof cached.savedAt !== "number") {
+      return null;
+    }
+
+    if (ttlMs && Date.now() - cached.savedAt > ttlMs) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+
+    return cached.data ?? null;
+  } catch {
+    sessionStorage.removeItem(key);
+    return null;
+  }
+}
+
+function writeSessionCache(key, data) {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        savedAt: Date.now(),
+        data,
+      })
+    );
+  } catch {
+    // sessionStorage voi olla täynnä tai estetty — ei kaadeta karttaa.
+  }
+}
+
+async function fetchSightingsClusters({ force = false } = {}) {
+  if (!force) {
+    const cached = readSessionCache(SIGHTINGS_CACHE_KEY, SIGHTINGS_TTL_MS);
+    if (cached) return cached;
+  }
+
+  const res = await fetch(`${BASE}/api/sightings/clusters`, {
+    cache: "default",
+  });
+
+  if (!res.ok) {
+    throw new Error(`sightings ${res.status}`);
+  }
+
+  const data = await res.json();
+
+  writeSessionCache(SIGHTINGS_CACHE_KEY, data);
+
+  return data;
+}
+
+export async function loadSightingsLayer(layer, { force = false } = {}) {
+  try {
+    const data = await fetchSightingsClusters({ force });
 
     layer.clearLayers();
 

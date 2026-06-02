@@ -14,33 +14,152 @@ import SEO from "./components/SEO";
 import {
   createAuroraOverlay,
   fetchAuroraData,
+  getAuroraIntensity,
 } from "./utils/auroraOverlay";
 
 import {
   loadSightingsLayer,
 } from "./utils/mapSightings";
 
-const BASE = "https://report.masto84.workers.dev";
+const BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://report.masto84.workers.dev";
+
+const PREMIUM_POINT_TTL_MS = 60 * 60 * 1000; // 1h
+const MAP_CLICK_DEBOUNCE_MS = 300;
+const SIGHTINGS_REFRESH_MS = 10 * 60 * 1000; // 10 min
 
 function readPremium() {
   try {
     const p = JSON.parse(
       localStorage.getItem("aurora_premium") || "null"
     );
+
     if (!p || !p.deviceKey || !p.expiresAt) return null;
     if (p.expiresAt < Date.now()) return null;
+
     return p;
   } catch {
     return null;
   }
 }
 
+function roundCoord(value, step = 0.25) {
+  return Math.round(Number(value) / step) * step;
+}
+
+function premiumPointCacheKey(lat, lon, deviceKey) {
+  const latKey = roundCoord(lat, 0.25).toFixed(2);
+  const lonKey = roundCoord(lon, 0.25).toFixed(2);
+  const devicePart = String(deviceKey || "").slice(0, 12);
+
+  return `aurora_session_cache:map:premium-calc:${latKey}:${lonKey}:${devicePart}:v1`;
+}
+
+function readSessionCache(key, ttlMs) {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+
+    const cached = JSON.parse(raw);
+
+    if (!cached || typeof cached.savedAt !== "number") {
+      return null;
+    }
+
+    if (ttlMs && Date.now() - cached.savedAt > ttlMs) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+
+    return cached.data ?? null;
+  } catch {
+    sessionStorage.removeItem(key);
+    return null;
+  }
+}
+
+function writeSessionCache(key, data) {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        savedAt: Date.now(),
+        data,
+      })
+    );
+  } catch {
+    // sessionStorage voi olla täynnä/estetty. Ei kaadeta sivua.
+  }
+}
+
+async function sessionCachedJson(key, ttlMs, fetcher) {
+  const cached = readSessionCache(key, ttlMs);
+  if (cached) return cached;
+
+  const data = await fetcher();
+  writeSessionCache(key, data);
+
+  return data;
+}
+
+async function fetchPremiumAuroraPoint(lat, lon) {
+  const premium = readPremium();
+
+  // Free-käyttäjä ei kutsu Workeria karttaklikistä.
+  if (!premium?.deviceKey) {
+    return null;
+  }
+
+  const deviceKey = premium.deviceKey;
+  const cacheKey = premiumPointCacheKey(lat, lon, deviceKey);
+
+  return sessionCachedJson(
+    cacheKey,
+    PREMIUM_POINT_TTL_MS,
+    async () => {
+      const res = await fetch(`${BASE}/api/aurora/calc`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lat,
+          lon,
+          deviceKey,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`calc ${res.status}: ${text.slice(0, 120)}`);
+      }
+
+      return res.json();
+    }
+  );
+}
+
+function buildFreePointData(lat, lon) {
+  const ovation = getAuroraIntensity(lat, lon);
+
+  return {
+    tier: "free",
+    ovation,
+  };
+}
+
 export default function MapPage() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markerRef = useRef(null);
+  const clickTimerRef = useRef(null);
+  const popupRootRef = useRef(null);
 
-  // auroraIcon useRef:iin — ei luo uutta objektia joka renderillä
   const auroraIconRef = useRef(
     L.divIcon({
       className: "",
@@ -63,32 +182,29 @@ export default function MapPage() {
         `${window.innerHeight * 0.01}px`
       );
     };
+
     setVH();
+
     window.addEventListener("resize", setVH);
+
     return () => window.removeEventListener("resize", setVH);
   }, []);
 
   // ===== DISABLE BODY SCROLL
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
 
-  const fetchAuroraPoint = async (lat, lon) => {
-    const p = readPremium();
-    const deviceKey = p?.deviceKey || "";
-    const res = await fetch(`${BASE}/api/aurora/calc`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lat, lon, deviceKey }),
-    });
-    if (!res.ok) throw new Error(`calc ${res.status}`);
-    return res.json();
-  };
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   // ===== POPUP
   const openPopup = useCallback(async (map, lat, lng) => {
     if (!map) return;
+
+    const freeData = buildFreePointData(lat, lng);
+    const premium = readPremium();
 
     const popup = L.popup({
       maxWidth: 320,
@@ -97,20 +213,70 @@ export default function MapPage() {
     }).setLatLng([lat, lng]);
 
     const container = document.createElement("div");
+
     popup.setContent(container);
     popup.addTo(map);
 
+    if (popupRootRef.current) {
+      try {
+        popupRootRef.current.unmount();
+      } catch {
+        // ignore
+      }
+    }
+
     const root = createRoot(container);
-    root.render(<AuroraPopup lat={lat} lng={lng} data={null} />);
+    popupRootRef.current = root;
+
+    // Renderöi heti free-data ilman Worker-kutsua.
+    root.render(
+      <AuroraPopup
+        lat={lat}
+        lng={lng}
+        data={freeData}
+        premium={!!premium}
+        loading={!!premium}
+      />
+    );
+
+    // Premium-käyttäjälle tarkka data Workerin kautta, cache 1h.
+    if (!premium) return;
 
     try {
-      const data = await fetchAuroraPoint(lat, lng);
-      root.render(<AuroraPopup lat={lat} lng={lng} data={data} />);
+      const premiumData = await fetchPremiumAuroraPoint(lat, lng);
+
+      root.render(
+        <AuroraPopup
+          lat={lat}
+          lng={lng}
+          data={premiumData || freeData}
+          premium
+        />
+      );
     } catch (err) {
       console.error("[aurora calc]", err);
-      root.render(<AuroraPopup lat={lat} lng={lng} data={null} error />);
+
+      root.render(
+        <AuroraPopup
+          lat={lat}
+          lng={lng}
+          data={freeData}
+          premium
+          error
+        />
+      );
     }
   }, []);
+
+  const schedulePopup = useCallback((map, lat, lng) => {
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
+
+    clickTimerRef.current = setTimeout(() => {
+      openPopup(map, lat, lng);
+    }, MAP_CLICK_DEBOUNCE_MS);
+  }, [openPopup]);
 
   // ===== MAP INIT
   useEffect(() => {
@@ -122,29 +288,25 @@ export default function MapPage() {
       markerZoomAnimation: false,
     }).setView([initialLat, initialLon], 9);
 
-    // Mobile hint
-    
-      L.popup({
-        closeButton: true,
-        autoClose: true,
-        closeOnClick: true,  // korjattu: ei enää estä kartan klikkausta
-      })
-        .setLatLng([66.5, 25.7])
-        .setContent(`
-          <div class="map-hint-popup">
-            <strong>Explore aurora forecast</strong>
-            <p>Tap anywhere on the map to view live aurora probability and conditions.</p>
-          </div>
-        `)
-        .addTo(map);
-    
+    L.popup({
+      closeButton: true,
+      autoClose: true,
+      closeOnClick: true,
+    })
+      .setLatLng([66.5, 25.7])
+      .setContent(`
+        <div class="map-hint-popup">
+          <strong>Explore aurora forecast</strong>
+          <p>Tap anywhere on the map to view live aurora probability and conditions.</p>
+        </div>
+      `)
+      .addTo(map);
 
-    // Tile
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     ).addTo(map);
 
-    // Aurora overlay
+    // Aurora overlay — fetchAuroraData on nyt session-cachettu 1h.
     const overlay = createAuroraOverlay();
     overlay.addTo(map);
 
@@ -156,56 +318,79 @@ export default function MapPage() {
         console.error(e);
       }
     };
-    loadAurora();
-    const auroraInterval = setInterval(loadAurora, 60000);
 
-    // Sightings
+    loadAurora();
+
+    // Sightings — vain premiumille ja paljon harvemmin kuin 1 min.
     const premium = readPremium();
     const sightingsLayer = L.layerGroup().addTo(map);
     let sightingsInterval = null;
 
     if (premium) {
       loadSightingsLayer(sightingsLayer);
+
       sightingsInterval = setInterval(() => {
         loadSightingsLayer(sightingsLayer);
-      }, 60000);
+      }, SIGHTINGS_REFRESH_MS);
     }
 
-    // Click — avaa popup ja sulkee vanhan automaattisesti
     map.on("click", (e) => {
-      openPopup(map, e.latlng.lat, e.latlng.lng);
+      schedulePopup(map, e.latlng.lat, e.latlng.lng);
     });
 
     mapInstance.current = map;
 
-    // URL-parametrit → avaa popup ja markeri
+    // URL-parametrit → avaa popup ja markeri.
     if (searchParams.get("lat") && searchParams.get("lon")) {
-      map.flyTo([initialLat, initialLon], isSighting ? 11 : 7, { duration: 1.5 });
-      openPopup(map, initialLat, initialLon);
+      map.flyTo([initialLat, initialLon], isSighting ? 11 : 7, {
+        duration: 1.5,
+      });
+
+      schedulePopup(map, initialLat, initialLon);
 
       const marker = L.marker([initialLat, initialLon], {
         icon: auroraIconRef.current,
       }).addTo(map);
+
       markerRef.current = marker;
 
       setTimeout(() => {
         const el = marker.getElement();
+
         if (el && el.firstChild) {
           el.firstChild.classList.add(
             isSighting ? "map-marker-sighting" : "map-marker-active"
           );
         }
       }, 0);
-
-    } 
+    }
 
     return () => {
-      clearInterval(auroraInterval);
-      if (sightingsInterval) clearInterval(sightingsInterval);
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
+
+      if (sightingsInterval) {
+        clearInterval(sightingsInterval);
+      }
+
+      if (popupRootRef.current) {
+        try {
+          popupRootRef.current.unmount();
+        } catch {
+          // ignore
+        }
+      }
+
       map.remove();
     };
-  }, [openPopup, initialLat, initialLon, searchParams, isSighting]);
-  // ↑ auroraIcon poistettu dependency listasta
+  }, [
+    initialLat,
+    initialLon,
+    isSighting,
+    schedulePopup,
+    searchParams,
+  ]);
 
   // ===== SEARCH
   const handleSearchSelect = (place) => {
@@ -213,37 +398,47 @@ export default function MapPage() {
     if (!map) return;
 
     const { lat, lon } = place;
-    map.flyTo([lat, lon], 7, { duration: 1.5 });
 
-    if (markerRef.current) markerRef.current.remove();
+    map.flyTo([lat, lon], 7, {
+      duration: 1.5,
+    });
+
+    if (markerRef.current) {
+      markerRef.current.remove();
+    }
 
     const marker = L.marker([lat, lon], {
       icon: auroraIconRef.current,
     }).addTo(map);
+
     markerRef.current = marker;
 
     setTimeout(() => {
       const el = marker.getElement();
+
       if (el && el.firstChild) {
         el.firstChild.classList.add("map-marker-active");
       }
     }, 0);
 
-    openPopup(map, lat, lon);
+    schedulePopup(map, lat, lon);
   };
 
   return (
     <div>
       <SEO
-  title="Northern Lights Map Finland | RepoTracker"
-  description="Interactive Northern Lights map showing current northern lights conditions across Finland."
-  keywords="aurora map, northern lights map Finland"
-  canonical="https://repotracker.fi/map"
-/>
+        title="Northern Lights Map Finland | RepoTracker"
+        description="Interactive Northern Lights map showing current northern lights conditions across Finland."
+        keywords="aurora map, northern lights map Finland"
+        canonical="https://repotracker.fi/map"
+      />
+
       <Header />
+
       <div className="map-search-wrap">
         <SearchBox onSelect={handleSearchSelect} />
       </div>
+
       <div id="map" ref={mapRef} />
     </div>
   );

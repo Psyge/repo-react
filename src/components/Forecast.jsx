@@ -155,23 +155,30 @@ export default function Forecast({ data, tier: tierProp = "free", genAt, current
         </ResponsiveContainer>
 
         {/* Free-overlay: päivien 2–3 päälle blur + CTA */}
-        {!isPremium && (
-          <div
-            className="fc-lock-overlay"
-            style={{
-              position: "absolute",
-              right: 0,
-              top: 0,
-              width: "66%",
-              height: "100%",
-              pointerEvents: "none",
-              background:
-                "linear-gradient(90deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0.65) 35%, rgba(15,23,42,0.85) 100%)",
-             
-            }}
-          >
-          </div>
-        )}
+       {!isPremium && (
+  <Link
+    to="/premium"
+    className="fc-lock-overlay"
+    style={{
+      position: "absolute",
+      right: 0,
+      top: 0,
+      width: "66%",
+      height: "100%",
+      background:
+        "linear-gradient(90deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0.65) 35%, rgba(15,23,42,0.85) 100%)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      textDecoration: "none",
+      color: "#fff",
+    }}
+  >
+    <span className="fc-overlay-cta">
+      🔒 {t("forecast.unlock") || "Unlock 3-day premium forecast"}
+    </span>
+  </Link>
+)}
       </div>
 
       {/* Kp-rivi pohjalle (free + premium) */}

@@ -1,22 +1,22 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import useTranslation from "../hooks/useTranslation";
 
+const BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://report.masto84.workers.dev";
+
+const SIGHTINGS_CACHE_KEY = "aurora_session_cache:sightings:clusters:v1";
+const SIGHTINGS_TTL_MS = 10 * 60 * 1000; // 10 min
 
 function readPremium() {
   try {
     const p = JSON.parse(
-      localStorage.getItem(
-        "aurora_premium"
-      ) || "null"
+      localStorage.getItem("aurora_premium") || "null"
     );
 
-    if (
-      !p ||
-      !p.deviceKey ||
-      !p.expiresAt
-    ) {
+    if (!p || !p.deviceKey || !p.expiresAt) {
       return null;
     }
 
@@ -30,76 +30,129 @@ function readPremium() {
   }
 }
 
+function readSessionCache(key, ttlMs) {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+
+    const cached = JSON.parse(raw);
+
+    if (!cached || typeof cached.savedAt !== "number") {
+      return null;
+    }
+
+    if (ttlMs && Date.now() - cached.savedAt > ttlMs) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+
+    return cached.data ?? null;
+  } catch {
+    sessionStorage.removeItem(key);
+    return null;
+  }
+}
+
+function writeSessionCache(key, data) {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        savedAt: Date.now(),
+        data,
+      })
+    );
+  } catch {
+    // sessionStorage voi olla täynnä/estetty — ei kaadeta sivua.
+  }
+}
+
+async function sessionCachedJson(key, ttlMs, fetcher, { force = false } = {}) {
+  if (!force) {
+    const cached = readSessionCache(key, ttlMs);
+    if (cached) return cached;
+  }
+
+  const data = await fetcher();
+  writeSessionCache(key, data);
+  return data;
+}
+
 export default function Sightings() {
-  const [clusters, setClusters] =
-    useState([]);
+  const [clusters, setClusters] = useState([]);
 
-  
   const { t } = useTranslation();
-
   const navigate = useNavigate();
 
-  const BASE =
-    "https://report.masto84.workers.dev";
+  const premium = useMemo(() => readPremium(), []);
 
-  const premium = readPremium();
+  const loadClusters = useCallback(
+    async ({ force = false } = {}) => {
+      // Free-käyttäjä ei kuluta Workeria.
+      if (!premium) return;
 
- const loadClusters = useCallback(
-  async () => {
-    // FREE users ei näe sightings-listaa
-   
+      try {
+        const data = await sessionCachedJson(
+          SIGHTINGS_CACHE_KEY,
+          SIGHTINGS_TTL_MS,
+          async () => {
+            const res = await fetch(`${BASE}/api/sightings/clusters`, {
+              cache: "default",
+            });
 
-    try {
-      const res = await fetch(
-        `${BASE}/api/sightings/clusters`,
-        {
-          cache: "no-cache",
-        }
-      );
+            if (!res.ok) {
+              throw new Error(`sightings ${res.status}`);
+            }
 
-      const data = await res.json();
+            return res.json();
+          },
+          { force }
+        );
 
-      setClusters(
-        data.clusters || []
-      );
-    } catch (e) {
-      console.error(e);
-    }
-  },
-  []
-);
+        setClusters(data.clusters || []);
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    [premium]
+  );
 
   useEffect(() => {
+    if (!premium) {
+      setClusters([]);
+      return;
+    }
+
     loadClusters();
 
-    const interval =
-      setInterval(
-        loadClusters,
-        120000
-      );
+    const interval = setInterval(() => {
+      loadClusters({ force: true });
+    }, SIGHTINGS_TTL_MS);
 
-    window.__refreshSightings =
-      loadClusters;
+    window.__refreshSightings = () => {
+      loadClusters({ force: true });
+    };
 
     return () => {
       clearInterval(interval);
-
       delete window.__refreshSightings;
     };
-  }, [loadClusters]);
+  }, [loadClusters, premium]);
 
-  // FREE upsell
+  // FREE upsell — ei Worker-kutsua.
   if (!premium) {
-  const totalReports = clusters.reduce((sum, c) => sum + c.count, 0);
-  return (
-    <div className="sightings-empty">
-      {totalReports > 0
-        ? `🌌 ${totalReports} ${t("sightings.reportsActive") || "aurora report(s) active right now"} — 🔒 ${t("sightings.unlockDetails") || "Unlock Premium to see locations"}`
-        : `🔒 ${t("sightings.premiumRequired") || "Premium required to view live aurora sightings"}`
-      }
-    </div>
-  );
-}
+    return (
+      <div className="sightings-empty">
+        🔒{" "}
+        {t("sightings.premiumRequired") ||
+          "Premium required to view live aurora sightings"}
+      </div>
+    );
+  }
 
   return (
     <div className="sightings-list">
@@ -110,7 +163,7 @@ export default function Sightings() {
       ) : (
         clusters.map((c, i) => (
           <div
-            key={i}
+            key={`${c.region}-${c.latestTs || i}`}
             className="sighting-row"
             onClick={() => {
               navigate(

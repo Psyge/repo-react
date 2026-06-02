@@ -1,7 +1,9 @@
 import { useState } from "react";
 import useTranslation from "../hooks/useTranslation";
 
-const BASE = "https://report.masto84.workers.dev";
+const BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://report.masto84.workers.dev";
 
 const TURNSTILE_SITE_KEY =
   "0x4AAAAAADF29-_iSqwRQWf2";
@@ -16,6 +18,23 @@ export default function ReportButton() {
   const getTurnstileToken = async () => {
     return new Promise(
       (resolve, reject) => {
+        let widgetId = null;
+
+        const cleanup = () => {
+          if (
+            widgetId != null &&
+            window.turnstile
+          ) {
+            try {
+              window.turnstile.remove(
+                widgetId
+              );
+            } catch {
+              // ignore
+            }
+          }
+        };
+
         try {
           if (!window.turnstile) {
             reject(
@@ -43,8 +62,7 @@ export default function ReportButton() {
           // tyhjennä vanha widget
           container.innerHTML = "";
 
-          // renderöi uusi invisible widget
-          const id =
+          widgetId =
             window.turnstile.render(
               container,
               {
@@ -58,18 +76,16 @@ export default function ReportButton() {
                 ) => {
                   resolve(token);
 
-                  // poista widget jälkeenpäin
-                  setTimeout(() => {
-                    try {
-                      window.turnstile.remove(
-                        id
-                      );
-                    } catch {}
-                  }, 0);
+                  setTimeout(
+                    cleanup,
+                    0
+                  );
                 },
 
                 "error-callback":
                   () => {
+                    cleanup();
+
                     reject(
                       new Error(
                         "Turnstile failed"
@@ -79,6 +95,8 @@ export default function ReportButton() {
 
                 "expired-callback":
                   () => {
+                    cleanup();
+
                     reject(
                       new Error(
                         "Turnstile expired"
@@ -88,17 +106,18 @@ export default function ReportButton() {
               }
             );
 
-          // pieni delay estää race conditionit
           setTimeout(() => {
             try {
               window.turnstile.execute(
-                id
+                widgetId
               );
             } catch (err) {
+              cleanup();
               reject(err);
             }
           }, 50);
         } catch (err) {
+          cleanup();
           reject(err);
         }
       }
@@ -125,7 +144,6 @@ export default function ReportButton() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          // ===== captcha token
           const turnstileToken =
             await getTurnstileToken();
 
@@ -165,12 +183,6 @@ export default function ReportButton() {
           const text =
             await res.text();
 
-          console.log(
-            "sighting response:",
-            res.status,
-            text
-          );
-
           if (
             res.status === 429
           ) {
@@ -196,7 +208,8 @@ export default function ReportButton() {
             )
           );
 
-          // refresh sightings lista
+          // Refresh sightings vain kerran.
+          // Päivitetty Sightings/mapSightings voi käyttää force-refreshiä tämän takana.
           if (
             window.__refreshSightings
           ) {
@@ -234,6 +247,10 @@ export default function ReportButton() {
         enableHighAccuracy: true,
 
         timeout: 10000,
+
+        // Hyväksy viimeisen 5 min aikana haettu sijainti.
+        // Tämä keventää selainpuolta eikä vaikuta Worker-kuluihin.
+        maximumAge: 5 * 60 * 1000,
       }
     );
   };

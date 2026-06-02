@@ -1,15 +1,26 @@
+import { Link } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 
 /**
  * AuroraPopup
  * Props:
  *   lat, lng        – sijainti
- *   data            – workerin /api/aurora/calc vastaus tai null (loading)
+ *   data            – workerin /api/aurora/calc vastaus tai free fallback
  *                     { tier:'free'|'premium', kp, level, clouds, probability,
- *                       speed, bz, density, temp, windMs, weatherDesc, cloudSource }
+ *                       speed, bz, density, temp, windMs, weatherDesc, cloudSource,
+ *                       ovation }
  *   error           – true jos fetch epäonnistui
+ *   premium         – true jos käyttäjällä on premium (voi näyttää loading premium-dataa varten)
+ *   loading         – true jos premium-data on vielä latautumassa
  */
-export default function AuroraPopup({ lat, lng, data, error }) {
+export default function AuroraPopup({
+  lat,
+  lng,
+  data,
+  error,
+  premium = false,
+  loading = false,
+}) {
   const { t } = useTranslation();
 
   // ---- Loading
@@ -25,7 +36,7 @@ export default function AuroraPopup({ lat, lng, data, error }) {
   }
 
   // ---- Error
-  if (error || !data) {
+  if (error && !data) {
     return (
       <div style={{ minWidth: 220, color: "#fff" }}>
         <Loc lat={lat} lng={lng} />
@@ -36,165 +47,202 @@ export default function AuroraPopup({ lat, lng, data, error }) {
     );
   }
 
-  const isPremium = data.tier === "premium";
-  const level = data.level || "low";
+  const isPremium = data?.tier === "premium";
+
+  const derivedProbability =
+    data?.probability ??
+    data?.ovation ??
+    null;
+
+  const level =
+    data?.level ||
+    probabilityToLevel(derivedProbability);
+
   const color = levelColor(level);
   const levelLabel = t(`probability.${level}`, level);
 
-  // ---- FREE: vain Kp + level + locked teaser
- // ---- FREE: vain Kp + level + locked teaser
-if (!isPremium) {
+  // ---- FREE / FALLBACK
+  if (!isPremium) {
+    return (
+      <div style={{ minWidth: 240, color: "#fff" }}>
+        <Loc lat={lat} lng={lng} />
+
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
+          <div style={{ fontSize: 12, opacity: 0.7 }}>
+            {data?.kp != null
+              ? t("kp.label", "Kp")
+              : t("probability.label", "Aurora probability")}
+          </div>
+
+          <div style={{ fontSize: 28, fontWeight: 700, color }}>
+            {data?.kp != null
+              ? fmt(data.kp)
+              : derivedProbability != null
+                ? `${Math.round(derivedProbability)}%`
+                : "–"}
+          </div>
+        </div>
+
+        <div style={{ fontSize: 13, color, marginTop: 2 }}>
+          {levelLabel}
+        </div>
+
+        {data?.clouds != null && (
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
+            {t("row.clouds", "Clouds")}:{" "}
+            <strong>{`${data.clouds}%`}</strong>
+          </div>
+        )}
+
+        {loading && premium && (
+          <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
+            {t("loading", "Loading…")}
+          </div>
+        )}
+
+        {error && (
+          <div style={{ marginTop: 8, fontSize: 12, color: "#ff6b6b" }}>
+            {t("error.fetch", "Failed to load premium data")}
+          </div>
+        )}
+
+        {!premium && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: 10,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px dashed rgba(255,255,255,0.15)",
+              borderRadius: 8,
+            }}
+          >
+            <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 6 }}>
+              {t("popup.premiumIncludes", "Premium unlocks:")}
+            </div>
+
+            <Row
+              label={t("probability.label", "Aurora probability")}
+              value={<span style={{ color: "#00ffcc" }}>— %</span>}
+              locked
+            />
+            <Row
+              label={t("wind.speed", "Solar wind")}
+              value="—"
+              locked
+            />
+            <Row
+              label={t("bz.label", "Bz")}
+              value="—"
+              locked
+            />
+            <Row
+              label={t("wind.density", "Density")}
+              value="—"
+              locked
+            />
+
+            <Link
+              to="/premium"
+              style={{
+                display: "block",
+                marginTop: 10,
+                padding: "8px 10px",
+                textAlign: "center",
+                background: "linear-gradient(135deg,#ff3b7f,#ffe600)",
+                color: "#000",
+                fontWeight: 700,
+                borderRadius: 6,
+                textDecoration: "none",
+                fontSize: 12,
+              }}
+            >
+              🔒 {t("forecast.popup_full", "Unlock full forecast — from 2,99 €")}
+            </Link>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ---- PREMIUM
   return (
-    <div style={{ minWidth: 240, color: "#fff" }}>
+    <div className="aurora-popup">
       <Loc lat={lat} lng={lng} />
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
-        <div style={{ fontSize: 12, opacity: 0.7 }}>{t("kp.label", "Kp")}</div>
-        <div style={{ fontSize: 28, fontWeight: 700 }}>{fmt(data.kp)}</div>
-      </div>
-
-      <div style={{ fontSize: 13, color, marginTop: 2 }}>{levelLabel}</div>
-
-      {/* Pilvisyys näytetään ilmaiseksi — konkreettinen arvo houkuttelee */}
-      <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
-        {t("row.clouds", "Clouds")}: <strong>{data.clouds != null ? `${data.clouds}%` : "–"}</strong>
+      <div
+        className="ap-prob"
+        style={{ color }}
+      >
+        {data.probability != null
+          ? `${data.probability}%`
+          : "–"}
       </div>
 
       <div
-        style={{
-          marginTop: 10,
-          padding: 10,
-          background: "rgba(255,255,255,0.05)",
-          border: "1px dashed rgba(255,255,255,0.15)",
-          borderRadius: 8,
-        }}
+        className="ap-level"
+        style={{ color }}
       >
-        {/* Näytetään mitä premium sisältää — ei pelkkä lukko */}
-        <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 6 }}>
-          {t("popup.premiumIncludes", "Premium unlocks:")}
+        {levelLabel}
+      </div>
+
+      <div className="ap-quick">
+        <div>
+          <span>{t("kp.label", "Kp")}</span>
+          <strong>{fmt(data.kp)}</strong>
         </div>
 
-        <Row
-          label={t("probability.label", "Aurora probability")}
-          value={<span style={{ color: "#00ffcc" }}>— %</span>}
-          locked
-        />
-        <Row
-          label={t("wind.speed", "Solar wind")}
-          value="—"
-          locked
-        />
-        <Row
-          label={t("bz.label", "Bz")}
-          value="—"
-          locked
-        />
-        <Row
-          label={t("wind.density", "Density")}
-          value="—"
-          locked
-        />
-
-        <a
-          href="/premium"
-          style={{
-            display: "block",
-            marginTop: 10,
-            padding: "8px 10px",
-            textAlign: "center",
-            background: "linear-gradient(135deg,#ff3b7f,#ffe600)",
-            color: "#000",
-            fontWeight: 700,
-            borderRadius: 6,
-            textDecoration: "none",
-            fontSize: 12,
-          }}
-        >
-          🔒 {t("forecast.popup_full", "Unlock full forecast — from 2,99 €")}
-        </a>
-      </div>
-    </div>
-  );
-}
-
-  // ---- PREMIUM
-return (
-  <div className="aurora-popup">
-    <Loc lat={lat} lng={lng} />
-
-    <div
-      className="ap-prob"
-      style={{ color }}
-    >
-      {data.probability != null
-        ? `${data.probability}%`
-        : "–"}
-    </div>
-
-    <div
-      className="ap-level"
-      style={{ color }}
-    >
-      {levelLabel}
-    </div>
-
-    <div className="ap-quick">
-      <div>
-        <span>{t("kp.label", "Kp")}</span>
-        <strong>{fmt(data.kp)}</strong>
-      </div>
-
-      <div>
-        <span>{t("row.clouds", "Clouds")}</span>
-        <strong>
-          {data.clouds != null
-            ? `${data.clouds}%`
-            : "–"}
-        </strong>
-      </div>
-
-      <div>
-        <span>{t("bz.label", "Bz")}</span>
-        <strong>{fmt(data.bz)}</strong>
-      </div>
-    </div>
-
-    <div className="ap-details">
-      <div>
-        <span>{t("wind.speed", "Solar wind")}</span>
-        <strong>{fmt(data.speed, " km/s", 0)}</strong>
-      </div>
-
-      <div>
-        <span>{t("wind.density", "Density")}</span>
-        <strong>{fmt(data.density, " p/cm³")}</strong>
-      </div>
-
-      {data.temp != null && (
         <div>
-          <span>{t("row.temp", "Temp")}</span>
-          <strong>{data.temp}°C</strong>
+          <span>{t("row.clouds", "Clouds")}</span>
+          <strong>
+            {data.clouds != null
+              ? `${data.clouds}%`
+              : "–"}
+          </strong>
         </div>
-      )}
 
-      {data.windMs != null && (
         <div>
-          <span>{t("weather.wind", "Wind")}</span>
-          <strong>{data.windMs} m/s</strong>
+          <span>{t("bz.label", "Bz")}</span>
+          <strong>{fmt(data.bz)}</strong>
+        </div>
+      </div>
+
+      <div className="ap-details">
+        <div>
+          <span>{t("wind.speed", "Solar wind")}</span>
+          <strong>{fmt(data.speed, " km/s", 0)}</strong>
+        </div>
+
+        <div>
+          <span>{t("wind.density", "Density")}</span>
+          <strong>{fmt(data.density, " p/cm³")}</strong>
+        </div>
+
+        {data.temp != null && (
+          <div>
+            <span>{t("row.temp", "Temp")}</span>
+            <strong>{data.temp}°C</strong>
+          </div>
+        )}
+
+        {data.windMs != null && (
+          <div>
+            <span>{t("weather.wind", "Wind")}</span>
+            <strong>{data.windMs} m/s</strong>
+          </div>
+        )}
+      </div>
+
+      {data.weatherDesc && (
+        <div className="ap-desc">
+          {data.weatherDesc}
         </div>
       )}
     </div>
-
-    {data.weatherDesc && (
-      <div className="ap-desc">
-        {data.weatherDesc}
-      </div>
-    )}
-  </div>
   );
 }
 
 /* ---------- helpers ---------- */
+
 function Loc({ lat, lng }) {
   return (
     <div className="ap-name">
@@ -202,6 +250,7 @@ function Loc({ lat, lng }) {
     </div>
   );
 }
+
 function Row({ label, value, locked = false }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
@@ -212,10 +261,20 @@ function Row({ label, value, locked = false }) {
     </div>
   );
 }
+
 function fmt(v, suffix = "", digits = 1) {
   if (v == null || isNaN(v)) return "–";
   return Number(v).toFixed(digits) + suffix;
 }
+
+function probabilityToLevel(probability) {
+  if (probability == null || isNaN(probability)) return "low";
+  if (probability >= 75) return "veryhigh";
+  if (probability >= 50) return "high";
+  if (probability >= 25) return "medium";
+  return "low";
+}
+
 function levelColor(level) {
   return (
     {
@@ -225,5 +284,4 @@ function levelColor(level) {
       veryhigh: "#ff3b7f",
     }[level] || "#888"
   );
-  }
-
+}

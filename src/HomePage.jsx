@@ -1,21 +1,23 @@
-import { useEffect, useState, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Header from "./components/Header";
+import Hero from "./components/Hero";
 import Sightings from "./components/Sightings";
 import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
 import PlacesSection from "./components/PlacesSection";
 import SEO from "./components/SEO";
-import revontulet from "./images/revontulet.png";
-
-import { calculateAurora } from "./utils/auroraEngine";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 const BASE =
   import.meta.env.VITE_API_BASE ||
   "https://report.masto84.workers.dev";
+
+const NOAA_3_DAY_FORECAST_URL =
+  "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
+
+const FREE_FORECAST_CACHE_KEY = "aurora_session_cache:home:forecast:free:v1";
+const FORECAST_TTL_MS = 60 * 60 * 1000;
 
 /** Lue premium deviceKey localStoragesta */
 function readDeviceKey() {
@@ -35,7 +37,55 @@ function readDeviceKey() {
     return "";
   }
 }
-async function fetchJsonSafe(url, label) {
+
+function readSessionCache(key, ttlMs) {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+
+    const cached = JSON.parse(raw);
+    if (!cached || typeof cached.savedAt !== "number") return null;
+
+    if (ttlMs && Date.now() - cached.savedAt > ttlMs) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+
+    return cached.data ?? null;
+  } catch {
+    sessionStorage.removeItem(key);
+    return null;
+  }
+}
+
+function writeSessionCache(key, data) {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        savedAt: Date.now(),
+        data,
+      })
+    );
+  } catch {
+    // sessionStorage voi täyttyä tai olla estetty — ei kaadeta sivua.
+  }
+}
+
+async function sessionCachedJson(key, ttlMs, fetcher) {
+  const cached = readSessionCache(key, ttlMs);
+  if (cached) return cached;
+
+  const data = await fetcher();
+  writeSessionCache(key, data);
+  return data;
+}
+
+async function fetchTextSafe(url, label) {
   const res = await fetch(url, {
     cache: "no-store",
   });
@@ -50,100 +100,155 @@ async function fetchJsonSafe(url, label) {
     throw new Error(`${label}: empty response`);
   }
 
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(`${label}: invalid JSON`); 
-  }
+  return text;
 }
 
-function lastValidRow(rows, colIndex) {
-  if (!Array.isArray(rows)) return null;
-
-  for (let i = rows.length - 1; i >= 1; i--) {
-    const value = parseFloat(rows[i]?.[colIndex]);
-    if (!Number.isNaN(value)) return rows[i];
-  }
-
-  return null;
+function kpToLevel(kp) {
+  if (kp == null) return "low";
+  if (kp >= 7) return "veryhigh";
+  if (kp >= 5) return "high";
+  if (kp >= 4) return "medium";
+  return "low";
 }
-export default function HomePage() {
-  const [kp, setKp] = useState(null);
-  const [wind, setWind] = useState(null);
-  const [bz, setBz] = useState(null);
 
-  const [forecast, setForecast] = useState({
-    tier: "free",
-    slots: [],
-    genAt: null,
-    current: null,
-  });
+/**
+ * Parsii NOAA SWPC 3-day forecast -tekstistä "NOAA Kp index breakdown" -taulukon.
+ * Tämä pitää free-forecastin pois Cloudflare Workerista.
+ */
+function parseNoaa3DayKp(text) {
+  const lines = text.split("\n");
+  const startIdx = lines.findIndex((line) =>
+    /NOAA Kp index breakdown/i.test(line)
+  );
 
-  const navigate = useNavigate();
-  const { t } = useTranslation();
+  if (startIdx < 0) return [];
 
-  const previewMapRef = useRef(null);
-  const previewMapInstance = useRef(null);
+  let headerLine = null;
 
-  const aurora = calculateAurora({
-    kp,
-    speed: wind,
-    density: 5,
-    bz,
-    cloudCover: 50,
-    latitude: 67.5,
-  });
-
-  // ===== SOLAR + FORECAST
-  useEffect(() => {
-   const fetchSolar = async () => {
-  try {
-    const kpUrl = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
-    const plasmaUrl = "https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json";
-    const magUrl = "https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json";
-
-    const [kpData, plasmaData, magData] = await Promise.all([
-      fetchJsonSafe(kpUrl, "NOAA Kp").catch((e) => {
-        console.warn("NOAA Kp failed:", e);
-        return null;
-      }),
-      fetchJsonSafe(plasmaUrl, "NOAA plasma").catch((e) => {
-        console.warn("NOAA plasma failed:", e);
-        return null;
-      }),
-      fetchJsonSafe(magUrl, "NOAA mag").catch((e) => {
-        console.warn("NOAA mag failed:", e);
-        return null;
-      }),
-    ]);
-
-    const kpLast = lastValidRow(kpData, 1);
-    const plasmaLast = lastValidRow(plasmaData, 2);
-    const magLast = lastValidRow(magData, 3);
-
-    if (kpLast) {
-      const parsedKp = parseFloat(kpLast[1]);
-      setKp(Number.isNaN(parsedKp) ? 0 : parsedKp);
+  for (let i = startIdx + 1; i < Math.min(startIdx + 6, lines.length); i++) {
+    if (/[A-Z][a-z]{2}\s+\d{1,2}/.test(lines[i])) {
+      headerLine = lines[i];
+      break;
     }
-
-    if (plasmaLast) {
-      const parsedWind = parseFloat(plasmaLast[2]);
-      if (!Number.isNaN(parsedWind)) setWind(parsedWind);
-    }
-
-    if (magLast) {
-      const parsedBz = parseFloat(magLast[3]);
-      if (!Number.isNaN(parsedBz)) setBz(parsedBz);
-    }
-  } catch (e) {
-    console.warn("SOLAR ERROR:", e);
   }
-};
 
-    const fetchForecast = async () => {
-  try {
-    const deviceKey = readDeviceKey();
+  if (!headerLine) return [];
 
+  const dateMatches = [
+    ...headerLine.matchAll(/([A-Z][a-z]{2})\s+(\d{1,2})/g),
+  ];
+
+  if (dateMatches.length < 3) return [];
+
+  const year = new Date().getUTCFullYear();
+  const nowMonth = new Date().getUTCMonth();
+
+  const monthMap = {
+    Jan: 0,
+    Feb: 1,
+    Mar: 2,
+    Apr: 3,
+    May: 4,
+    Jun: 5,
+    Jul: 6,
+    Aug: 7,
+    Sep: 8,
+    Oct: 9,
+    Nov: 10,
+    Dec: 11,
+  };
+
+  const dates = dateMatches.slice(0, 3).map((match) => {
+    const mo = monthMap[match[1]];
+    const d = parseInt(match[2], 10);
+    let yr = year;
+
+    // Vuodenvaihde: Dec -> Jan
+    if (mo < nowMonth - 6) yr = year + 1;
+
+    return { mo, d, yr };
+  });
+
+  const series = [];
+
+  for (const line of lines) {
+    const match = line.match(
+      /^\s*(\d{2})-(\d{2})UT\s+([\d.]+)(?:\s*\(?[A-Z]?\)?)?\s+([\d.]+)(?:\s*\(?[A-Z]?\)?)?\s+([\d.]+)/
+    );
+
+    if (!match) continue;
+
+    const startH = parseInt(match[1], 10);
+    const vals = [
+      parseFloat(match[3]),
+      parseFloat(match[4]),
+      parseFloat(match[5]),
+    ];
+
+    for (let c = 0; c < 3; c++) {
+      if (Number.isNaN(vals[c])) continue;
+
+      const tsMs = Date.UTC(
+        dates[c].yr,
+        dates[c].mo,
+        dates[c].d,
+        startH,
+        0,
+        0
+      );
+
+      series.push({
+        tsMs,
+        kp: Math.round(vals[c] * 10) / 10,
+      });
+    }
+  }
+
+  series.sort((a, b) => a.tsMs - b.tsMs);
+
+  return series;
+}
+
+async function fetchFreeForecast() {
+  return sessionCachedJson(FREE_FORECAST_CACHE_KEY, FORECAST_TTL_MS, async () => {
+    const text = await fetchTextSafe(
+      NOAA_3_DAY_FORECAST_URL,
+      "NOAA 3-day forecast"
+    );
+
+    const kpSeries = parseNoaa3DayKp(text);
+
+    const now = Date.now();
+    const cutoff = now + 72 * 60 * 60 * 1000;
+
+    const slots = kpSeries
+      .filter(
+        (slot) =>
+          slot.tsMs >= now - 3 * 60 * 60 * 1000 &&
+          slot.tsMs <= cutoff
+      )
+      .map((slot) => ({
+        tsUtc: new Date(slot.tsMs).toISOString(),
+        kp: slot.kp,
+        level: kpToLevel(slot.kp),
+      }));
+
+    return {
+      tier: "free",
+      genAt: new Date(now).toISOString(),
+      slots,
+      current: null,
+    };
+  });
+}
+
+async function fetchPremiumForecast(deviceKey) {
+  const cacheKey = `aurora_session_cache:home:forecast:premium:${deviceKey.slice(
+    0,
+    12
+  )}:v1`;
+
+  return sessionCachedJson(cacheKey, FORECAST_TTL_MS, async () => {
     const res = await fetch(`${BASE}/api/aurora/forecast`, {
       method: "POST",
       headers: {
@@ -165,203 +270,124 @@ export default function HomePage() {
       throw new Error("Forecast: invalid JSON");
     });
 
-    setForecast({
-      tier: data?.tier || "free",
+    return {
+      tier: data?.tier || "premium",
       slots: Array.isArray(data?.slots) ? data.slots : [],
       genAt: data?.genAt || null,
       current: data?.current || null,
-    });
-  } catch (e) {
-    console.error("FORECAST ERROR:", e);
+    };
+  });
+}
 
-    setForecast((prev) => {
-  if (prev.slots.length) return prev;
-
-  return {
+export default function HomePage() {
+  const [forecast, setForecast] = useState({
     tier: "free",
     slots: [],
     genAt: null,
     current: null,
-  };
-});
-  }
-};
+  });
 
-    fetchSolar();
-    fetchForecast();
+  const { t } = useTranslation();
 
-    const interval = setInterval(() => {
-      fetchSolar();
-      fetchForecast();
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // ===== HERO PREVIEW MAP
   useEffect(() => {
-    if (previewMapInstance.current || !previewMapRef.current) {
-      return;
-    }
+    let cancelled = false;
 
-    const map = L.map(previewMapRef.current, {
-      zoomControl: false,
-      attributionControl: false,
-      dragging: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      boxZoom: false,
-      keyboard: false,
-      touchZoom: false,
-    }).setView([67.5, 26], 4);
+    const loadForecast = async () => {
+      try {
+        const deviceKey = readDeviceKey();
 
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    ).addTo(map);
+        const data = deviceKey
+          ? await fetchPremiumForecast(deviceKey)
+          : await fetchFreeForecast();
 
-    L.circleMarker([68.5, 27], {
-      radius: 32,
-      color: "#35ffe1",
-      weight: 2,
-      fillColor: "#00ffd5",
-      fillOpacity: 0.18,
-    }).addTo(map);
+        if (cancelled) return;
 
-    previewMapInstance.current = map;
+        setForecast({
+          tier: data?.tier || "free",
+          slots: Array.isArray(data?.slots) ? data.slots : [],
+          genAt: data?.genAt || null,
+          current: data?.current || null,
+        });
+      } catch (e) {
+        console.error("FORECAST ERROR:", e);
+
+        if (cancelled) return;
+
+        setForecast((prev) => {
+          if (prev.slots.length) return prev;
+
+          return {
+            tier: "free",
+            slots: [],
+            genAt: null,
+            current: null,
+          };
+        });
+      }
+    };
+
+    loadForecast();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
     <div>
       <SEO
-  title="Northern Lights Forecast Finland | RepoTracker"
-  description="Live Northern Lights forecast, KP index, solar wind and northern lights map for Finland and Lapland."
-  keywords="northern lights, aurora forecast, Finland, Lapland, KP index"
-  canonical="https://repotracker.fi/"
-/>
+        title="Northern Lights Forecast Finland | RepoTracker"
+        description="Live Northern Lights forecast, KP index, solar wind and northern lights map for Finland and Lapland."
+        keywords="northern lights, aurora forecast, Finland, Lapland, KP index"
+        canonical="https://repotracker.fi/"
+      />
+
       <Header />
 
       <main>
-
         {/* HERO */}
         <section className="block">
           <div className="container">
-<div className="hero-banner">
-  <img
-    src={revontulet}
-    alt="Northern Lights"
-  />
-</div>
-            <div className="hero-split">
-              <div className="hero-text">
-                <h1>{t("hero.title")}</h1>
-                <p className="tagline">{t("hero.sub")}</p>
-              </div>
-
-              <div className="hero-grid">
-                <div className="kp-display">
-                  <div className="kp-label">
-                    {t("probability.label")}
-                  </div>
-
-                  <div className="kp-big">
-                    <span>
-                      {aurora?.probability != null
-                        ? `${aurora.probability}%`
-                        : "--"}
-                    </span>
-                  </div>
-                   <div className="kp-level">
-  {aurora?.level === "veryhigh" && <span style={{ color: "#00ffcc" }}>🟢 {t("level.veryhigh") || "Excellent chance"}</span>}
-  {aurora?.level === "high"     && <span style={{ color: "#a8ff78" }}>🟡 {t("level.high")     || "Good chance"}</span>}
-  {aurora?.level === "medium"   && <span style={{ color: "#ffd166" }}>🟠 {t("level.medium")   || "Possible"}</span>}
-  {aurora?.level === "low"      && <span style={{ color: "#9aa3b2" }}>⚫ {t("level.low")      || "Unlikely tonight"}</span>}
-  {aurora?.level == null        && <span style={{ color: "#9aa3b2" }}>--</span>}
-</div>       
-                  <div className="kp-meta">
-                    <span>
-                      {t("kp.label")}:
-                      <strong> {kp ?? "--"}</strong>
-                    </span>
-
-                    <span>
-                      {t("wind.speed")}:
-                      <strong> {wind ?? "--"}</strong>
-                    </span>
-
-                    <span>
-                      {t("bz.label")}:
-                      <strong> {bz ?? "--"}</strong>
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  className="map-preview"
-                  onClick={() => navigate("/map")}
-                  style={{
-                    cursor: "pointer",
-                    position: "relative",
-                  }}
-                >
-                  <div
-                    ref={previewMapRef}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                    }}
-                  />
-
-                  <div className="map-preview-cta">
-                    <span>{t("map.open")}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            <Hero />
           </div>
         </section>
 
         {/* FORECAST */}
         <section className="block">
           <div className="container">
-
             <Forecast
               data={forecast.slots}
               tier={forecast.tier}
               genAt={forecast.genAt}
               current={forecast.current}
             />
-
           </div>
         </section>
 
         {/* SIGHTINGS */}
-      <section className="container section-block">
-  <div className="section-head">
-    <div>
-      <h2>{t("sightings.title")}</h2>
-      <p>{t("sightings.sub")}</p>
-    </div>
+        <section className="container section-block">
+          <div className="section-head">
+            <div>
+              <h2>{t("sightings.title")}</h2>
+              <p>{t("sightings.sub")}</p>
+            </div>
 
-    <ReportButton />
-  </div>
+            <ReportButton />
+          </div>
 
-  <Sightings />
-</section>
+          <Sightings />
+        </section>
 
         {/* LOCATIONS */}
         <section className="block">
           <div className="container">
-
-            <PlacesSection kp={kp} />
-
+            <PlacesSection />
           </div>
         </section>
 
         {/* ARTICLES */}
         <section className="block">
           <div className="container">
-
             <div className="section-head">
               <div>
                 <h2>{t("home.articles.title")}</h2>
@@ -370,75 +396,44 @@ export default function HomePage() {
             </div>
 
             <div className="home-articles">
-
               <Link to="/blog/photography" className="blog-card">
-                <div className="blog-card-tag">
-                  GUIDE
-                </div>
-
+                <div className="blog-card-tag">GUIDE</div>
                 <h2>{t("blog.post1.title")}</h2>
-
                 <p>{t("blog.post1.excerpt")}</p>
-
-                <div className="blog-card-read">
-                  {t("blog.read")}
-                </div>
+                <div className="blog-card-read">{t("blog.read")}</div>
               </Link>
 
               <Link to="/blog/forecast" className="blog-card">
-                <div className="blog-card-tag">
-                  GUIDE
-                </div>
-
+                <div className="blog-card-tag">GUIDE</div>
                 <h2>{t("blog.post2.title")}</h2>
-
                 <p>{t("blog.post2.excerpt")}</p>
-
-                <div className="blog-card-read">
-                  {t("blog.read")}
-                </div>
+                <div className="blog-card-read">{t("blog.read")}</div>
               </Link>
 
               <Link to="/blog/best-time" className="blog-card">
-                <div className="blog-card-tag">
-                  GUIDE
-                </div>
-
+                <div className="blog-card-tag">GUIDE</div>
                 <h2>{t("blog.post3.title")}</h2>
-
                 <p>{t("blog.post3.excerpt")}</p>
-
-                <div className="blog-card-read">
-                  {t("blog.read")}
-                </div>
+                <div className="blog-card-read">{t("blog.read")}</div>
               </Link>
-
             </div>
-
           </div>
         </section>
-
       </main>
 
       <footer className="footer">
-  <p>© RepoTracker</p>
+        <p>© RepoTracker</p>
 
-  <Link to="/privacy">
-    {t("footer.privacy")}
-  </Link>
+        <Link to="/privacy">{t("footer.privacy")}</Link>
 
-  {" - "}
+        {" - "}
 
-  <Link to="/terms">
-    {t("privacy.q.terms")}
-  </Link>
+        <Link to="/terms">{t("privacy.q.terms")}</Link>
 
-  {" - "}
+        {" - "}
 
-  <Link to="/contact">
-    {t("footer.contact") || "Contact"}
-  </Link>
-</footer>
+        <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
+      </footer>
     </div>
   );
 }

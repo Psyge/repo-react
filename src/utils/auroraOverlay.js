@@ -3,12 +3,57 @@ import L from "leaflet";
 const SOURCE =
   "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json";
 
+const AURORA_CACHE_KEY = "aurora_session_cache:ovation:v1";
+const AURORA_TTL_MS = 60 * 60 * 1000; // 1h
+
 let latestData = null;
 let sprites = { r: 0, green: null, yellow: null, red: null };
+
+function readSessionCache(key, ttlMs) {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+
+    const cached = JSON.parse(raw);
+
+    if (!cached || typeof cached.savedAt !== "number") {
+      return null;
+    }
+
+    if (ttlMs && Date.now() - cached.savedAt > ttlMs) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+
+    return cached.data ?? null;
+  } catch {
+    sessionStorage.removeItem(key);
+    return null;
+  }
+}
+
+function writeSessionCache(key, data) {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        savedAt: Date.now(),
+        data,
+      })
+    );
+  } catch {
+    // Älä kaada sovellusta, jos sessionStorage ei ole käytössä tai se on täynnä.
+  }
+}
 
 // 🔥 sprite builder
 function buildSprites(radius) {
   if (radius === sprites.r) return;
+
   sprites.r = radius;
 
   const make = (rgb) => {
@@ -58,15 +103,16 @@ function createLayer() {
       );
 
       this._canvas.style.pointerEvents = "none";
-
       this._canvas.style.transform = "translateZ(0)";
-this._canvas.style.willChange = "transform";
+      this._canvas.style.willChange = "transform";
 
       map.getPanes().overlayPane.appendChild(this._container);
 
       this._ctx = this._canvas.getContext("2d");
 
-      map.on("move zoom moveend zoomend resize", this._reset, this);
+      // Kevyempi kuin "move zoom moveend zoomend resize".
+      // Ei resetoi jatkuvasti karttaa raahatessa/zoomatessa.
+      map.on("moveend zoomend resize", this._reset, this);
 
       this._reset();
       this._startAnim();
@@ -74,8 +120,11 @@ this._canvas.style.willChange = "transform";
 
     onRemove(map) {
       cancelAnimationFrame(this._raf);
-      map.off("move zoom moveend zoomend resize", this._reset, this);
-      L.DomUtil.remove(this._container);
+      map.off("moveend zoomend resize", this._reset, this);
+
+      if (this._container) {
+        L.DomUtil.remove(this._container);
+      }
     },
 
     setData(data) {
@@ -84,8 +133,8 @@ this._canvas.style.willChange = "transform";
     },
 
     _reset() {
-
       if (!this._canvas || !this._map) return;
+
       const size = this._map.getSize();
       const tl = this._map.containerPointToLayerPoint([0, 0]);
 
@@ -103,7 +152,9 @@ this._canvas.style.willChange = "transform";
     },
 
     _startAnim() {
-      const fps = 22;
+      // 10 FPS riittää kevyeksi "eläväksi" efektiksi.
+      // Tämä ei vaikuta datan päivitystiheyteen.
+      const fps = 10;
       const interval = 1000 / fps;
       let last = 0;
 
@@ -112,6 +163,7 @@ this._canvas.style.willChange = "transform";
           this._draw();
           last = now;
         }
+
         this._raf = requestAnimationFrame(loop);
       };
 
@@ -119,22 +171,24 @@ this._canvas.style.willChange = "transform";
     },
 
     _draw() {
-  const ctx = this._ctx;
-  const cv = this._canvas;
+      const ctx = this._ctx;
+      const cv = this._canvas;
 
-  if (
-    !ctx ||
-    !cv ||
-    cv.width === 0 ||
-    cv.height === 0
-  ) {
-    return;
-  }
+      if (
+        !ctx ||
+        !cv ||
+        cv.width === 0 ||
+        cv.height === 0
+      ) {
+        return;
+      }
 
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, cv.width, cv.height);
 
-      if (!latestData || !Array.isArray(latestData.coordinates)) return;
+      if (!latestData || !Array.isArray(latestData.coordinates)) {
+        return;
+      }
 
       const map = this._map;
       const zoom = map.getZoom();
@@ -169,16 +223,15 @@ this._canvas.style.willChange = "transform";
         if (!bounds.contains(ll)) return;
 
         const pos = map.latLngToContainerPoint(ll);
-
         const sprite = pickSprite(intensity);
 
         if (
-  !sprite ||
-  sprite.width === 0 ||
-  sprite.height === 0
-) {
-  return;
-}
+          !sprite ||
+          sprite.width === 0 ||
+          sprite.height === 0
+        ) {
+          return;
+        }
 
         const baseAlpha = zoom > 8 ? 0.6 : 0.45;
 
@@ -214,13 +267,36 @@ this._canvas.style.willChange = "transform";
 }
 
 // 🔥 FETCH
-export async function fetchAuroraData() {
-  const res = await fetch(SOURCE, { cache: "no-cache" });
+export async function fetchAuroraData({ force = false } = {}) {
+  if (!force) {
+    const cached = readSessionCache(AURORA_CACHE_KEY, AURORA_TTL_MS);
 
-  if (!res.ok) throw new Error("Aurora fetch failed");
+    if (cached) {
+      latestData = cached;
+      return cached;
+    }
+  }
+
+  if (force && typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem(AURORA_CACHE_KEY);
+    } catch {
+      // ignore
+    }
+  }
+
+  const res = await fetch(SOURCE, {
+    cache: "default",
+  });
+
+  if (!res.ok) {
+    throw new Error("Aurora fetch failed");
+  }
 
   const data = await res.json();
+
   latestData = data;
+  writeSessionCache(AURORA_CACHE_KEY, data);
 
   return data;
 }
@@ -229,6 +305,7 @@ export async function fetchAuroraData() {
 export function createAuroraOverlay() {
   return createLayer();
 }
+
 export function getAuroraIntensity(lat, lon) {
   if (!latestData || !Array.isArray(latestData.coordinates)) return 0;
 
