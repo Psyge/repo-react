@@ -58,39 +58,60 @@
 /* STARS */
 
 .stars {
-  position: absolute;
-  inset: 0;
-
-  opacity: 0.25;
+  opacity: 0.6;
 
   background-image:
-    radial-gradient(
-      white 1px,
-      transparent 1px
-    );
+    radial-gradient(white 1px, transparent 1px),
+    radial-gradient(white 1px, transparent 1px);
 
   background-size:
-    4px 4px;
+    3px 3px,
+    5px 5px;
+
+  background-position:
+    0 0,
+    50px 50px;
+
+  animation: twinkle 6s infinite alternate;
+}
+
+@keyframes twinkle {
+  from {
+    opacity: 0.4;
+  }
+
+  to {
+    opacity: 0.8;
+  }
 }
 
 /* AURORA */
 
 .aurora {
   position: absolute;
-
-  inset: -20%;
+  inset: -10%;
 
   background:
     radial-gradient(
-      ellipse at center,
+      ellipse at 20% 40%,
       rgba(0,255,180,0.22),
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 60% 30%,
+      rgba(0,180,255,0.15),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 80% 45%,
+      rgba(180,255,120,0.18),
       transparent 60%
     );
 
-  filter: blur(60px);
+  filter: blur(70px);
 
   animation:
-    auroraMove 8s ease-in-out infinite alternate;
+    auroraMove 10s ease-in-out infinite alternate;
 }
 
 @keyframes auroraMove {
@@ -236,7 +257,33 @@
   /* background poistettu — tulee nyt dynaamisesti */
   border-top: 1px solid rgba(255,255,255,0.08);
 }
+.cloud-layer {
+  position: absolute;
+  inset: 0;
 
+  background:
+    radial-gradient(
+      ellipse at 20% 20%,
+      rgba(255,255,255,0.22),
+      transparent 40%
+    ),
+    radial-gradient(
+      ellipse at 70% 25%,
+      rgba(255,255,255,0.18),
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse at 50% 60%,
+      rgba(255,255,255,0.12),
+      transparent 50%
+    );
+
+  filter: blur(40px);
+
+  pointer-events: none;
+
+  transition: opacity 1s ease;
+}
 /* MOBILE */
 
 @media (max-width: 768px) {

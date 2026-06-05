@@ -15,6 +15,7 @@ export default function MidnightSun() {
   const [month, setMonth] = useState(new Date().getMonth());
 const [hour, setHour] = useState(new Date().getHours());
   const [kp, setKp] = useState(null);
+  const [cloudCover, setCloudCover] = useState(null);
   const { t } = useTranslation();
 
   // ===== KP FETCH
@@ -36,8 +37,37 @@ const [hour, setHour] = useState(new Date().getHours());
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+  const fetchWeather = async () => {
+    try {
+      const res = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=cloud_cover`
+      );
+
+      const data = await res.json();
+
+      setCloudCover(data.current?.cloud_cover ?? null);
+    } catch (err) {
+      console.warn("Weather fetch failed", err);
+    }
+  };
+
+  fetchWeather();
+
+  const interval = setInterval(fetchWeather, 300000);
+
+  return () => clearInterval(interval);
+}, []);
+
   // ===== SCENE CALC
   const scene = useMemo(() => {
+   const auroraScore =
+  kp == null
+    ? null
+    : Math.max(
+        0,
+        kp * 20 - (cloudCover ?? 50)
+      );
     const date = new Date(2025, month, 15, hour, 0, 0);
     
      const horizonColor = (() => {
@@ -79,12 +109,13 @@ const [hour, setHour] = useState(new Date().getHours());
     // Revontulet: sesonki loka-huhtikuu + Kp >= 2 + pimeä taivas
     const auroraSeasonMonths = [10, 11, 0, 1, 2,];
     const auroraVisible =
-      !isDay &&
-      !isTwilight &&
-      altitudeDeg < -6 &&
-      auroraSeasonMonths.includes(month) &&
-      kp !== null &&
-      kp >= 2;
+  !isDay &&
+  !isTwilight &&
+  altitudeDeg < -6 &&
+  auroraSeasonMonths.includes(month) &&
+  kp !== null &&
+  kp >= 2 &&
+  (cloudCover === null || cloudCover < 85);
 
     const skyHue = isDay ? 210 - (altitudeDeg / maxAlt) * 30 : 220;
     const skyLightness = isDay ? 15 + (altitudeDeg / maxAlt) * 35 : 3;
@@ -109,8 +140,9 @@ const [hour, setHour] = useState(new Date().getHours());
       sunriseH,
       sunsetH,
       horizonColor,
+      auroraScore,
     };
-  }, [month, hour, kp]);
+  }, [month, hour, kp, cloudCover]);
 
 
   const formatH = (h) => {
@@ -180,20 +212,57 @@ const [hour, setHour] = useState(new Date().getHours());
             </strong>
           </div>
         )}
+        {scene.auroraScore !== null && (
+  <div>
+    Aurora:
+    <strong>
+      {scene.auroraScore >= 80
+        ? " Excellent"
+        : scene.auroraScore >= 60
+        ? " Good"
+        : scene.auroraScore >= 40
+        ? " Fair"
+        : " Poor"}
+    </strong>
+  </div>
+)}
+{cloudCover !== null && (
+  <div>
+    Clouds:
+    <strong>{cloudCover}%</strong>
+  </div>
+)}
       </div>
 
       {/* SKY */}
-      <div className="sky" style={{ background: skyBg }}>
+     <div className="sky" style={{ background: skyBg }}>
 
-        {/* STARS */}
-        {!scene.isDay && !scene.isTwilight && (
-          <div className="stars" />
-        )}
+  {!scene.isDay && !scene.isTwilight && (
+    <div className="stars" />
+  )}
 
-        {/* AURORA */}
-        {scene.auroraVisible && (
-          <div className="aurora" />
-        )}
+  <div
+    className="cloud-layer"
+    style={{
+      opacity:
+        cloudCover !== null
+          ? Math.min(0.9, cloudCover / 100)
+          : 0,
+    }}
+  />
+
+  {scene.auroraVisible && (
+    <div
+      className="aurora"
+      style={{
+        opacity:
+          cloudCover === null
+            ? 1
+            : Math.max(0.15, 1 - cloudCover / 100),
+      }}
+    />
+  )}
+        
 
         {/* SUN */}
         <div
