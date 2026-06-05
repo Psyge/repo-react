@@ -11,7 +11,7 @@ import TermsPage from "./TermsPage";
 import PremiumPage from "./PremiumPage";
 import PremiumSuccessPage from "./PremiumSuccessPage";
 import Contact from "./Contact";
-import MidnightSun from "./components/MidnightSunV2";
+import MidnightSunV2 from "./components/MidnightSunV2";
 import CookieBanner from "./components/CookieBanner";
 
 function App() {
