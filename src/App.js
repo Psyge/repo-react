@@ -11,7 +11,7 @@ import TermsPage from "./TermsPage";
 import PremiumPage from "./PremiumPage";
 import PremiumSuccessPage from "./PremiumSuccessPage";
 import Contact from "./Contact";
-import MidnightSun from "./components/MidnightSun";
+import MidnightSun from "./components/MidnightSunV2";
 import CookieBanner from "./components/CookieBanner";
 
 function App() {
@@ -29,7 +29,7 @@ function App() {
           <Route path="/premium" element={<PremiumPage />} />
           <Route path="/premium-success" element={<PremiumSuccessPage />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/midnightsunV2" element={<MidnightSunV2 />} />
+          <Route path="/MidNightSunV2" element={<MidnightSunV2 />} />
         </Routes>
 
         <CookieBanner />
