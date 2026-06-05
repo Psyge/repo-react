@@ -171,19 +171,18 @@ if (altitude > -5) {
 
   ctx.fillStyle = "#ffe066";
   ctx.fill();
-
 }
+
+}; // <-- TÄMÄ PUUTTUI
 
 render(0);
 
 return () => {
-  
   window.removeEventListener(
     "resize",
     resize
   );
 };
-
 
 }, [month, hour]);
 
@@ -193,35 +192,36 @@ return (
       ref={canvasRef}
       className="midnight-canvas"
     />
+
     <div className="controls">
-  <div>
-    <label>Month {month + 1}</label>
+      <div>
+        <label>Month {month + 1}</label>
 
-    <input
-      type="range"
-      min="0"
-      max="11"
-      value={month}
-      onChange={(e) =>
-        setMonth(Number(e.target.value))
-      }
-    />
-  </div>
+        <input
+          type="range"
+          min="0"
+          max="11"
+          value={month}
+          onChange={(e) =>
+            setMonth(Number(e.target.value))
+          }
+        />
+      </div>
 
-  <div>
-    <label>Hour {hour}:00</label>
+      <div>
+        <label>Hour {hour}:00</label>
 
-    <input
-      type="range"
-      min="0"
-      max="23"
-      value={hour}
-      onChange={(e) =>
-        setHour(Number(e.target.value))
-      }
-    />
-  </div>
-</div>
+        <input
+          type="range"
+          min="0"
+          max="23"
+          value={hour}
+          onChange={(e) =>
+            setHour(Number(e.target.value))
+          }
+        />
+      </div>
+    </div>
   </section>
 );
 }
