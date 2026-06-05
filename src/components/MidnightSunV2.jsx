@@ -1,227 +1,459 @@
-import { useRef, useEffect, useState } from "react";
-import "../styles/midnightSunV2.css";
-
+import { useEffect, useRef, useState } from "react";
 import SunCalc from "suncalc";
 
-export default function MidnightSunV2() {
-const canvasRef = useRef(null);
-const [month, setMonth] = useState(new Date().getMonth());
-const [hour, setHour] = useState(new Date().getHours());
+import "../styles/midnightSunV2.css";
+
+import { drawSky } from "../utils/skyRenderer";
+import { drawGround } from "../utils/groundRenderer";
+import { drawAurora } from "../utils/auroraRenderer";
+import { drawClouds } from "../utils/cloudRenderer";
+
+import { fetchKp } from "../services/auroraService";
+import { fetchCloudCover } from "../services/weatherService";
 
 const LAT = 66.5;
 const LON = 26;
 
-useEffect(() => {
-const canvas = canvasRef.current;
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec"
+];
 
+export default function MidnightSunV2() {
+  const canvasRef = useRef(null);
 
-if (!canvas) return;
+  const [month, setMonth] = useState(
+    new Date().getMonth()
+  );
 
-const ctx = canvas.getContext("2d");
+  const [hour, setHour] = useState(
+    new Date().getHours()
+  );
 
+  const [kp, setKp] = useState(null);
 
+  const [cloudCover, setCloudCover] =
+    useState(0);
 
-const resize = () => {
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-};
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [kpData, cloudData] =
+          await Promise.all([
+            fetchKp(),
+            fetchCloudCover(
+              LAT,
+              LON
+            ),
+          ]);
 
-resize();
+        setKp(kpData);
+        setCloudCover(cloudData);
+      } catch (err) {
+        console.warn(err);
+      }
+    };
 
-window.addEventListener("resize", resize);
+    loadData();
 
-const stars = Array.from({ length: 250 }, () => ({
-  x: Math.random(),
-  y: Math.random() * 0.7,
-  size: Math.random() * 2 + 0.5,
-  phase: Math.random() * Math.PI * 2,
-}));
+    const interval =
+      setInterval(
+        loadData,
+        300000
+      );
 
-const render = (time) => {
-  const w = canvas.width;
-  const h = canvas.height;
-   const date = new Date(
-  2025,
-  month,
-  15,
-  hour,
-  0,
-  0
-);
+    return () =>
+      clearInterval(interval);
+  }, []);
 
-const pos = SunCalc.getPosition(
-  date,
-  LAT,
-  LON
-);
+  useEffect(() => {
+    const canvas =
+      canvasRef.current;
 
-const altitude =
-  pos.altitude * (180 / Math.PI);
+    if (!canvas) return;
 
-const isDay = altitude > 0;
+    const ctx =
+      canvas.getContext("2d");
 
-const isTwilight =
-  altitude <= 0 &&
-  altitude > -6;  
+    let animationFrame;
 
-  ctx.clearRect(0, 0, w, h);
+    const resize = () => {
+      canvas.width =
+        canvas.offsetWidth;
 
-  // Sky
-  const sky = ctx.createLinearGradient(
-  0,
-  0,
-  0,
-  h
-);
+      canvas.height =
+        canvas.offsetHeight;
+    };
 
-if (isDay) {
-  sky.addColorStop(0, "#5aa7ff");
-  sky.addColorStop(1, "#d7ecff");
-}
-else if (isTwilight) {
-  sky.addColorStop(0, "#20103a");
-  sky.addColorStop(0.5, "#7a2f4f");
-  sky.addColorStop(1, "#ff8a3d");
-}
-else {
-  sky.addColorStop(0, "#02040a");
-  sky.addColorStop(1, "#081020");
-}
+    resize();
 
-  
-
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, w, h);
-
-  // Stars
-  if (!isDay && !isTwilight) {
-  stars.forEach((star) => {
-    const alpha =
-      0.4 +
-      Math.sin(time * 0.001 + star.phase) * 0.3;
-
-    ctx.beginPath();
-    ctx.arc(
-      star.x * w,
-      star.y * h,
-      star.size,
-      0,
-      Math.PI * 2
+    window.addEventListener(
+      "resize",
+      resize
     );
 
-    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-    ctx.fill();
-  });
-  }
+    const stars =
+      Array.from(
+        { length: 250 },
+        () => ({
+          x: Math.random(),
+          y:
+            Math.random() *
+            0.7,
+          size:
+            Math.random() *
+              2 +
+            0.5,
+          phase:
+            Math.random() *
+            Math.PI *
+            2,
+        })
+      );
 
-  // Test sun
- 
+    const render = (time) => {
+      const w =
+        canvas.width;
 
-const normalized =
-  altitude / 47;
+      const h =
+        canvas.height;
 
-const sunX =
-  (hour / 23) * w;
+      ctx.clearRect(
+        0,
+        0,
+        w,
+        h
+      );
 
-const sunY =
-  h * (0.72 - normalized * 0.55);
+      const date =
+        new Date(
+          2025,
+          month,
+          15,
+          hour,
+          0,
+          0
+        );
 
-if (altitude > -5) {
+      const pos =
+        SunCalc.getPosition(
+          date,
+          LAT,
+          LON
+        );
 
-  const glow = ctx.createRadialGradient(
-    sunX,
-    sunY,
-    10,
-    sunX,
-    sunY,
-    120
-  );
+      const altitude =
+        pos.altitude *
+        (180 / Math.PI);
 
-  glow.addColorStop(
-    0,
-    "rgba(255,220,120,1)"
-  );
+      const isDay =
+        altitude > 0;
 
-  glow.addColorStop(
-    1,
-    "rgba(255,220,120,0)"
-  );
+      const isTwilight =
+        altitude <= 0 &&
+        altitude > -6;
 
-  ctx.fillStyle = glow;
+      drawSky(
+        ctx,
+        w,
+        h,
+        isDay,
+        isTwilight
+      );
 
-  ctx.beginPath();
-  ctx.arc(
-    sunX,
-    sunY,
-    120,
-    0,
-    Math.PI * 2
-  );
+      if (
+        !isDay &&
+        !isTwilight
+      ) {
+        stars.forEach(
+          (star) => {
+            const alpha =
+              0.4 +
+              Math.sin(
+                time *
+                  0.001 +
+                  star.phase
+              ) *
+                0.3;
 
-  ctx.fill();
+            ctx.beginPath();
 
-  ctx.beginPath();
-  ctx.arc(
-    sunX,
-    sunY,
-    16,
-    0,
-    Math.PI * 2
-  );
+            ctx.arc(
+              star.x * w,
+              star.y * h,
+              star.size,
+              0,
+              Math.PI * 2
+            );
 
-  ctx.fillStyle = "#ffe066";
-  ctx.fill();
-}
+            ctx.fillStyle =
+              `rgba(
+                255,
+                255,
+                255,
+                ${alpha}
+              )`;
 
-}; // <-- TÄMÄ PUUTTUI
-
-render(0);
-
-return () => {
-  window.removeEventListener(
-    "resize",
-    resize
-  );
-};
-
-}, [month, hour]);
-
-return (
-  <section className="midnight-v2">
-    <canvas
-      ref={canvasRef}
-      className="midnight-canvas"
-    />
-
-    <div className="controls">
-      <div>
-        <label>Month {month + 1}</label>
-
-        <input
-          type="range"
-          min="0"
-          max="11"
-          value={month}
-          onChange={(e) =>
-            setMonth(Number(e.target.value))
+            ctx.fill();
           }
-        />
+        );
+      }
+
+      const auroraVisible =
+        kp >= 2 &&
+        !isDay &&
+        !isTwilight &&
+        altitude < -6;
+
+      if (
+        auroraVisible
+      ) {
+        drawAurora(
+          ctx,
+          w,
+          h,
+          kp,
+          cloudCover,
+          time
+        );
+      }
+
+      drawClouds(
+        ctx,
+        w,
+        h,
+        cloudCover,
+        time
+      );
+
+      const normalized =
+        altitude / 47;
+
+      const sunX =
+        (hour / 23) * w;
+
+      const sunY =
+        h *
+        (
+          0.72 -
+          normalized *
+            0.55
+        );
+
+      if (
+        altitude > -5
+      ) {
+        const glow =
+          ctx.createRadialGradient(
+            sunX,
+            sunY,
+            10,
+            sunX,
+            sunY,
+            120
+          );
+
+        glow.addColorStop(
+          0,
+          "rgba(255,220,120,1)"
+        );
+
+        glow.addColorStop(
+          1,
+          "rgba(255,220,120,0)"
+        );
+
+        ctx.fillStyle =
+          glow;
+
+        ctx.beginPath();
+
+        ctx.arc(
+          sunX,
+          sunY,
+          120,
+          0,
+          Math.PI * 2
+        );
+
+        ctx.fill();
+
+        ctx.beginPath();
+
+        ctx.arc(
+          sunX,
+          sunY,
+          16,
+          0,
+          Math.PI * 2
+        );
+
+        ctx.fillStyle =
+          "#ffe066";
+
+        ctx.fill();
+      }
+
+      drawGround(
+        ctx,
+        w,
+        h,
+        month
+      );
+    };
+
+    const animate = (
+      time
+    ) => {
+      render(time);
+
+      animationFrame =
+        requestAnimationFrame(
+          animate
+        );
+    };
+
+    animate(0);
+
+    return () => {
+      cancelAnimationFrame(
+        animationFrame
+      );
+
+      window.removeEventListener(
+        "resize",
+        resize
+      );
+    };
+  }, [
+    month,
+    hour,
+    kp,
+    cloudCover,
+  ]);
+
+  return (
+    <section className="midnight-v2">
+
+      <canvas
+        ref={canvasRef}
+        className="midnight-canvas"
+      />
+
+      <div className="hud">
+        <div>
+          Month:
+          <strong>
+            {" "}
+            {
+              MONTHS[
+                month
+              ]
+            }
+          </strong>
+        </div>
+
+        <div>
+          Time:
+          <strong>
+            {" "}
+            {String(
+              hour
+            ).padStart(
+              2,
+              "0"
+            )}
+            :00
+          </strong>
+        </div>
+
+        <div>
+          Kp:
+          <strong>
+            {" "}
+            {kp ??
+              "-"}
+          </strong>
+        </div>
+
+        <div>
+          Clouds:
+          <strong>
+            {" "}
+            {
+              cloudCover
+            }
+            %
+          </strong>
+        </div>
       </div>
 
-      <div>
-        <label>Hour {hour}:00</label>
+      <div className="controls">
 
-        <input
-          type="range"
-          min="0"
-          max="23"
-          value={hour}
-          onChange={(e) =>
-            setHour(Number(e.target.value))
-          }
-        />
+        <div>
+          <label>
+            Month{" "}
+            {
+              MONTHS[
+                month
+              ]
+            }
+          </label>
+
+          <input
+            type="range"
+            min="0"
+            max="11"
+            value={month}
+            onChange={(
+              e
+            ) =>
+              setMonth(
+                Number(
+                  e.target
+                    .value
+                )
+              )
+            }
+          />
+        </div>
+
+        <div>
+          <label>
+            Hour{" "}
+            {hour}:00
+          </label>
+
+          <input
+            type="range"
+            min="0"
+            max="23"
+            value={hour}
+            onChange={(
+              e
+            ) =>
+              setHour(
+                Number(
+                  e.target
+                    .value
+                )
+              )
+            }
+          />
+        </div>
+
       </div>
-    </div>
-  </section>
-);
+
+    </section>
+  );
 }
