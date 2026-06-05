@@ -7,7 +7,7 @@ const canvasRef = useRef(null);
 useEffect(() => {
 const canvas = canvasRef.current;
 
-```
+
 if (!canvas) return;
 
 const ctx = canvas.getContext("2d");
@@ -137,13 +137,16 @@ return () => {
     resize
   );
 };
-```
+
 
 }, []);
 
-return ( <section className="midnight-v2"> <canvas
-     ref={canvasRef}
-     className="midnight-canvas"
-   /> </section>
+return (
+  <section className="midnight-v2">
+    <canvas
+      ref={canvasRef}
+      className="midnight-canvas"
+    />
+  </section>
 );
 }
