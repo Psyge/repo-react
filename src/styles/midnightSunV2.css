@@ -1,0 +1,11 @@
+.midnight-v2 {
+width: 100%;
+height: 100vh;
+background: #000;
+}
+
+.midnight-canvas {
+width: 100%;
+height: 100%;
+display: block;
+}

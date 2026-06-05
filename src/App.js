@@ -29,7 +29,7 @@ function App() {
           <Route path="/premium" element={<PremiumPage />} />
           <Route path="/premium-success" element={<PremiumSuccessPage />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/midnightsun" element={<MidnightSun />} />
+          <Route path="/midnightsunV2" element={<MidnightSunV2 />} />
         </Routes>
 
         <CookieBanner />
