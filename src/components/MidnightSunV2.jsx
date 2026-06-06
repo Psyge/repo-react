@@ -3,31 +3,28 @@ import SunCalc from "suncalc";
 
 import "../styles/midnightSunV2.css";
 
-import { drawSky } from "../utils/skyRenderer";
-import { drawGround } from "../utils/groundRenderer";
-import { drawAurora } from "../utils/auroraRenderer";
-import { drawClouds } from "../utils/cloudRenderer";
+import { drawSky, drawSun, drawSunPath } from "../utils/skyRenderer";
+import { drawGround }  from "../utils/groundRenderer";
+import { drawAurora }  from "../utils/auroraRenderer";
+import { drawClouds }  from "../utils/cloudRenderer";
 
-import { fetchKp } from "../services/auroraService";
+import { fetchKp }         from "../services/auroraService";
 import { fetchCloudCover } from "../services/weatherService";
 
 const LAT = 66.5;
 const LON = 26;
 
 const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan","Feb","Mar","Apr","May","Jun",
+  "Jul","Aug","Sep","Oct","Nov","Dec",
 ];
 
-// Skannaa kaikki 24h → oikea kaamos/yötön yö ilman harhoja
 function getDayStats(year, month, day) {
   let maxAlt = -999, minAlt = 999;
-  let riseH = null, setH = null;
-  let prevAlt = null;
+  let riseH = null, setH = null, prevAlt = null;
 
   for (let h = 0; h <= 24; h++) {
-    const d = new Date(year, month, day, h, 0, 0);
-    const pos = SunCalc.getPosition(d, LAT, LON);
+    const pos = SunCalc.getPosition(new Date(year, month, day, h, 0, 0), LAT, LON);
     const alt = pos.altitude * (180 / Math.PI);
     if (alt > maxAlt) maxAlt = alt;
     if (alt < minAlt) minAlt = alt;
@@ -35,7 +32,7 @@ function getDayStats(year, month, day) {
       if (prevAlt < 0 && alt >= 0 && riseH === null)
         riseH = (h - 1) + (-prevAlt) / (alt - prevAlt);
       if (prevAlt >= 0 && alt < 0 && setH === null)
-        setH = (h - 1) + prevAlt / (prevAlt - alt);
+        setH  = (h - 1) + prevAlt / (prevAlt - alt);
     }
     prevAlt = alt;
   }
@@ -73,14 +70,9 @@ export default function MidnightSunV2() {
   );
   const showLiveWeather = month === currentMonth && hourDiff <= 3;
 
-  // Päivän stats – kaamos/yötön yö lasketaan oikein
-  const stats = useMemo(
-    () => getDayStats(2025, month, 15),
-    [month]
-  );
+  const stats = useMemo(() => getDayStats(2025, month, 15), [month]);
   const { isPolarNight, isMidnightSun, daylightH, riseH, setH } = stats;
 
-  // Hetkellinen korkeus HUD:iin
   const hudDate = new Date(2025, month, 15, hour, 0, 0);
   const hudPos  = SunCalc.getPosition(hudDate, LAT, LON);
   const hudAlt  = hudPos.altitude * (180 / Math.PI);
@@ -94,7 +86,20 @@ export default function MidnightSunV2() {
                     : isTwilight    ? "🌆 Twilight"
                     :                 "🌌 Night";
 
-  // Data-fetch
+  const sunPathPoints = useMemo(() => {
+    const pts = [];
+    for (let h2 = 0; h2 < 24; h2 += 0.5) {
+      const hFloor = Math.floor(h2);
+      const mRound = Math.round((h2 % 1) * 60);
+      const p = SunCalc.getPosition(new Date(2025, month, 15, hFloor, mRound, 0), LAT, LON);
+      pts.push({
+        alt: p.altitude * (180 / Math.PI),
+        az:  ((p.azimuth + Math.PI) / (Math.PI * 2)) * 360,
+      });
+    }
+    return pts;
+  }, [month]);
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -113,7 +118,6 @@ export default function MidnightSunV2() {
     return () => clearInterval(interval);
   }, []);
 
-  // Canvas-render
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -130,8 +134,8 @@ export default function MidnightSunV2() {
 
     const stars = Array.from({ length: 250 }, () => ({
       x:     Math.random(),
-      y:     Math.random() * 0.7,
-      size:  Math.random() * 2 + 0.5,
+      y:     Math.random() * 0.68,
+      size:  Math.random() * 1.8 + 0.4,
       phase: Math.random() * Math.PI * 2,
     }));
 
@@ -140,55 +144,52 @@ export default function MidnightSunV2() {
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      const date     = new Date(2025, month, 15, hour, 0, 0);
-      const pos      = SunCalc.getPosition(date, LAT, LON);
-      const altitude = pos.altitude * (180 / Math.PI);
-      const _isDay      = altitude > 0;
-      const _isTwilight = altitude <= 0 && altitude > -6;
+      const date = new Date(2025, month, 15, hour, 0, 0);
+      const pos  = SunCalc.getPosition(date, LAT, LON);
+      const alt  = pos.altitude * (180 / Math.PI);
+      const az   = ((pos.azimuth + Math.PI) / (Math.PI * 2)) * 360;
 
-      drawSky(ctx, w, h, _isDay, _isTwilight, month);
+      const _isDay      = alt > 0;
+      const _isTwilight = alt <= 0 && alt > -6;
 
+      // 1. TAIVAS
+      drawSky(ctx, w, h, _isDay, _isTwilight, month, alt);
+
+      // 2. TÄHDET
       if (!_isDay && !_isTwilight) {
         stars.forEach((star) => {
-          const alpha = 0.4 + Math.sin(time * 0.001 + star.phase) * 0.3;
+          const a = 0.4 + Math.sin(time * 0.001 + star.phase) * 0.3;
           ctx.beginPath();
           ctx.arc(star.x * w, star.y * h, star.size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+          ctx.fillStyle = `rgba(255,255,255,${a})`;
           ctx.fill();
         });
       }
 
-      const auroraSeason   = [8, 9, 10, 11, 0, 1, 2, 3];
-      const fakeAurora     = auroraSeason.includes(month) && !_isDay && !_isTwilight;
-      const liveAurora     = showLiveWeather && kp >= 2 && altitude < -6 && !_isDay && !_isTwilight;
-      const auroraVisible  = liveAurora || (!showLiveWeather && fakeAurora);
+      // 3. REVONTULET
+      const auroraSeason  = [8, 9, 10, 11, 0, 1, 2, 3];
+      const fakeAurora    = auroraSeason.includes(month) && !_isDay && !_isTwilight;
+      const liveAurora    = showLiveWeather && kp >= 2 && alt < -6 && !_isDay && !_isTwilight;
+      const auroraVisible = liveAurora || (!showLiveWeather && fakeAurora);
 
       if (auroraVisible) {
         drawAurora(ctx, w, h, liveAurora ? kp : 3, liveAurora ? cloudCover : 0, time);
       }
 
+      // 4. PILVET
       if (showLiveWeather) {
         drawClouds(ctx, w, h, cloudCover, time);
       }
 
-      const normalized = altitude / 47;
-      const sunX = ((pos.azimuth + Math.PI) / (Math.PI * 2)) * w;
-      const sunY = h * (0.72 - normalized * 0.55);
-
-      if (altitude > -5) {
-        const glow = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 120);
-        glow.addColorStop(0, "rgba(255,220,120,1)");
-        glow.addColorStop(1, "rgba(255,220,120,0)");
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(sunX, sunY, 120, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(sunX, sunY, 16, 0, Math.PI * 2);
-        ctx.fillStyle = "#ffe066";
-        ctx.fill();
+      // 5. AURINGON RATAKÄYRÄ
+      if (alt > -10) {
+        drawSunPath(ctx, w, h, sunPathPoints);
       }
 
+      // 6. AURINKO
+      drawSun(ctx, w, h, alt, az);
+
+      // 7. MAA
       drawGround(ctx, w, h, month);
     };
 
@@ -202,16 +203,14 @@ export default function MidnightSunV2() {
       cancelAnimationFrame(animationFrame);
       window.removeEventListener("resize", resize);
     };
-  }, [month, hour, kp, cloudCover, showLiveWeather]);
+  }, [month, hour, kp, cloudCover, showLiveWeather, sunPathPoints]);
 
   return (
     <section className="midnight-v2">
       <canvas ref={canvasRef} className="midnight-canvas" />
 
-      {/* STATUS – oikeassa yläkulmassa */}
       <div className="msv2-status">{statusLabel}</div>
 
-      {/* HUD – pilleri-napit vasemmassa yläkulmassa */}
       <div className="msv2-hud">
         <span className="msv2-pill">
           Daylight: <strong>{daylightH.toFixed(1)}h</strong>
@@ -240,7 +239,6 @@ export default function MidnightSunV2() {
         )}
       </div>
 
-      {/* INFO-NAUHA – alareuna ennen slidereitä */}
       <div className="msv2-info">
         {isPolarNight && (
           <span className="msv2-info-tag">
@@ -260,9 +258,8 @@ export default function MidnightSunV2() {
         )}
       </div>
 
-      {/* SLIDERIT */}
       <div className="msv2-controls">
-        <div className="msv2-ctrl-row">
+        <div class="msv2-ctrl-row">
           <span className="msv2-ctrl-label">Month</span>
           <input
             type="range" min="0" max="11" value={month}
