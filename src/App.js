@@ -32,8 +32,9 @@ function App() {
           <Route path="/MidNightSunV2" element={<MidnightSunV2 />} />
         </Routes>
 
-        <CookieBanner />
+        
       </BrowserRouter>
+      <CookieBanner />
     </HelmetProvider>
   );
 }
