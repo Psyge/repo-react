@@ -20,9 +20,6 @@ function rgb(c) {
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 }
 
-function rgba(c, a) {
-  return `rgba(${c[0]},${c[1]},${c[2]},${a})`;
-}
 
 // Taivaan väripaletti auringon korkeuden mukaan (ei enää kuukausiportaat)
 // alt: -18 … +60

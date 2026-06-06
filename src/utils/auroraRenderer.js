@@ -37,8 +37,6 @@ export function drawAurora(ctx, w, h, kp, cloudCover, time) {
     const yBase  = h * (0.08 + lf * 0.10);
     const amp1   = h * (0.06 + lf * 0.04);
     const amp2   = h * (0.03 + lf * 0.02);
-    const freq1  = 0.008 + lf * 0.003;
-    const freq2  = 0.003 + lf * 0.001;
 
     // Vaihteleva alpha per kaista
     const layerAlpha = baseAlpha * (0.35 + 0.65 * Math.sin(t * 0.4 + lf * 2.1));

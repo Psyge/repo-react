@@ -3,9 +3,6 @@
  * Sama rajapinta: drawGround(ctx, w, h, month)
  */
 
-function lerp(a, b, t) {
-  return a + (b - a) * Math.max(0, Math.min(1, t));
-}
 
 // Kuusi-silhuetti yhdellä piirtokutsulla
 function drawSpruce(ctx, x, baseY, treeH, treeW) {
