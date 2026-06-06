@@ -188,7 +188,7 @@ export function drawSunPath(ctx, w, h, pathPoints) {
     if (alt < -8) { first = true; return; }
     const px = (az / 360) * w;
     const py = lerp(h * 0.72, h * 0.08, Math.max(0, alt) / 55);
-    first ? (ctx.moveTo(px, py), first = false) : ctx.lineTo(px, py);
+    if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
   });
   ctx.stroke();
   ctx.setLineDash([]);
