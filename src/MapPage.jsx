@@ -226,6 +226,13 @@ export default function MapPage() {
     }
 
     const root = createRoot(container);
+
+    popup.on("remove", () => {
+  try {
+    root.unmount();
+  } catch {}
+});
+
     popupRootRef.current = root;
 
     // Renderöi heti free-data ilman Worker-kutsua.
