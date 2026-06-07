@@ -87,7 +87,7 @@ export default function BlogPost() {
           
   <ReactMarkdown>{content}</ReactMarkdown>
 
-          <p style={{ whiteSpace: "pre-line" }}>{content}</p>
+          
         </div>
 
         <p className="article-cta">
