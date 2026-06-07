@@ -3,6 +3,7 @@ import SunCalc from "suncalc";
 
 import "../styles/midnightSunV2.css";
 
+
 import { drawSky, drawSun, drawSunPath } from "../utils/skyRenderer";
 import { drawGround }  from "../utils/groundRenderer";
 import { drawAurora }  from "../utils/auroraRenderer";
@@ -11,8 +12,7 @@ import { drawClouds }  from "../utils/cloudRenderer";
 import { fetchKp }         from "../services/auroraService";
 import { fetchCloudCover } from "../services/weatherService";
 
-const LAT = 66.5;
-const LON = 26;
+
 
 const MONTHS = [
   "Jan","Feb","Mar","Apr","May","Jun",
@@ -53,7 +53,9 @@ function fmtH(h) {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-export default function MidnightSunV2() {
+export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
+  const LAT = propLat ?? 66.5;
+  const LON = propLon ?? 26;
   const canvasRef = useRef(null);
 
   const [month, setMonth] = useState(new Date().getMonth());
