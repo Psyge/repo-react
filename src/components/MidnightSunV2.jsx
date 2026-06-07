@@ -3,7 +3,6 @@ import SunCalc from "suncalc";
 
 import "../styles/midnightSunV2.css";
 
-
 import { drawSky, drawSun, drawSunPath } from "../utils/skyRenderer";
 import { drawGround }  from "../utils/groundRenderer";
 import { drawAurora }  from "../utils/auroraRenderer";
@@ -12,19 +11,20 @@ import { drawClouds }  from "../utils/cloudRenderer";
 import { fetchKp }         from "../services/auroraService";
 import { fetchCloudCover } from "../services/weatherService";
 
-
+const LAT = 66.5;
+const LON = 26;
 
 const MONTHS = [
   "Jan","Feb","Mar","Apr","May","Jun",
   "Jul","Aug","Sep","Oct","Nov","Dec",
 ];
 
-function getDayStats(year, month, day) {
+function getDayStats(year, month, day, lat, lon) {
   let maxAlt = -999, minAlt = 999;
   let riseH = null, setH = null, prevAlt = null;
 
   for (let h = 0; h <= 24; h++) {
-    const pos = SunCalc.getPosition(new Date(year, month, day, h, 0, 0), LAT, LON);
+    const pos = SunCalc.getPosition(new Date(year, month, day, h, 0, 0), lat, lon);
     const alt = pos.altitude * (180 / Math.PI);
     if (alt > maxAlt) maxAlt = alt;
     if (alt < minAlt) minAlt = alt;
@@ -53,9 +53,7 @@ function fmtH(h) {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
-  const LAT = propLat ?? 66.5;
-  const LON = propLon ?? 26;
+export default function MidnightSunV2() {
   const canvasRef = useRef(null);
 
   const [month, setMonth] = useState(new Date().getMonth());
@@ -72,7 +70,7 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
   );
   const showLiveWeather = month === currentMonth && hourDiff <= 3;
 
-  const stats = useMemo(() => getDayStats(2025, month, 15), [month]);
+  const stats = useMemo(() => getDayStats(2025, month, 15, LAT, LON), [month, LAT, LON]);
   const { isPolarNight, isMidnightSun, daylightH, riseH, setH } = stats;
 
   const hudDate = new Date(2025, month, 15, hour, 0, 0);
@@ -100,7 +98,7 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
       });
     }
     return pts;
-  }, [month]);
+  }, [month, LAT, LON]);
 
   useEffect(() => {
     const loadData = async () => {
