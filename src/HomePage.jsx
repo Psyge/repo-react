@@ -8,7 +8,7 @@ import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
 import PlacesSection from "./components/PlacesSection";
 import SEO from "./components/SEO";
-import { client } from "../lib/contentfulClient"; // 1. Tuodaan Contentful-asiakas (varmista polun .. määrä)
+import { client } from "./lib/contentfulClient"; // 1. Tuodaan Contentful-asiakas (varmista polun .. määrä)
 
 const BASE =
   import.meta.env.VITE_API_BASE ||
