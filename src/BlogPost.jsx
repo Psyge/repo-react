@@ -1,63 +1,104 @@
-import { useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import useTranslation from "./hooks/useTranslation";
+import Header from "./components/Header";
 import SEO from "./components/SEO";
-
-import BlogPost1 from "./pages/BlogPost1";
-import BlogPost2 from "./pages/BlogPost2";
-import BlogPost3 from "./pages/BlogPost3";
+import { client } from "../lib/contentfulClient"; // 1. Haetaan Contentful-asiakas Sanityn sijaan
 
 export default function BlogPost() {
   const { slug } = useParams();
-  const { t } = useTranslation();
+  const { currentLanguage, t } = useTranslation();
+  const [article, setArticle] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (slug === "photography") {
-    return <BlogPost1 />;
+  useEffect(() => {
+    setLoading(true);
+    
+    // 2. Päivitetään haku Contentfulin muotoon.
+    // Haetaan se artikkeli, jonka 'fields.slug' vastaa osoiterivin slugia.
+    client
+      .getEntries({
+        content_type: 'post', // Varmista, että Contentfulissa Content Type ID on 'post'
+        'fields.slug': slug,
+        limit: 1
+      })
+      .then((response) => {
+        if (response.items.length > 0) {
+          // Contentful palauttaa datan response.items-listassa. Otetaan sieltä ensimmäinen.
+          setArticle(response.items[0].fields);
+        } else {
+          setArticle(null);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Virhe Contentful-haussa:", err);
+        setLoading(false);
+      });
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="container" style={{ padding: "var(--space-lg)" }}>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
-  if (slug === "forecast") {
-    return <BlogPost2 />;
+  if (!article) {
+    return (
+      <div>
+        <Header />
+        <div className="container" style={{ padding: "var(--space-lg) var(--space-md)" }}>
+          <h1>Article not found</h1>
+          <p><Link to="/blog">Back to blog</Link></p>
+        </div>
+      </div>
+    );
   }
 
-  if (slug === "best-time") {
-    return <BlogPost3 />;
-  }
+  const lang = currentLanguage || "fi";
+  
+  // 3. Haetaan tekstikentät. Contentfulissa ne ovat suoraan articlen sisällä.
+  // Huom: Jos käytät Contentfulin omaa lokalisointia, kentät voivat olla muotoa article.title[lang].
+  // Jos taas teit erilliset kentät kummallekin kielelle (esim. titleFi, titleEn), muuta nämä sen mukaan.
+  const title = article.title?.[lang] || article.title || "";
+  const content = article.content?.[lang] || article.content || "";
+  const description = article.excerpt?.[lang] || article.excerpt || "RepoTracker Blog";
 
   return (
     <div>
-      <SEO
-  title="Northern Lights Blog"
-  description="Aurora guides, photography tips and northern lights forecasting articles."
-  canonical="https://repotracker.fi/blog"
-/>
-      <div className="container">
-        <h1>Article not found</h1>
+      <SEO 
+        title={`${title} - RepoTracker Blog`} 
+        description={description}
+        canonical={`https://repotracker.fi/blog/${slug}`}
+      />
+      <Header />
 
-        <p>
-          <Link to="/blog">
-            Back to blog
-          </Link>
+      <main className="container article" style={{ padding: "var(--space-lg) var(--space-md)", maxWidth: "760px" }}>
+        <p className="article-back">
+          <Link to="/blog">{t("blog.back")}</Link>
         </p>
-      </div>
+
+        <h1>{title}</h1>
+
+        <div className="article-content">
+          {/* 4. Poistettiin Sanityn PortableText. 
+              Jos kirjoitat Contentfulissa tekstin "Long text" (Markdown/Plain text) muodossa,
+              tämä pre-line-tyyli pitää huolen siitä, että rivivälit toimivat oikein. */}
+          <p style={{ whiteSpace: "pre-line" }}>{content}</p>
+        </div>
+
+        <p className="article-cta">
+          {t("blog.cta")} <Link to="/">{t("map.open")}</Link>
+        </p>
+      </main>
 
       <footer className="footer">
         <p>© RepoTracker</p>
-
-        <Link to="/privacy">
-          {t("footer.privacy")}
-        </Link>
-
-        {" - "}
-
-        <Link to="/terms">
-          {t("footer.terms")}
-        </Link>
-
-        {" - "}
-
-        <Link to="/contact">
-          {t("footer.contact")}
-        </Link>
+        <Link to="/privacy">{t("footer.privacy")}</Link> {" - "}
+        <Link to="/terms">{t("footer.terms")}</Link> {" - "}
+        <Link to="/contact">{t("footer.contact")}</Link>
       </footer>
     </div>
   );

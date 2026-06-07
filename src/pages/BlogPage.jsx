@@ -1,67 +1,71 @@
-import { Link } from "react-router-dom";
-import useTranslation from "../hooks/useTranslation";
-import Header from "../components/Header";
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import useTranslation from '../hooks/useTranslation'; // Jos käytät täälläkin kielenkääntöä
+import Header from '../components/Header';
+import { client } from '../lib/contentfulClient';
 
 export default function BlogPage() {
-  const { t } = useTranslation();
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { currentLanguage, t } = useTranslation();
+
+  useEffect(() => {
+    setLoading(true);
+    
+    // Haetaan kaikki "post"-tyypin sisällöt Contentfulista
+    client.getEntries({
+      content_type: 'post'
+    })
+      .then((response) => {
+        setArticles(response.items);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Virhe Contentful-haussa:", err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div className="container"><p>Loading blog...</p></div>;
+  if (error) return <div className="container"><p style={{ color: 'red' }}>Error: {error}</p></div>;
+
+  const lang = currentLanguage || "fi";
 
   return (
-    <div className="blog-page">
-    <Header />
-    <main className="container">
-      <h1>{t("blog.title")}</h1>
-      <p>{t("blog.intro")}</p>
+    <div>
+      <Header />
+      <main className="container" style={{ padding: "var(--space-lg) var(--space-md)" }}>
+        <h1>{lang === 'fi' ? 'Blogi' : 'Blog'}</h1>
+        
+        {articles.length === 0 ? (
+          <p>No articles found.</p>
+        ) : (
+          <div className="articles-grid" style={{ display: 'grid', gap: '20px', marginTop: '20px' }}>
+            {articles.map((article) => {
+              const fields = article.fields;
+              
+              // Haetaan kieliversiot (tai suorat kentät, jos et käytä Contentful-lokalisointia)
+              const title = fields.title?.[lang] || fields.title || "";
+              const excerpt = fields.excerpt?.[lang] || fields.excerpt || "";
+              const slug = fields.slug?.[lang] || fields.slug || "";
 
-      <div className="home-articles">
-
-        <Link to="/blog/photography" className="blog-card">
-          <div className="blog-card-tag">GUIDE</div>
-          <h2>{t("blog.post1.title")}</h2>
-          <p>{t("blog.post1.excerpt")}</p>
-          <div className="blog-card-read">
-            {t("blog.read")}
+              return (
+                <div key={article.sys.id} className="article-card" style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '8px' }}>
+                  <h2>{title}</h2>
+                  <p>{excerpt}</p>
+                  
+                  {/* Linkki vie BlogPost-sivulle slug-osoitteen perusteella */}
+                  <Link to={`/blog/${slug}`} style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                    {lang === 'fi' ? 'Lue lisää' : 'Read more'}
+                  </Link>
+                </div>
+              );
+            })}
           </div>
-        </Link>
-
-        <Link to="/blog/forecast" className="blog-card">
-          <div className="blog-card-tag">GUIDE</div>
-          <h2>{t("blog.post2.title")}</h2>
-          <p>{t("blog.post2.excerpt")}</p>
-          <div className="blog-card-read">
-            {t("blog.read")}
-          </div>
-        </Link>
-
-        <Link to="/blog/best-time" className="blog-card">
-          <div className="blog-card-tag">GUIDE</div>
-          <h2>{t("blog.post3.title")}</h2>
-          <p>{t("blog.post3.excerpt")}</p>
-          <div className="blog-card-read">
-            {t("blog.read")}
-          </div>
-        </Link>
-
-      </div>
-    </main>
-    <footer className="footer">
-        <p>© RepoTracker</p>
-
-        <Link to="/privacy">
-          {t("footer.privacy")}
-        </Link>
-
-        {" - "}
-
-        <Link to="/terms">
-          {t("footer.terms")}
-        </Link>
-
-        {" - "}
-
-        <Link to="/contact">
-          {t("footer.contact")}
-        </Link>
-      </footer>
+        )}
+      </main>
     </div>
   );
 }
