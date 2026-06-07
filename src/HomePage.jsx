@@ -239,16 +239,19 @@ export default function HomePage() {
 
       <main>
         {/* HERO */}
-        <section className="block">
+       <section className="block">
           <div className="container">
-            {/* Kuva haetaan nätisti public-kansiosta */}
-            <img 
-              src="/images/reposet.png" 
-              alt="Northern Lights" 
-              style={{ width: "100%", height: "auto", borderRadius: "8px", marginBottom: "20px" }} 
-            />
+            
+            {/* TÄSSÄ KORJAUS: Kääritään kuva .hero-banner laatikkoon, jotta CSS-rajaukset aktivoituvat */}
+            <div className="hero-banner">
+              <img 
+                src="/images/reposet.png" 
+                alt="Northern Lights" 
+              />
+            </div>
+
             <Hero />
-          </div> {/* TÄMÄ oli se puuttuva tagi, joka kaatoi buildin! */}
+          </div>
         </section>
 
         {/* FORECAST */}
