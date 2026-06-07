@@ -1,8 +1,8 @@
-// Muutetaan require -> import muotoon
 import { createClient } from 'contentful';
 
 export const client = createClient({
-  space: 'rchue37o185a',
+  // React lukee nämä automaattisesti prosessin taustalta
+  space: process.env.REACT_APP_CONTENTFUL_SPACE_ID,
   environment: 'master', 
-  accessToken: '31nl_9mUTjwjflgqU3JUUem28Y7Niw6OkABjY2tEPZA'
+  accessToken: process.env.REACT_APP_CONTENTFUL_ACCESS_TOKEN
 });
