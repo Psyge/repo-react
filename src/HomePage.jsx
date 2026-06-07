@@ -386,7 +386,7 @@ export default function HomePage() {
         </section>
 
         {/* ARTICLES */}
-        <section className="block">
+      <section className="block">
           <div className="container">
             <div className="section-head">
               <div>
@@ -395,27 +395,24 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* 4. Tulostetaan dynaamiset kortit Contentfulista */}
             <div className="home-articles">
-              <Link to="/blog/photography" className="blog-card">
-                <div className="blog-card-tag">GUIDE</div>
-                <h2>{t("blog.post1.title")}</h2>
-                <p>{t("blog.post1.excerpt")}</p>
-                <div className="blog-card-read">{t("blog.read")}</div>
-              </Link>
+              {articles.map((article) => {
+                const { title, excerpt, slug } = article.fields;
 
-              <Link to="/blog/forecast" className="blog-card">
-                <div className="blog-card-tag">GUIDE</div>
-                <h2>{t("blog.post2.title")}</h2>
-                <p>{t("blog.post2.excerpt")}</p>
-                <div className="blog-card-read">{t("blog.read")}</div>
-              </Link>
+                // Kielituki (kuten BlogPost-sivulla)
+                const displayTitle = title?.[lang] || title || "";
+                const displayExcerpt = excerpt?.[lang] || excerpt || "";
 
-              <Link to="/blog/best-time" className="blog-card">
-                <div className="blog-card-tag">GUIDE</div>
-                <h2>{t("blog.post3.title")}</h2>
-                <p>{t("blog.post3.excerpt")}</p>
-                <div className="blog-card-read">{t("blog.read")}</div>
-              </Link>
+                return (
+                  <Link key={article.sys.id} to={`/blog/${slug}`} className="blog-card">
+                    {/* GUIDE-tagi poistettu pyynnöstäsi */}
+                    <h2>{displayTitle}</h2>
+                    <p>{displayExcerpt}</p>
+                    <div className="blog-card-read">{t("blog.read")}</div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
