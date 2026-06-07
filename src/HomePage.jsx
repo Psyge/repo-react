@@ -241,15 +241,14 @@ export default function HomePage() {
         {/* HERO */}
         <section className="block">
           <div className="container">
-            <div className="hero-banner">
- <img 
-      src="/images/reposet.png" 
-      alt="Northern Lights" 
-      style={{ width: "100%", height: "auto", borderRadius: "8px", marginBottom: "20px" }} 
-    />
-
+            {/* Kuva haetaan nätisti public-kansiosta */}
+            <img 
+              src="/images/reposet.png" 
+              alt="Northern Lights" 
+              style={{ width: "100%", height: "auto", borderRadius: "8px", marginBottom: "20px" }} 
+            />
             <Hero />
-          </div>
+          </div> {/* TÄMÄ oli se puuttuva tagi, joka kaatoi buildin! */}
         </section>
 
         {/* FORECAST */}
