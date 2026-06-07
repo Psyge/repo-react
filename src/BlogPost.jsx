@@ -4,6 +4,7 @@ import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
 import SEO from "./components/SEO";
 import { client } from "./lib/contentfulClient"; // 1. Haetaan Contentful-asiakas Sanityn sijaan
+import ReactMarkdown from 'react-markdown';
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -83,9 +84,9 @@ export default function BlogPost() {
         <h1>{title}</h1>
 
         <div className="article-content">
-          {/* 4. Poistettiin Sanityn PortableText. 
-              Jos kirjoitat Contentfulissa tekstin "Long text" (Markdown/Plain text) muodossa,
-              tämä pre-line-tyyli pitää huolen siitä, että rivivälit toimivat oikein. */}
+          
+  <ReactMarkdown>{content}</ReactMarkdown>
+
           <p style={{ whiteSpace: "pre-line" }}>{content}</p>
         </div>
 
