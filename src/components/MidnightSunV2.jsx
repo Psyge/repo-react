@@ -70,7 +70,7 @@ export default function MidnightSunV2() {
   );
   const showLiveWeather = month === currentMonth && hourDiff <= 3;
 
-  const stats = useMemo(() => getDayStats(2025, month, 15, LAT, LON), [month, LAT, LON]);
+  const stats = useMemo(() => getDayStats(2025, month, 15, LAT, LON), [month, propLat, propLon]);
   const { isPolarNight, isMidnightSun, daylightH, riseH, setH } = stats;
 
   const hudDate = new Date(2025, month, 15, hour, 0, 0);
@@ -98,7 +98,7 @@ export default function MidnightSunV2() {
       });
     }
     return pts;
-  }, [month, LAT, LON]);
+  }, [month, propLat, propLon]);
 
   useEffect(() => {
     const loadData = async () => {
