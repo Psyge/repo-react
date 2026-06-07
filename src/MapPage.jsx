@@ -7,7 +7,7 @@ import AuroraPopup from "./components/AuroraPopup";
 import Header from "./components/Header";
 import SearchBox from "./components/SearchBox";
 import MidnightSunV2 from "./components/MidnightSunV2";
-import "../styles/Maptoggle.css";
+import "./styles/Maptoggle.css";
 
 import { useSearchParams } from "react-router-dom";
 import SEO from "./components/SEO";
