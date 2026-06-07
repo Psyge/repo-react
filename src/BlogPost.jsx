@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
 import SEO from "./components/SEO";
-import { client } from "../lib/contentfulClient"; // 1. Haetaan Contentful-asiakas Sanityn sijaan
+import { client } from "./lib/contentfulClient"; // 1. Haetaan Contentful-asiakas Sanityn sijaan
 
 export default function BlogPost() {
   const { slug } = useParams();

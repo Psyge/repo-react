@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useTranslation from '../hooks/useTranslation'; // Jos käytät täälläkin kielenkääntöä
 import Header from '../components/Header';
-import { client } from '../lib/contentfulClient';
+import { client } from './lib/contentfulClient';
 
 export default function BlogPage() {
   const [articles, setArticles] = useState([]);
