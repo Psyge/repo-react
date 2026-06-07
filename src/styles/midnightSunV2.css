@@ -68,7 +68,7 @@
    ---------------------------------------------------------- */
 .msv2-info {
   position: absolute;
-  bottom: 118px;         /* slideripalkin yläpuolella */
+  bottom: 182px;         /* slideripalkin yläpuolella */
   left: 0;
   right: 0;
   z-index: 10;
@@ -95,7 +95,7 @@
    ---------------------------------------------------------- */
 .msv2-controls {
   position: absolute;
-  bottom: 20px;
+  bottom: 84px;
   left: 50%;
   transform: translateX(-50%);
   width: min(700px, 90vw);
