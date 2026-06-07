@@ -8,7 +8,7 @@ export default function BlogPage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { currentLanguage, t } = useTranslation();
+  const { currentLanguage } = useTranslation();
 
   useEffect(() => {
     setLoading(true);
