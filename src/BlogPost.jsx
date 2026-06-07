@@ -90,9 +90,6 @@ export default function BlogPost() {
           
         </div>
 
-        <p className="article-cta">
-          {t("blog.cta")} <Link to="/">{t("map.open")}</Link>
-        </p>
       </main>
 
       <footer className="footer">
