@@ -11,8 +11,8 @@ import { drawClouds }  from "../utils/cloudRenderer";
 import { fetchKp }         from "../services/auroraService";
 import { fetchCloudCover } from "../services/weatherService";
 
-const LAT = 66.5;
-const LON = 26;
+const DEFAULT_LAT = 66.5;
+const DEFAULT_LON = 26;
 
 const MONTHS = [
   "Jan","Feb","Mar","Apr","May","Jun",
@@ -53,7 +53,10 @@ function fmtH(h) {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-export default function MidnightSunV2() {
+export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
+  const lat = propLat ?? DEFAULT_LAT;
+  const lon = propLon ?? DEFAULT_LON;
+
   const canvasRef = useRef(null);
 
   const [month, setMonth] = useState(new Date().getMonth());
@@ -70,11 +73,14 @@ export default function MidnightSunV2() {
   );
   const showLiveWeather = month === currentMonth && hourDiff <= 3;
 
-  const stats = useMemo(() => getDayStats(2025, month, 15, LAT, LON), [month, propLat, propLon]);
+  const stats = useMemo(
+    () => getDayStats(2025, month, 15, lat, lon),
+    [month, lat, lon]
+  );
   const { isPolarNight, isMidnightSun, daylightH, riseH, setH } = stats;
 
   const hudDate = new Date(2025, month, 15, hour, 0, 0);
-  const hudPos  = SunCalc.getPosition(hudDate, LAT, LON);
+  const hudPos  = SunCalc.getPosition(hudDate, lat, lon);
   const hudAlt  = hudPos.altitude * (180 / Math.PI);
 
   const isDay      = hudAlt > 0;
@@ -91,21 +97,25 @@ export default function MidnightSunV2() {
     for (let h2 = 0; h2 < 24; h2 += 0.5) {
       const hFloor = Math.floor(h2);
       const mRound = Math.round((h2 % 1) * 60);
-      const p = SunCalc.getPosition(new Date(2025, month, 15, hFloor, mRound, 0), LAT, LON);
+      const p = SunCalc.getPosition(
+        new Date(2025, month, 15, hFloor, mRound, 0),
+        lat,
+        lon
+      );
       pts.push({
         alt: p.altitude * (180 / Math.PI),
         az:  ((p.azimuth + Math.PI) / (Math.PI * 2)) * 360,
       });
     }
     return pts;
-  }, [month, propLat, propLon]);
+  }, [month, lat, lon]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const [kpData, cloudData] = await Promise.all([
           fetchKp(),
-          fetchCloudCover(LAT, LON),
+          fetchCloudCover(lat, lon),
         ]);
         setKp(kpData);
         setCloudCover(cloudData);
@@ -116,7 +126,7 @@ export default function MidnightSunV2() {
     loadData();
     const interval = setInterval(loadData, 300000);
     return () => clearInterval(interval);
-  }, []);
+  }, [lat, lon]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -145,17 +155,15 @@ export default function MidnightSunV2() {
       ctx.clearRect(0, 0, w, h);
 
       const date = new Date(2025, month, 15, hour, 0, 0);
-      const pos  = SunCalc.getPosition(date, LAT, LON);
+      const pos  = SunCalc.getPosition(date, lat, lon);
       const alt  = pos.altitude * (180 / Math.PI);
       const az   = ((pos.azimuth + Math.PI) / (Math.PI * 2)) * 360;
 
       const _isDay      = alt > 0;
       const _isTwilight = alt <= 0 && alt > -6;
 
-      // 1. TAIVAS
       drawSky(ctx, w, h, _isDay, _isTwilight, month, alt);
 
-      // 2. TÄHDET
       if (!_isDay && !_isTwilight) {
         stars.forEach((star) => {
           const a = 0.4 + Math.sin(time * 0.001 + star.phase) * 0.3;
@@ -166,7 +174,6 @@ export default function MidnightSunV2() {
         });
       }
 
-      // 3. REVONTULET
       const auroraSeason  = [8, 9, 10, 11, 0, 1, 2, 3];
       const fakeAurora    = auroraSeason.includes(month) && !_isDay && !_isTwilight;
       const liveAurora    = showLiveWeather && kp >= 2 && alt < -6 && !_isDay && !_isTwilight;
@@ -176,20 +183,15 @@ export default function MidnightSunV2() {
         drawAurora(ctx, w, h, liveAurora ? kp : 3, liveAurora ? cloudCover : 0, time);
       }
 
-      // 4. PILVET
       if (showLiveWeather) {
         drawClouds(ctx, w, h, cloudCover, time);
       }
 
-      // 5. AURINGON RATAKÄYRÄ
       if (alt > -10) {
         drawSunPath(ctx, w, h, sunPathPoints);
       }
 
-      // 6. AURINKO
       drawSun(ctx, w, h, alt, az);
-
-      // 7. MAA
       drawGround(ctx, w, h, month);
     };
 
@@ -203,7 +205,7 @@ export default function MidnightSunV2() {
       cancelAnimationFrame(animationFrame);
       window.removeEventListener("resize", resize);
     };
-  }, [month, hour, kp, cloudCover, showLiveWeather, sunPathPoints]);
+  }, [month, hour, kp, cloudCover, showLiveWeather, sunPathPoints, lat, lon]);
 
   return (
     <section className="midnight-v2">
@@ -259,7 +261,7 @@ export default function MidnightSunV2() {
       </div>
 
       <div className="msv2-controls">
-        <div class="msv2-ctrl-row">
+        <div className="msv2-ctrl-row">
           <span className="msv2-ctrl-label">Month</span>
           <input
             type="range" min="0" max="11" value={month}
