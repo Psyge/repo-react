@@ -1,87 +1,58 @@
 import { Link } from "react-router-dom";
-import { setLang } from "../utils/i18n";
 import useTranslation from "../hooks/useTranslation";
 import { FaInstagram, FaTiktok } from "react-icons/fa";
 import { usePremium } from "../context/PremiumContext";
 
 export default function Header() {
-  const { t } = useTranslation();
+  // 1. Otetaan changeLanguage-funktio käyttöön tästä hookista
+  const { t, changeLanguage } = useTranslation();
   const { premium } = usePremium();
 
   return (
-   <header className="header">
-  <div className="header-inner">
+    <header className="header">
+      <div className="header-inner">
 
-    <Link to="/" className="brand">
-      RepoTracker
-    </Link>
+        <Link to="/" className="brand">
+          RepoTracker
+        </Link>
 
-    <nav className="main-nav">
-      <Link to="/">
-        {t("nav.home")}
-      </Link>
+        <nav className="main-nav">
+          <Link to="/">{t("nav.home")}</Link>
+          <Link to="/map">{t("nav.map")}</Link>
+          <Link to="/blog">{t("nav.blog")}</Link>
+          <Link to="/faq">{t("nav.faq")}</Link>
+          <Link
+            to="/premium"
+            className={premium.active ? "premium-link active" : "premium-link"}
+          >
+            {premium.active ? "✨ Premium" : "Premium"}
+          </Link>
+        </nav>
 
-      <Link to="/map">
-        {t("nav.map")}
-      </Link>
+        <div className="header-actions">
 
-      <Link to="/blog">
-        {t("nav.blog")}
-      </Link>
+          <div className="header-socials">
+            <a href="https://instagram.com/repotracker_" target="_blank" rel="noreferrer" aria-label="Instagram">
+              <FaInstagram />
+            </a>
+            <a href="https://tiktok.com/@repotracker" target="_blank" rel="noreferrer" aria-label="TikTok">
+              <FaTiktok />
+            </a>
+          </div>
 
-      <Link to="/faq">
-        {t("nav.faq")}
-      </Link>
+          {/* 2. KORJATTU TÄMÄ OSIO: Käytetään changeLanguage-funktiota */}
+          <div className="lang-switcher">
+            <button onClick={() => changeLanguage("en")}>
+              EN
+            </button>
+            <button onClick={() => changeLanguage("fi")}>
+              FI
+            </button>
+          </div>
 
-      <Link
-        to="/premium"
-        className={
-          premium.active
-            ? "premium-link active"
-            : "premium-link"
-        }
-      >
-        {premium.active
-          ? "✨ Premium"
-          : "Premium"}
-      </Link>
-    </nav>
+        </div>
 
-    <div className="header-actions">
-
-      <div className="header-socials">
-        <a
-          href="https://instagram.com/repotracker_"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Instagram"
-        >
-          <FaInstagram />
-        </a>
-
-        <a
-          href="https://tiktok.com/@repotracker"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="TikTok"
-        >
-          <FaTiktok />
-        </a>
       </div>
-
-      <div className="lang-switcher">
-        <button onClick={() => setLang("en")}>
-          EN
-        </button>
-
-        <button onClick={() => setLang("fi")}>
-          FI
-        </button>
-      </div>
-
-    </div>
-
-  </div>
-</header>
+    </header>
   );
 }
