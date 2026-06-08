@@ -4,9 +4,7 @@ import places from "../data/places";
 import useTranslation from "../hooks/useTranslation";
 import { client } from "../lib/contentfulClient";
 
-const NOAA_KP_URL =
-  "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
-
+const NOAA_KP_URL    = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
 const KP_CACHE_KEY   = "aurora_session_cache:places:kp:v1";
 const KP_TTL_MS      = 30 * 60 * 1000;
 const WEATHER_TTL_MS = 60 * 60 * 1000;
@@ -89,9 +87,9 @@ async function fetchOpenMeteoCurrent(lat, lon) {
     const data    = await res.json();
     const current = data.current || {};
     return {
-      temp:   current.temperature_2m != null ? Math.round(current.temperature_2m)          : null,
-      clouds: current.cloud_cover    != null ? Math.round(current.cloud_cover)              : null,
-      wind:   current.wind_speed_10m != null ? Math.round(current.wind_speed_10m * 10) / 10 : null,
+      temp:   current.temperature_2m != null ? Math.round(current.temperature_2m)           : null,
+      clouds: current.cloud_cover    != null ? Math.round(current.cloud_cover)               : null,
+      wind:   current.wind_speed_10m != null ? Math.round(current.wind_speed_10m * 10) / 10  : null,
       fetchedAt: Date.now(),
     };
   });
@@ -109,13 +107,13 @@ export default function PlacesSection({ kp: kpProp = null }) {
   const [placeData,    setPlaceData]    = useState({});
   const [randomPlaces, setRandomPlaces] = useState([]);
   const [localKp,      setLocalKp]      = useState(kpProp);
-  const [cmsPlaces,    setCmsPlaces]    = useState({}); // slug → { name, short }
+  const [cmsPlaces,    setCmsPlaces]    = useState({});
 
-  const navigate          = useNavigate();
+  const navigate               = useNavigate();
   const { t, currentLanguage } = useTranslation();
   const lang = currentLanguage === "en" ? "en-US" : "fi-FI";
 
-  // Satunnaiset 3 paikkaa
+  // Satunnaiset 3 paikkaa — arvotaan vain kerran
   useEffect(() => {
     setRandomPlaces([...places].sort(() => 0.5 - Math.random()).slice(0, 3));
   }, []);
@@ -127,12 +125,12 @@ export default function PlacesSection({ kp: kpProp = null }) {
       .then((res) => {
         const map = {};
         res.items.forEach((item) => {
-          console.log("slug kenttä:", JSON.stringify(item.fields.slug));
-          
-          // slug ei ole lokalisoitu → voi tulla stringinä tai objektina
-          const slugVal = typeof slug === "object"
-            ? Object.values(slug)[0]
-            : slug;
+          const slugField = item.fields.slug;
+          // slug ei ole lokalisoitu → tulee objektina { "en-US": "rovaniemi" } tai suorana stringinä
+          const slugVal = typeof slugField === "object" && slugField !== null
+            ? Object.values(slugField)[0]
+            : slugField;
+          console.log("slugVal:", slugVal, "| raw:", JSON.stringify(slugField));  
           if (slugVal) {
             map[slugVal] = {
               name:  getField(item.fields.name,  lang),
@@ -184,8 +182,8 @@ export default function PlacesSection({ kp: kpProp = null }) {
 
       <div className="places-grid">
         {randomPlaces.map((place) => {
-          const data = placeData[place.id];
-          const cms  = cmsPlaces[place.slug];
+          const data         = placeData[place.id];
+          const cms          = cmsPlaces[place.slug];
           const displayName  = cms?.name  || place.name;
           const displayShort = cms?.short || "";
 
