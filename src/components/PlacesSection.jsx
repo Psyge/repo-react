@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import places from "../data/places";
 import useTranslation from "../hooks/useTranslation";
@@ -87,9 +87,9 @@ async function fetchOpenMeteoCurrent(lat, lon) {
     const data    = await res.json();
     const current = data.current || {};
     return {
-      temp:   current.temperature_2m != null ? Math.round(current.temperature_2m)           : null,
-      clouds: current.cloud_cover    != null ? Math.round(current.cloud_cover)               : null,
-      wind:   current.wind_speed_10m != null ? Math.round(current.wind_speed_10m * 10) / 10  : null,
+      temp:   current.temperature_2m != null ? Math.round(current.temperature_2m)            : null,
+      clouds: current.cloud_cover    != null ? Math.round(current.cloud_cover)                : null,
+      wind:   current.wind_speed_10m != null ? Math.round(current.wind_speed_10m * 10) / 10   : null,
       fetchedAt: Date.now(),
     };
   });
@@ -104,21 +104,21 @@ function getField(field, lang) {
 }
 
 export default function PlacesSection({ kp: kpProp = null }) {
-  const [placeData,    setPlaceData]    = useState({});
-  const [randomPlaces, setRandomPlaces] = useState([]);
-  const [localKp,      setLocalKp]      = useState(kpProp);
-  const [cmsPlaces,    setCmsPlaces]    = useState({});
+  const [placeData, setPlaceData] = useState({});
+  const [localKp,   setLocalKp]   = useState(kpProp);
+  const [cmsPlaces, setCmsPlaces] = useState({});
+
+  // Lukitaan satunnainen järjestys — ei arvo uudelleen re-renderissä
+  const randomPlacesRef = useRef(
+    [...places].sort(() => 0.5 - Math.random()).slice(0, 3)
+  );
+  const randomPlaces = randomPlacesRef.current;
 
   const navigate               = useNavigate();
   const { t, currentLanguage } = useTranslation();
   const lang = currentLanguage === "en" ? "en-US" : "fi-FI";
 
-  // Satunnaiset 3 paikkaa — arvotaan vain kerran
-  useEffect(() => {
-    setRandomPlaces([...places].sort(() => 0.5 - Math.random()).slice(0, 3));
-  }, []);
-
-  // Contentful — hae kaikkien paikkojen name + short
+  // Contentful — name + short
   useEffect(() => {
     client.withAllLocales
       .getEntries({ content_type: "place", limit: 50 })
@@ -129,7 +129,6 @@ export default function PlacesSection({ kp: kpProp = null }) {
           const slugVal = typeof slugField === "object" && slugField !== null
             ? Object.values(slugField)[0]?.toLowerCase()
             : slugField?.toLowerCase();
-          console.log("slugVal:", slugVal, "| raw:", JSON.stringify(slugField));
           if (slugVal) {
             map[slugVal] = {
               name:  getField(item.fields.name,  lang),
@@ -152,9 +151,8 @@ export default function PlacesSection({ kp: kpProp = null }) {
     return () => { cancelled = true; };
   }, [kpProp]);
 
-  // Sää
+  // Sää — käytetään ref-listaa jotta id:t pysyvät oikeina
   useEffect(() => {
-    if (randomPlaces.length === 0) return;
     let cancelled = false;
     Promise.all(
       randomPlaces.map(async (place) => {
@@ -181,28 +179,23 @@ export default function PlacesSection({ kp: kpProp = null }) {
 
       <div className="places-grid">
         {randomPlaces.map((place) => {
-          const data         = placeData[place.id];
-          const cms          = cmsPlaces[place.slug];
-          const displayName  = cms?.name  || place.name;
-          const displayShort = cms?.short || "";
+          const data        = placeData[place.id];
+          const cms         = cmsPlaces[place.slug];
+          const displayName = cms?.name || place.name;
 
           return (
-            <div
-              key={place.id}
-              className="place-row"
-              style={{ cursor: "pointer" }}
-            >
+            <div key={place.id} className="place-row">
+
+              {/* Nimi → kartta */}
               <div
                 className="place-name"
-                onClick={() => navigate(`/places/${place.slug}`)}
+                style={{ cursor: "pointer" }}
+                onClick={() => navigate(`/map?lat=${place.lat}&lon=${place.lon}`)}
               >
                 {displayName}
               </div>
 
-              {displayShort && (
-                <div className="place-short">{displayShort}</div>
-              )}
-
+              {/* Sää/Kp data */}
               <div className="data-group">
                 <div className="data-item">
                   <span className="label">KP</span>
@@ -224,22 +217,18 @@ export default function PlacesSection({ kp: kpProp = null }) {
                 </div>
               </div>
 
-              <div className="place-actions">
-                <button
-                  className="place-btn place-btn--map"
-                  onClick={() => navigate(`/map?lat=${place.lat}&lon=${place.lon}`)}
-                >
-                  🗺 {t("places.viewMap") || "View on map"}
-                </button>
-                {cms && (
+              {/* Read more — vain jos Contentful-data löytyy */}
+              {cms && (
+                <div className="place-actions">
                   <button
                     className="place-btn place-btn--info"
                     onClick={() => navigate(`/places/${place.slug}`)}
                   >
                     {t("places.readMore") || "Read more"}
                   </button>
-                )}
-              </div>
+                </div>
+              )}
+
             </div>
           );
         })}
