@@ -298,24 +298,24 @@ export default function HomePage() {
             </div>
 
             {/* 4. Tulostetaan dynaamiset kortit Contentfulista */}
-            <div className="home-articles">
-              {articles.map((article) => {
-                const { title, excerpt, slug } = article.fields;
+          <div className="home-articles">
+  {articles.map((article) => {
+    const { title, excerpt, slug } = article.fields;
 
-                // Kielituki (kuten BlogPost-sivulla)
-                const displayTitle = title?.[lang] || title || "";
-                const displayExcerpt = excerpt?.[lang] || excerpt || "";
+    // Haetaan tekstit ja slug oikealla kielellä (lang = "fi-FI" tai "en-US")
+    const displayTitle = title?.[lang] || (typeof title === 'string' ? title : "");
+    const displayExcerpt = excerpt?.[lang] || (typeof excerpt === 'string' ? excerpt : "");
+    const displaySlug = slug?.[lang] || (typeof slug === 'string' ? slug : "");
 
-                return (
-                  <Link key={article.sys.id} to={`/blog/${slug}`} className="blog-card">
-                    {/* GUIDE-tagi poistettu pyynnöstäsi */}
-                    <h2>{displayTitle}</h2>
-                    <p>{displayExcerpt}</p>
-                    <div className="blog-card-read">{t("blog.read")}</div>
-                  </Link>
-                );
-              })}
-            </div>
+    return (
+      <Link key={article.sys.id} to={`/blog/${displaySlug}`} className="blog-card">
+        <h2>{displayTitle}</h2>
+        <p>{displayExcerpt}</p>
+        <div className="blog-card-read">{t("blog.read")}</div>
+      </Link>
+    );
+  })}
+</div>
           </div>
         </section>
       </main>

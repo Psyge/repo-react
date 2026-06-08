@@ -50,20 +50,21 @@ export default function BlogPage() {
               const fields = article.fields;
               
               // Nyt nämä kielivalinnat toimivat täydellisesti, kun .withAllLocales on päällä
-              const title = fields.title?.[lang] || fields.title || "";
-              const excerpt = fields.excerpt?.[lang] || fields.excerpt || "";
-              const slug = fields.slug?.[lang] || fields.slug || "";
+            const title = fields.title?.[lang] || (typeof fields.title === 'string' ? fields.title : "");
+const excerpt = fields.excerpt?.[lang] || (typeof fields.excerpt === 'string' ? fields.excerpt : "");
+const displaySlug = fields.slug?.[lang] || (typeof fields.slug === 'string' ? fields.slug : "");
 
-              return (
-                <div key={article.sys.id} className="article-card" style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '8px' }}>
-                  <h2>{title}</h2>
-                  <p>{excerpt}</p>
-                  
-                  <Link to={`/blog/${slug}`} style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
-                    {lang === 'fi' ? 'Lue lisää' : 'Read more'}
-                  </Link>
-                </div>
-              );
+return (
+  <div key={article.sys.id} className="article-card" style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '8px' }}>
+    <h2>{title}</h2>
+    <p>{excerpt}</p>
+    
+    {/* Käytetään displaySlug-muuttujaa */}
+    <Link to={`/blog/${displaySlug}`} style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
+      {lang === 'fi-FI' ? 'Lue lisää' : 'Read more'}
+    </Link>
+  </div>
+);
             })}
           </div>
         )}

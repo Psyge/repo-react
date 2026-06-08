@@ -16,12 +16,16 @@ export default function BlogPost() {
     setLoading(true);
     
     // Muutettu: lisätty .withAllLocales ja poistettu locale: '*'
-    client.withAllLocales
-      .getEntries({
-        content_type: 'post',
-        'fields.slug': slug,
-        limit: 1
-      })
+    const currentLang = currentLanguage || "fi";
+const queryLang = currentLang === "en" ? "en-US" : "fi-FI";
+
+client.withAllLocales
+  .getEntries({
+    content_type: 'post',
+    // Etsitään slugia juuri sen kielen alta, mikä sivustolla on valittuna
+    [`fields.slug.${queryLang}`]: slug, 
+    limit: 1
+  })
       .then((response) => {
         if (response.items.length > 0) {
           setArticle(response.items[0].fields);
@@ -56,8 +60,7 @@ export default function BlogPost() {
     );
   }
 
-  const currentLang = currentLanguage || "fi";
-  const lang = currentLang === "en" ? "en-US" : "fi-FI";
+  
   
   // 3. Haetaan tekstikentät. Contentfulissa ne ovat suoraan articlen sisällä.
   // Huom: Jos käytät Contentfulin omaa lokalisointia, kentät voivat olla muotoa article.title[lang].
