@@ -44,12 +44,21 @@ export default function PlacePage() {
         if (!item) {
           setNotFound(true);
         } else {
+          const f = item.fields;
+
+          // Numerokentät voivat tulla withAllLocales:ssa objektina { "en-US": 66.5 }
+          const getNum = (field) => {
+            if (field == null) return null;
+            if (typeof field === "object") return Object.values(field)[0] ?? null;
+            return field;
+          };
+
           setCmsData({
-            name:        getField(item.fields.name,        lang),
-            short:       getField(item.fields.short,       lang),
-            description: getField(item.fields.description, lang),
-            lat:         item.fields.lat,
-            lon:         item.fields.lon,
+            name:        getField(f.name,        lang),
+            short:       getField(f.short,       lang),
+            description: getField(f.description, lang),
+            lat:         getNum(f.lat),
+            lon:         getNum(f.lon),
           });
         }
         setLoading(false);

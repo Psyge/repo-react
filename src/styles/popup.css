@@ -2,30 +2,21 @@
    LEAFLET POPUP POSITION FIX
 ======================================== */
 
-/* tärkein fix -> popup keskitetään oikein markerin päälle */
-
 .leaflet-popup {
-  margin-bottom: 18px;
+  margin-bottom: 0;
 }
 
 .leaflet-popup-content-wrapper {
   padding: 0 !important;
-
   overflow: hidden;
-
   border-radius: 22px !important;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(7,12,28,0.96),
-      rgba(5,8,20,0.98)
-    ) !important;
-
+  background: linear-gradient(
+    180deg,
+    rgba(7,12,28,0.96),
+    rgba(5,8,20,0.98)
+  ) !important;
   border: 1px solid rgba(255,255,255,0.08);
-
   backdrop-filter: blur(18px);
-
   box-shadow:
     0 25px 60px rgba(0,0,0,0.55),
     0 0 40px rgba(0,255,200,0.08);
@@ -33,29 +24,28 @@
 
 .leaflet-popup-content {
   margin: 0 !important;
-
   width: auto !important;
+  padding: 0 !important;
 }
 
+/* Nuoli — keskitetään tarkasti */
 .leaflet-popup-tip-container {
-  margin-top: -1px;
+  width: 40px;
+  height: 20px;
+  margin-top: 0;
+  margin-left: -20px;
+  left: 50%;
+  overflow: hidden;
 }
 
 .leaflet-popup-tip {
-  width: 18px;
-  height: 18px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(7,12,28,0.98),
-      rgba(5,8,20,0.98)
-    ) !important;
-
-  border: 1px solid rgba(255,255,255,0.06);
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.35);
+  width: 17px;
+  height: 17px;
+  background: rgba(7,12,28,0.98) !important;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  margin: -9px auto 0;
+  transform: rotate(45deg);
 }
 
 /* ========================================
@@ -64,44 +54,22 @@
 
 .aurora-popup {
   position: relative;
-
   min-width: 260px;
   max-width: 300px;
-
-  padding:
-    20px
-    20px
-    18px;
-
+  padding: 20px 20px 18px;
   color: var(--fg);
-
   overflow: hidden;
 }
 
-/* aurora glow inside */
-
 .aurora-popup::before {
   content: "";
-
   position: absolute;
   inset: -30%;
-
   background:
-    radial-gradient(
-      circle at 20% 20%,
-      rgba(0,255,204,0.12),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at 80% 70%,
-      rgba(125,95,255,0.10),
-      transparent 40%
-    );
-
+    radial-gradient(circle at 20% 20%, rgba(0,255,204,0.12), transparent 35%),
+    radial-gradient(circle at 80% 70%, rgba(125,95,255,0.10), transparent 40%);
   filter: blur(50px);
-
   pointer-events: none;
-
   z-index: 0;
 }
 
@@ -118,15 +86,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
-
   font-size: 11px;
-
   text-transform: uppercase;
-
   letter-spacing: 0.14em;
-
   color: var(--fg-muted);
-
   margin-bottom: 18px;
 }
 
@@ -136,39 +99,23 @@
 
 .ap-prob {
   font-family: var(--font-display);
-
   font-size: 58px;
-
   font-weight: 800;
-
   line-height: 1;
-
-  margin:
-    4px
-    0
-    8px;
-
+  margin: 4px 0 8px;
   letter-spacing: -0.04em;
-
   background: var(--gradient-aurora);
-
   -webkit-background-clip: text;
   background-clip: text;
-
   color: transparent;
 }
 
 .ap-level {
   font-size: 12px;
-
   font-weight: 700;
-
   text-transform: uppercase;
-
   letter-spacing: 0.16em;
-
   color: var(--accent);
-
   margin-bottom: 18px;
 }
 
@@ -178,55 +125,33 @@
 
 .ap-quick {
   display: grid;
-
   grid-template-columns: repeat(3, 1fr);
-
   gap: 12px;
-
   margin-top: 14px;
-
-  padding:
-    16px
-    14px;
-
+  padding: 16px 14px;
   border-radius: 16px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.03),
-      rgba(255,255,255,0.015)
-    );
-
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
   border: 1px solid rgba(255,255,255,0.06);
 }
 
 .ap-quick > div {
   display: flex;
   flex-direction: column;
-
   align-items: center;
-
   gap: 4px;
 }
 
 .ap-quick span {
   font-size: 10px;
-
   text-transform: uppercase;
-
   letter-spacing: 0.12em;
-
   color: var(--fg-dim);
 }
 
 .ap-quick strong {
   font-family: var(--font-display);
-
   font-size: 16px;
-
   font-weight: 700;
-
   color: var(--fg);
 }
 
@@ -236,40 +161,22 @@
 
 .ap-toggle {
   width: 100%;
-
   margin-top: 16px;
-
   border: 0;
-
   border-radius: 14px;
-
-  padding:
-    12px
-    16px;
-
+  padding: 12px 16px;
   background: var(--gradient-aurora);
-
   color: #04120f;
-
   font-size: 13px;
   font-weight: 800;
-
   cursor: pointer;
-
-  transition:
-    transform .15s ease,
-    box-shadow .15s ease,
-    opacity .15s ease;
-
-  box-shadow:
-    0 0 24px rgba(0,255,204,0.25);
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  box-shadow: 0 0 24px rgba(0,255,204,0.25);
 }
 
 .ap-toggle:hover {
   transform: translateY(-1px);
-
-  box-shadow:
-    0 0 34px rgba(0,255,204,0.4);
+  box-shadow: 0 0 34px rgba(0,255,204,0.4);
 }
 
 /* ========================================
@@ -278,37 +185,25 @@
 
 .ap-details {
   margin-top: 16px;
-
   padding-top: 14px;
-
   border-top: 1px dashed rgba(255,255,255,0.1);
-
   display: grid;
-
   gap: 10px;
 }
 
-.ap-details[hidden] {
-  display: none !important;
-}
+.ap-details[hidden] { display: none !important; }
 
 .ap-details > div {
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
   gap: 16px;
-
   font-size: 13px;
-
   color: var(--fg-muted);
 }
 
 .ap-details strong {
   color: var(--fg);
-
   font-weight: 700;
 }
 
@@ -318,13 +213,9 @@
 
 .ap-desc {
   margin-top: 14px;
-
   text-align: center;
-
   font-size: 13px;
-
   line-height: 1.5;
-
   color: var(--fg-muted);
 }
 
@@ -335,42 +226,43 @@
 .leaflet-popup-close-button {
   top: 10px !important;
   right: 10px !important;
-
   color: rgba(255,255,255,0.5) !important;
-
   font-size: 18px !important;
-
   transition: opacity .15s ease;
 }
 
-.leaflet-popup-close-button:hover {
-  opacity: 1;
+.leaflet-popup-close-button:hover { opacity: 1; }
+
+/* ========================================
+   HINT POPUP
+======================================== */
+
+.map-hint-popup {
+  padding: 18px 16px;
+  text-align: center;
+  max-width: 240px;
 }
-.aurora-popup-wrap .leaflet-popup-content {
+
+.map-hint-popup strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.map-hint-popup p {
   margin: 0;
+  color: var(--fg-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
-.aurora-popup-wrap .leaflet-popup-content-wrapper {
-  padding: 0;
-  overflow: hidden;
-}
-
-.aurora-popup {
-  padding: 18px;
-}
-.leaflet-popup-content {
-  padding: 15px;
-}
 /* ========================================
    MOBILE
 ======================================== */
 
 @media (max-width: 768px) {
-
-  .leaflet-popup {
-    margin-bottom: 12px;
-  }
-
   .leaflet-popup-content-wrapper {
     border-radius: 18px !important;
   }
@@ -378,141 +270,21 @@
   .aurora-popup {
     min-width: 0;
     max-width: 240px;
-
-    padding:
-      16px
-      16px
-      14px;
+    padding: 16px 16px 14px;
   }
 
-  .ap-name {
-    font-size: 10px;
-
-    margin-bottom: 14px;
-  }
-
-  .ap-prob {
-    font-size: 44px;
-
-    margin-bottom: 6px;
-  }
-
-  .ap-level {
-    font-size: 11px;
-
-    margin-bottom: 14px;
-  }
-
-  .ap-quick {
-    gap: 8px;
-
-    padding:
-      12px
-      10px;
-  }
-
-  .ap-quick strong {
-    font-size: 14px;
-  }
-
-  .ap-toggle {
-    margin-top: 14px;
-
-    padding:
-      11px
-      14px;
-
-    font-size: 12px;
-  }
-
-  .ap-details {
-    margin-top: 14px;
-
-    gap: 8px;
-  }
-
-  .ap-details > div {
-    font-size: 12px;
-  }
-
-  .ap-desc {
-    font-size: 12px;
-
-    margin-top: 12px;
-  }
-
-  .leaflet-popup-close-button {
-    top: 8px !important;
-    right: 8px !important;
-
-    font-size: 16px !important;
-  }
+  .ap-name { font-size: 10px; margin-bottom: 14px; }
+  .ap-prob { font-size: 44px; margin-bottom: 6px; }
+  .ap-level { font-size: 11px; margin-bottom: 14px; }
+  .ap-quick { gap: 8px; padding: 12px 10px; }
+  .ap-quick strong { font-size: 14px; }
+  .ap-toggle { margin-top: 14px; padding: 11px 14px; font-size: 12px; }
+  .ap-details { margin-top: 14px; gap: 8px; }
+  .ap-details > div { font-size: 12px; }
+  .ap-desc { font-size: 12px; margin-top: 12px; }
+  .leaflet-popup-close-button { top: 8px !important; right: 8px !important; font-size: 16px !important; }
 }
-
-/* ========================================
-   TOUCH DEVICES
-======================================== */
 
 @media (hover: none) {
-
-  .ap-toggle:hover {
-    transform: none;
-  }
-}
-/* ========================================
-   MOBILE MAP HINT POPUP
-======================================== */
-
-.mobile-map-hint .leaflet-popup-content-wrapper {
-  border-radius: 18px !important;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(7,12,28,0.96),
-      rgba(5,8,20,0.98)
-    ) !important;
-
-  border: 1px solid rgba(255,255,255,0.08);
-
-  backdrop-filter: blur(14px);
-
-  box-shadow:
-    0 20px 50px rgba(0,0,0,0.35);
-}
-
-.mobile-map-hint .leaflet-popup-content {
-  margin: 0 !important;
-
-  padding: 0 !important;
-}
-
-.map-hint-popup {
-  padding: 18px 16px;
-
-  text-align: center;
-
-  max-width: 240px;
-}
-
-.map-hint-popup strong {
-  display: block;
-
-  margin-bottom: 8px;
-
-  color: var(--fg);
-
-  font-size: 14px;
-
-  font-weight: 700;
-}
-
-.map-hint-popup p {
-  margin: 0;
-
-  color: var(--fg-muted);
-
-  font-size: 12px;
-
-  line-height: 1.5;
+  .ap-toggle:hover { transform: none; }
 }

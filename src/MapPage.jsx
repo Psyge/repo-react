@@ -7,7 +7,6 @@ import AuroraPopup from "./components/AuroraPopup";
 import Header from "./components/Header";
 import SearchBox from "./components/SearchBox";
 import MidnightSunV2 from "./components/MidnightSunV2";
-import "./styles/Maptoggle.css";
 
 import { useSearchParams } from "react-router-dom";
 import SEO from "./components/SEO";
@@ -109,6 +108,7 @@ export default function MapPage() {
   const mapInstance   = useRef(null);
   const markerRef     = useRef(null);
   const clickTimerRef = useRef(null);
+  const hintPopupRef  = useRef(null);
   const popupRootRef  = useRef(null);
 
   const [view, setView]           = useState("map");
@@ -179,6 +179,7 @@ export default function MapPage() {
       maxWidth: 320,
       autoPanPadding: L.point(24, 24),
       className: "aurora-popup-wrap",
+      offset: L.point(0, -2),
     }).setLatLng([lat, lng]);
 
     const container = document.createElement("div");
@@ -245,7 +246,7 @@ export default function MapPage() {
       markerZoomAnimation: false,
     }).setView([initialLat, initialLon], 9);
 
-    L.popup({ closeButton: true, autoClose: true, closeOnClick: true })
+    const hintPopup = L.popup({ closeButton: true, autoClose: true, closeOnClick: true })
       .setLatLng([66.5, 25.7])
       .setContent(`
         <div class="map-hint-popup">
@@ -254,6 +255,7 @@ export default function MapPage() {
         </div>
       `)
       .addTo(map);
+    hintPopupRef.current = hintPopup;
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -274,7 +276,14 @@ export default function MapPage() {
       );
     }
 
-    map.on("click", (e) => schedulePopup(map, e.latlng.lat, e.latlng.lng));
+    map.on("click", (e) => {
+      // Sulje hint-popup kun käyttäjä klikkaa karttaa
+      if (hintPopupRef.current) {
+        hintPopupRef.current.remove();
+        hintPopupRef.current = null;
+      }
+      schedulePopup(map, e.latlng.lat, e.latlng.lng);
+    });
     mapInstance.current = map;
 
     if (searchParams.get("lat") && searchParams.get("lon")) {
