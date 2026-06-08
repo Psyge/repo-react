@@ -1,17 +1,26 @@
 import { useEffect, useState } from "react";
-import { t, getLang } from "../utils/i18n";
+import { t, getLang, setLang } from "../utils/i18n";
 
 export default function useTranslation() {
-  const [, setUpdate] = useState(0);
+  const [currentLanguage, setCurrentLanguage] = useState(getLang());
 
   useEffect(() => {
-    const rerender = () => setUpdate((x) => x + 1);
+    const rerender = () => {
+      setCurrentLanguage(getLang());
+    };
     window.addEventListener("lang-change", rerender);
     return () => window.removeEventListener("lang-change", rerender);
   }, []);
 
+  const changeLanguage = (newLang) => {
+    setLang(newLang);
+    setCurrentLanguage(newLang);
+  };
+
   return {
     t,
-    lang: getLang(),
+    lang: currentLanguage,
+    currentLanguage,
+    changeLanguage,
   };
 }
