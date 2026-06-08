@@ -8,7 +8,7 @@ import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
 import PlacesSection from "./components/PlacesSection";
 import SEO from "./components/SEO";
-import { client } from "./lib/contentfulClient"; // 1. Tuodaan Contentful-asiakas (varmista polun .. määrä)
+import { client } from "./lib/contentfulClient";
 
 const BASE =
   import.meta.env.VITE_API_BASE ||
@@ -173,14 +173,13 @@ async function fetchPremiumForecast(deviceKey) {
 
 export default function HomePage() {
   const [forecast, setForecast] = useState({ tier: "free", slots: [], genAt: null, current: null });
-  // 2. Luodaan tila Contentful-artikkeleille
   const [articles, setArticles] = useState([]);
   const { t, currentLanguage } = useTranslation();
 
+  // EFEKTI 1: Ennusteen lataus (KORJATTU SULUT TÄSTÄ)
   useEffect(() => {
     let cancelled = false;
 
-    // Ennusteen haku (pysyy ennallaan)
     const loadForecast = async () => {
       try {
         const deviceKey = readDeviceKey();
@@ -202,12 +201,25 @@ export default function HomePage() {
       }
     };
 
-    // 3. Haetaan 3 uusinta artikkelia Contentfulista
-   const loadArticles = () => {
-      // Muutettu: lisätty .withAllLocales ja poistettu locale: '*'
-      client.withAllLocales.getEntries({
+    loadForecast();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // EFEKTI 2: Contentful-artikkeleiden lataus
+  useEffect(() => {
+    let cancelled = false;
+
+    const currentLang = currentLanguage || "fi";
+    const contentfulLocale = currentLang === "en" ? "en-US" : "fi-FI";
+
+    const loadArticles = () => {
+      client.getEntries({
         content_type: 'post',
-        limit: 3
+        limit: 3,
+        locale: contentfulLocale
       })
       .then((response) => {
         if (!cancelled) {
@@ -217,16 +229,12 @@ export default function HomePage() {
       .catch((err) => console.error("Virhe etusivun artikkeleiden haussa:", err));
     };
 
-    loadForecast();
     loadArticles();
 
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  const currentLang = currentLanguage || "fi";
-  const lang = currentLang === "en" ? "en-US" : "fi-FI";
+  }, [currentLanguage]);
 
   return (
     <div>
@@ -241,17 +249,14 @@ export default function HomePage() {
 
       <main>
         {/* HERO */}
-       <section className="block">
+        <section className="block">
           <div className="container">
-            
-            {/* TÄSSÄ KORJAUS: Kääritään kuva .hero-banner laatikkoon, jotta CSS-rajaukset aktivoituvat */}
             <div className="hero-banner">
               <img 
                 src="/images/reposet.png" 
                 alt="Northern Lights" 
               />
             </div>
-
             <Hero />
           </div>
         </section>
@@ -297,25 +302,19 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* 4. Tulostetaan dynaamiset kortit Contentfulista */}
-          <div className="home-articles">
-  {articles.map((article) => {
-    const { title, excerpt, slug } = article.fields;
+            <div className="home-articles">
+              {articles.map((article) => {
+                const { title, excerpt, slug } = article.fields;
 
-    // Haetaan tekstit ja slug oikealla kielellä (lang = "fi-FI" tai "en-US")
-    const displayTitle = title?.[lang] || (typeof title === 'string' ? title : "");
-    const displayExcerpt = excerpt?.[lang] || (typeof excerpt === 'string' ? excerpt : "");
-    const displaySlug = slug?.[lang] || (typeof slug === 'string' ? slug : "");
-
-    return (
-      <Link key={article.sys.id} to={`/blog/${displaySlug}`} className="blog-card">
-        <h2>{displayTitle}</h2>
-        <p>{displayExcerpt}</p>
-        <div className="blog-card-read">{t("blog.read")}</div>
-      </Link>
-    );
-  })}
-</div>
+                return (
+                  <Link key={article.sys.id} to={`/blog/${slug}`} className="blog-card">
+                    <h2>{title || ""}</h2>
+                    <p>{excerpt || ""}</p>
+                    <div className="blog-card-read">{t("blog.read")}</div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </section>
       </main>

@@ -12,24 +12,27 @@ export default function BlogPost() {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 1. MÄÄRITELLÄÄN KIELET FUNKTION ALUSSA
-  // Muutetaan lyhyt kieli (fi/en) Contentfulin ymmärtämään muotoon (fi-FI/en-US)
   const currentLang = currentLanguage || "fi";
   const lang = currentLang === "en" ? "en-US" : "fi-FI";
 
   useEffect(() => {
     setLoading(true);
     
+    // Haetaan kaikilla kielillä, jotta haku löytää artikkelin riippumatta siitä, onko osoiterivillä fi- vai en-slug
     client.withAllLocales
       .getEntries({
         content_type: 'post',
-        // Etsitään slugia juuri sen kielen alta, mikä sivustolla on valittuna
-        [`fields.slug.${lang}`]: slug, 
         limit: 1
       })
       .then((response) => {
-        if (response.items.length > 0) {
-          setArticle(response.items[0].fields);
+        // Etsitään se artikkeli, jonka slug mätsää joko suomeksi tai englanniksi osoiterivin kanssa
+        const found = response.items.find(item => {
+          const s = item.fields.slug;
+          return s?.['fi-FI'] === slug || s?.['en-US'] === slug;
+        });
+
+        if (found) {
+          setArticle(found.fields);
         } else {
           setArticle(null);
         }
@@ -39,7 +42,7 @@ export default function BlogPost() {
         console.error("Virhe Contentful-haussa:", err);
         setLoading(false);
       });
-  }, [slug, lang]); // Lisätty lang tänne riippuvuuksiin, jotta haku päivittyy jos kieltä lennosta vaihdetaan
+  }, [slug]);
 
   if (loading) {
     return (
@@ -61,10 +64,10 @@ export default function BlogPost() {
     );
   }
 
-  // 2. HAETAAN TEKSTIKENTÄT KIELLÄ (lang on nyt "fi-FI" tai "en-US")
-  const title = article.title?.[lang] || (typeof article.title === 'string' ? article.title : "");
-  const content = article.content?.[lang] || (typeof article.content === 'string' ? article.content : "");
-  const description = article.excerpt?.[lang] || (typeof article.excerpt === 'string' ? article.excerpt : "RepoTracker Blog");
+  // Puretaan tekstit valitun kielen mukaan objektista
+  const title = article.title?.[lang] || article.title?.['fi-FI'] || "";
+  const content = article.content?.[lang] || article.content?.['fi-FI'] || "";
+  const description = article.excerpt?.[lang] || article.excerpt?.['fi-FI'] || "RepoTracker Blog";
 
   return (
     <div>
@@ -82,7 +85,7 @@ export default function BlogPost() {
 
         <h1>{title}</h1>
 
-        <div className="article-content">
+        <div className="article-content" style={{ color: '#fff', marginTop: '20px', lineHeight: '1.6' }}>
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
       </main>
