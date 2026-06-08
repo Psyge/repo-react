@@ -52,10 +52,7 @@ function readSessionCache(key, ttlMs) {
 function writeSessionCache(key, data) {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(
-      key,
-      JSON.stringify({ savedAt: Date.now(), data })
-    );
+    sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
   } catch {}
 }
 
@@ -104,22 +101,31 @@ function parseNoaa3DayKp(text) {
 
   const year = new Date().getUTCFullYear();
   const nowMonth = new Date().getUTCMonth();
-  const monthMap = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+  const monthMap = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4,  Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+  };
 
   const dates = dateMatches.slice(0, 3).map((match) => {
     const mo = monthMap[match[1]];
-    const d = parseInt(match[2], 10);
-    let yr = year;
+    const d  = parseInt(match[2], 10);
+    let yr   = year;
     if (mo < nowMonth - 6) yr = year + 1;
     return { mo, d, yr };
   });
 
   const series = [];
   for (const line of lines) {
-    const match = line.match(/^\s*(\d{2})-(\d{2})UT\s+([\d.]+)(?:\s*\(?[A-Z]?\)?)?\s+([\d.]+)(?:\s*\(?[A-Z]?\)?)?\s+([\d.]+)/);
+    const match = line.match(
+      /^\s*(\d{2})-(\d{2})UT\s+([\d.]+)(?:\s*\(?[A-Z]?\)?)?\s+([\d.]+)(?:\s*\(?[A-Z]?\)?)?\s+([\d.]+)/
+    );
     if (!match) continue;
     const startH = parseInt(match[1], 10);
-    const vals = [parseFloat(match[3]), parseFloat(match[4]), parseFloat(match[5])];
+    const vals = [
+      parseFloat(match[3]),
+      parseFloat(match[4]),
+      parseFloat(match[5]),
+    ];
     for (let c = 0; c < 3; c++) {
       if (Number.isNaN(vals[c])) continue;
       const tsMs = Date.UTC(dates[c].yr, dates[c].mo, dates[c].d, startH, 0, 0);
@@ -134,14 +140,14 @@ async function fetchFreeForecast() {
   return sessionCachedJson(FREE_FORECAST_CACHE_KEY, FORECAST_TTL_MS, async () => {
     const text = await fetchTextSafe(NOAA_3_DAY_FORECAST_URL, "NOAA 3-day forecast");
     const kpSeries = parseNoaa3DayKp(text);
-    const now = Date.now();
+    const now    = Date.now();
     const cutoff = now + 72 * 60 * 60 * 1000;
-    const slots = kpSeries
-      .filter((slot) => slot.tsMs >= now - 3 * 60 * 60 * 1000 && slot.tsMs <= cutoff)
-      .map((slot) => ({
-        tsUtc: new Date(slot.tsMs).toISOString(),
-        kp: slot.kp,
-        level: kpToLevel(slot.kp),
+    const slots  = kpSeries
+      .filter((s) => s.tsMs >= now - 3 * 60 * 60 * 1000 && s.tsMs <= cutoff)
+      .map((s) => ({
+        tsUtc: new Date(s.tsMs).toISOString(),
+        kp:    s.kp,
+        level: kpToLevel(s.kp),
       }));
     return { tier: "free", genAt: new Date(now).toISOString(), slots, current: null };
   });
@@ -163,77 +169,87 @@ async function fetchPremiumForecast(deviceKey) {
       throw new Error("Forecast: invalid JSON");
     });
     return {
-      tier: data?.tier || "premium",
-      slots: Array.isArray(data?.slots) ? data.slots : [],
-      genAt: data?.genAt || null,
+      tier:    data?.tier    || "premium",
+      slots:   Array.isArray(data?.slots) ? data.slots : [],
+      genAt:   data?.genAt   || null,
       current: data?.current || null,
     };
   });
 }
 
+// Purkaa lokalisoitu Contentful-kenttä oikean kielen stringiksi
+function getField(field, lang) {
+  if (!field) return "";
+  if (typeof field === "object" && !Array.isArray(field)) {
+    return field[lang] || field["fi-FI"] || "";
+  }
+  return field;
+}
+
 export default function HomePage() {
-  const [forecast, setForecast] = useState({ tier: "free", slots: [], genAt: null, current: null });
+  const [forecast, setForecast] = useState({
+    tier: "free", slots: [], genAt: null, current: null,
+  });
   const [articles, setArticles] = useState([]);
   const { t, currentLanguage } = useTranslation();
 
-  // EFEKTI 1: Ennusteen lataus (KORJATTU SULUT TÄSTÄ)
+  // EFEKTI 1: Ennusteen lataus
   useEffect(() => {
     let cancelled = false;
-
-    const loadForecast = async () => {
+    const load = async () => {
       try {
         const deviceKey = readDeviceKey();
-        const data = deviceKey ? await fetchPremiumForecast(deviceKey) : await fetchFreeForecast();
+        const data = deviceKey
+          ? await fetchPremiumForecast(deviceKey)
+          : await fetchFreeForecast();
         if (cancelled) return;
         setForecast({
-          tier: data?.tier || "free",
-          slots: Array.isArray(data?.slots) ? data.slots : [],
-          genAt: data?.genAt || null,
+          tier:    data?.tier    || "free",
+          slots:   Array.isArray(data?.slots) ? data.slots : [],
+          genAt:   data?.genAt   || null,
           current: data?.current || null,
         });
       } catch (e) {
         console.error("FORECAST ERROR:", e);
         if (cancelled) return;
-        setForecast((prev) => {
-          if (prev.slots.length) return prev;
-          return { tier: "free", slots: [], genAt: null, current: null };
-        });
+        setForecast((prev) =>
+          prev.slots.length
+            ? prev
+            : { tier: "free", slots: [], genAt: null, current: null }
+        );
       }
     };
-
-    loadForecast();
-
-    return () => {
-      cancelled = true;
-    };
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   // EFEKTI 2: Contentful-artikkeleiden lataus
   useEffect(() => {
     let cancelled = false;
+    const lang = currentLanguage === "en" ? "en-US" : "fi-FI";
 
-    const currentLang = currentLanguage || "fi";
-    const contentfulLocale = currentLang === "en" ? "en-US" : "fi-FI";
-
-    const loadArticles = () => {
-      client.getEntries({
-        content_type: 'post',
-        limit: 3,
-        locale: contentfulLocale
-      })
+    // withAllLocales → kentät tulevat objekteina { 'fi-FI': '...', 'en-US': '...' }
+    // → getField purkaa oikean kielen → toimii kieltä vaihtaessa
+    client.withAllLocales
+      .getEntries({ content_type: "post", limit: 3 })
       .then((response) => {
-        if (!cancelled) {
-          setArticles(response.items);
-        }
+        if (cancelled) return;
+        const localized = response.items.map((item) => ({
+          ...item,
+          fields: {
+            ...item.fields,
+            title:   getField(item.fields.title,   lang),
+            excerpt: getField(item.fields.excerpt, lang),
+            slug:    getField(item.fields.slug,    lang),
+          },
+        }));
+        setArticles(localized);
       })
-      .catch((err) => console.error("Virhe etusivun artikkeleiden haussa:", err));
-    };
+      .catch((err) =>
+        console.error("Virhe etusivun artikkeleiden haussa:", err)
+      );
 
-    loadArticles();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [currentLanguage]);
 
   return (
@@ -252,10 +268,7 @@ export default function HomePage() {
         <section className="block">
           <div className="container">
             <div className="hero-banner">
-              <img 
-                src="/images/reposet.png" 
-                alt="Northern Lights" 
-              />
+              <img src="/images/reposet.png" alt="Northern Lights" />
             </div>
             <Hero />
           </div>
@@ -303,17 +316,17 @@ export default function HomePage() {
             </div>
 
             <div className="home-articles">
-              {articles.map((article) => {
-                const { title, excerpt, slug } = article.fields;
-
-                return (
-                  <Link key={article.sys.id} to={`/blog/${slug}`} className="blog-card">
-                    <h2>{title || ""}</h2>
-                    <p>{excerpt || ""}</p>
-                    <div className="blog-card-read">{t("blog.read")}</div>
-                  </Link>
-                );
-              })}
+              {articles.map((article) => (
+                <Link
+                  key={article.sys.id}
+                  to={`/blog/${article.fields.slug}`}
+                  className="blog-card"
+                >
+                  <h2>{article.fields.title}</h2>
+                  <p>{article.fields.excerpt}</p>
+                  <div className="blog-card-read">{t("blog.read")}</div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
