@@ -15,7 +15,9 @@ export default function BlogPage() {
     
     // Haetaan kaikki "post"-tyypin sisällöt Contentfulista
     client.getEntries({
-      content_type: 'post'
+      content_type: 'post',
+      limit: 3,
+        locale: '*'
     })
       .then((response) => {
         setArticles(response.items);
