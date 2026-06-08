@@ -12,21 +12,18 @@ export default function BlogPost() {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+ useEffect(() => {
     setLoading(true);
     
-    // 2. Päivitetään haku Contentfulin muotoon.
-    // Haetaan se artikkeli, jonka 'fields.slug' vastaa osoiterivin slugia.
-    client
+    // Muutettu: lisätty .withAllLocales ja poistettu locale: '*'
+    client.withAllLocales
       .getEntries({
-        content_type: 'post', // Varmista, että Contentfulissa Content Type ID on 'post'
+        content_type: 'post',
         'fields.slug': slug,
-        limit: 1,
-        locale: '*'
+        limit: 1
       })
       .then((response) => {
         if (response.items.length > 0) {
-          // Contentful palauttaa datan response.items-listassa. Otetaan sieltä ensimmäinen.
           setArticle(response.items[0].fields);
         } else {
           setArticle(null);

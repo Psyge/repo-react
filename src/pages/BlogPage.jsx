@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import useTranslation from '../hooks/useTranslation'; // Jos käytät täälläkin kielenkääntöä
+import useTranslation from '../hooks/useTranslation';
 import Header from '../components/Header';
 import { client } from '../lib/contentfulClient';
 
@@ -13,11 +13,11 @@ export default function BlogPage() {
   useEffect(() => {
     setLoading(true);
     
-    // Haetaan kaikki "post"-tyypin sisällöt Contentfulista
-    client.getEntries({
+    // 1. KÄYTETÄÄN UUTTA .withAllLocales JA POISTETTIIN locale: '*'
+    // Nostettu samalla limit 10:een, jotta kaikki artikkelit näkyvät listassa
+    client.withAllLocales.getEntries({
       content_type: 'post',
-      limit: 3,
-        locale: '*'
+      limit: 10 
     })
       .then((response) => {
         setArticles(response.items);
@@ -48,7 +48,7 @@ export default function BlogPage() {
             {articles.map((article) => {
               const fields = article.fields;
               
-              // Haetaan kieliversiot (tai suorat kentät, jos et käytä Contentful-lokalisointia)
+              // Nyt nämä kielivalinnat toimivat täydellisesti, kun .withAllLocales on päällä
               const title = fields.title?.[lang] || fields.title || "";
               const excerpt = fields.excerpt?.[lang] || fields.excerpt || "";
               const slug = fields.slug?.[lang] || fields.slug || "";
@@ -58,7 +58,6 @@ export default function BlogPage() {
                   <h2>{title}</h2>
                   <p>{excerpt}</p>
                   
-                  {/* Linkki vie BlogPost-sivulle slug-osoitteen perusteella */}
                   <Link to={`/blog/${slug}`} style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
                     {lang === 'fi' ? 'Lue lisää' : 'Read more'}
                   </Link>

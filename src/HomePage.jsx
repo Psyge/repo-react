@@ -203,10 +203,11 @@ export default function HomePage() {
     };
 
     // 3. Haetaan 3 uusinta artikkelia Contentfulista
-    const loadArticles = () => {
-      client.getEntries({
+   const loadArticles = () => {
+      // Muutettu: lisätty .withAllLocales ja poistettu locale: '*'
+      client.withAllLocales.getEntries({
         content_type: 'post',
-        limit: 3 // Haetaan tasan 3 kappaletta etusivulle
+        limit: 3
       })
       .then((response) => {
         if (!cancelled) {
