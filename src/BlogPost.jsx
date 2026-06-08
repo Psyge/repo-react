@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import SEO from "./components/SEO";
 import { client } from "./lib/contentfulClient";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from 'remark-gfm';
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -108,7 +109,7 @@ export default function BlogPost() {
           className="article-content"
           style={{ color: "#fff", marginTop: "20px", lineHeight: "1.6" }}
         >
-          <ReactMarkdown>{content}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         </div>
       </main>
 
