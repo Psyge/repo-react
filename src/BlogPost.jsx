@@ -21,7 +21,8 @@ export default function BlogPost() {
       .getEntries({
         content_type: 'post', // Varmista, että Contentfulissa Content Type ID on 'post'
         'fields.slug': slug,
-        limit: 1
+        limit: 1,
+        locale: '*'
       })
       .then((response) => {
         if (response.items.length > 0) {
