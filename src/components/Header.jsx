@@ -1,12 +1,23 @@
 import { Link } from "react-router-dom";
+import { setLang } from "../utils/i18n"; // PALAUTETTU TÄMÄ TAKAISIN!
 import useTranslation from "../hooks/useTranslation";
 import { FaInstagram, FaTiktok } from "react-icons/fa";
 import { usePremium } from "../context/PremiumContext";
 
 export default function Header() {
-  // 1. Otetaan changeLanguage-funktio käyttöön tästä hookista
   const { t, changeLanguage } = useTranslation();
   const { premium } = usePremium();
+
+  // Luodaan oma väli-funktio kielen vaihtamiselle, joka hoitaa molemmat järjestelmät!
+  const handleLanguageChange = (newLang) => {
+    // 1. Päivitetään teidän oma i18n-moottori (vaihtaa nappien ja käännöstiedostojen kielet)
+    setLang(newLang);
+    
+    // 2. Päivitetään Reactin tila (laukaisee Contentful-haut uusiksi)
+    if (typeof changeLanguage === "function") {
+      changeLanguage(newLang);
+    }
+  };
 
   return (
     <header className="header">
@@ -40,12 +51,12 @@ export default function Header() {
             </a>
           </div>
 
-          {/* 2. KORJATTU TÄMÄ OSIO: Käytetään changeLanguage-funktiota */}
+          {/* KORJATTU: Kutsutaan uutta handleLanguageChange-funktiota */}
           <div className="lang-switcher">
-            <button onClick={() => changeLanguage("en")}>
+            <button onClick={() => handleLanguageChange("en")}>
               EN
             </button>
-            <button onClick={() => changeLanguage("fi")}>
+            <button onClick={() => handleLanguageChange("fi")}>
               FI
             </button>
           </div>
