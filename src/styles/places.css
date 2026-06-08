@@ -1,51 +1,31 @@
 .places-grid {
   display: flex;
   flex-direction: column;
-
   gap: 12px;
-
   margin-top: 20px;
-
   width: 100%;
 }
 
 .place-row {
   width: 100%;
-
   box-sizing: border-box;
-
   display: grid;
-
-  grid-template-columns:
-    minmax(120px, 1fr)
-    auto;
-
+  
+  /* PÄIVITETTY: Kolme saraketta: nimi (joustava), säädata (automaattinen), nappi (automaattinen) */
+  grid-template-columns: minmax(120px, 1fr) auto auto;
   align-items: center;
-
-  gap: 20px;
-
-  padding:
-    18px
-    20px;
-
+  gap: 24px; /* Hieman isompi väli, jotta nappi ei liimautu säädataan */
+  padding: 18px 20px;
   border-radius: 18px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.04),
-      rgba(255,255,255,0.02)
-    );
-
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.04),
+    rgba(255,255,255,0.02)
+  );
   border: 1px solid rgba(255,255,255,0.08);
-
   backdrop-filter: blur(10px);
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.18);
-
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
   cursor: pointer;
-
   transition:
     transform .15s ease,
     border-color .15s ease,
@@ -54,136 +34,141 @@
 
 .place-row:hover {
   transform: translateY(-2px);
-
   border-color: rgba(0,255,204,0.25);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.05),
-      rgba(255,255,255,0.03)
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.05),
+    rgba(255,255,255,0.03)
+  );
 }
 
 /* location name */
-
 .place-name {
   font-size: 1rem;
   font-weight: 700;
-
   color: var(--fg);
-
   min-width: 0;
 }
 
 /* right side metrics */
-
 .data-group {
   display: flex;
   align-items: center;
-
   gap: 28px;
 }
 
 .data-item {
   min-width: 56px;
-
   text-align: center;
 }
 
 .data-item .label {
   display: block;
-
   margin-bottom: 6px;
-
   font-size: 10px;
-
   letter-spacing: 0.14em;
-
   text-transform: uppercase;
-
   color: var(--fg-dim);
 }
 
 .data-item .value {
   display: block;
-
   font-size: 1rem;
   font-weight: 700;
-
   color: var(--fg);
 }
 
 /* highlighted KP */
-
 .kp-val {
   color: var(--accent);
 }
 
+/* UUSI: Read more -painikkeen tyyli (vastaa "I see Northern Lights" -nappia) */
+.place-btn--info {
+  background: linear-gradient(135deg, #a3e635 0%, #10b981 100%);
+  color: #0b132b; /* Tumma teksti luettavuuden takaamiseksi */
+  border: none;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.place-btn--info:hover {
+  transform: scale(1.03); /* Kevyt suurennus hoverissa */
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+  opacity: 0.95;
+}
+
+.place-btn--info:active {
+  transform: scale(1);
+}
+
+
 /* ========================================
-   MOBILE
+   MOBILE (768px)
 ======================================== */
-
 @media (max-width: 768px) {
-
   .places-grid {
     gap: 10px;
-
     margin-top: 16px;
   }
 
   .place-row {
+    /* Muutetaan takaisin yhdeksi sarakkeeksi, jolloin osat pinoituvat allekkain */
     grid-template-columns: 1fr;
-
     gap: 14px;
-
     padding: 14px 14px;
-
     border-radius: 16px;
   }
 
   .place-name {
     font-size: 0.95rem;
-
     line-height: 1.2;
   }
 
   .data-group {
     width: 100%;
-
     justify-content: space-between;
-
     gap: 10px;
   }
 
   .data-item {
     flex: 1;
-
     min-width: 0;
   }
 
   .data-item .label {
     font-size: 9px;
-
     margin-bottom: 4px;
-
     letter-spacing: 0.1em;
   }
 
   .data-item .value {
     font-size: 0.92rem;
   }
+
+  /* UUSI: Painikkeen asettelu mobiilissa */
+  .place-btn--info {
+    width: 100%; /* Mobiilissa koko rivin levyinen */
+    padding: 12px;
+    font-size: 0.9rem;
+  }
 }
 
 /* ========================================
-   SMALL MOBILE
+   SMALL MOBILE (520px)
 ======================================== */
-
 @media (max-width: 520px) {
-
   .place-row {
     padding: 12px;
-
     gap: 12px;
   }
 
@@ -203,8 +188,12 @@
     font-size: 0.82rem;
   }
 }
+
 @media (hover: none) {
   .place-row:hover {
+    transform: none;
+  }
+  .place-btn--info:hover {
     transform: none;
   }
 }
