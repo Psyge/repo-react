@@ -225,7 +225,8 @@ export default function HomePage() {
     };
   }, []);
 
-  const lang = currentLanguage || "fi";
+  const currentLang = currentLanguage || "fi";
+  const lang = currentLang === "en" ? "en-US" : "fi-FI";
 
   return (
     <div>

@@ -56,7 +56,8 @@ export default function BlogPost() {
     );
   }
 
-  const lang = currentLanguage || "fi";
+  const currentLang = currentLanguage || "fi";
+  const lang = currentLang === "en" ? "en-US" : "fi-FI";
   
   // 3. Haetaan tekstikentät. Contentfulissa ne ovat suoraan articlen sisällä.
   // Huom: Jos käytät Contentfulin omaa lokalisointia, kentät voivat olla muotoa article.title[lang].

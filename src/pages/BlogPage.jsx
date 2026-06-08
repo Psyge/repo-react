@@ -33,7 +33,8 @@ export default function BlogPage() {
   if (loading) return <div className="container"><p>Loading blog...</p></div>;
   if (error) return <div className="container"><p style={{ color: 'red' }}>Error: {error}</p></div>;
 
-  const lang = currentLanguage || "fi";
+  const currentLang = currentLanguage || "fi";
+  const lang = currentLang === "en" ? "en-US" : "fi-FI";
 
   return (
     <div>
