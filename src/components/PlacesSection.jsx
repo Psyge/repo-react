@@ -127,7 +127,8 @@ export default function PlacesSection({ kp: kpProp = null }) {
       .then((res) => {
         const map = {};
         res.items.forEach((item) => {
-          const slug = item.fields.slug;
+          console.log("slug kenttä:", JSON.stringify(item.fields.slug));
+          
           // slug ei ole lokalisoitu → voi tulla stringinä tai objektina
           const slugVal = typeof slug === "object"
             ? Object.values(slug)[0]
