@@ -33,10 +33,11 @@ export default function PlacePage() {
     client.withAllLocales
       .getEntries({ content_type: "place", limit: 50 })
       .then((res) => {
-        console.log("Contentful vastaus:", res.items);
         const item = res.items.find((entry) => {
           const s = entry.fields.slug;
-          const val = typeof s === "object" ? Object.values(s)[0] : s;
+          const val = typeof s === "object" && s !== null
+            ? Object.values(s)[0]?.toLowerCase()
+            : s?.toLowerCase();
           return val === slug;
         });
 

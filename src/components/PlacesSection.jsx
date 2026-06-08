@@ -126,11 +126,10 @@ export default function PlacesSection({ kp: kpProp = null }) {
         const map = {};
         res.items.forEach((item) => {
           const slugField = item.fields.slug;
-          // slug ei ole lokalisoitu → tulee objektina { "en-US": "rovaniemi" } tai suorana stringinä
           const slugVal = typeof slugField === "object" && slugField !== null
-            ? Object.values(slugField)[0]
-            : slugField;
-          console.log("slugVal:", slugVal, "| raw:", JSON.stringify(slugField));  
+            ? Object.values(slugField)[0]?.toLowerCase()
+            : slugField?.toLowerCase();
+          console.log("slugVal:", slugVal, "| raw:", JSON.stringify(slugField));
           if (slugVal) {
             map[slugVal] = {
               name:  getField(item.fields.name,  lang),
