@@ -113,7 +113,6 @@ export default function MapPage() {
 
   const [view, setView]           = useState("map");
   const [sunCoords, setSunCoords] = useState(null);
-  // Pieni animaatiostate siirtymää varten
   const [sunVisible, setSunVisible] = useState(false);
 
   const auroraIconRef = useRef(
@@ -129,7 +128,6 @@ export default function MapPage() {
   const initialLon = parseFloat(searchParams.get("lon")) || 26;
   const isSighting  = searchParams.get("sighting");
 
-  // URL ?view=sun → avaa suoraan sun-näkymä
   useEffect(() => {
     if (searchParams.get("view") === "sun") {
       const lat = parseFloat(searchParams.get("lat"));
@@ -140,7 +138,6 @@ export default function MapPage() {
     }
   }, [searchParams]);
 
-  // Sun-näkymän fade-in/out
   const switchToSun = (lat, lon) => {
     if (lat != null && lon != null) setSunCoords({ lat, lon });
     setView("sun");
@@ -153,7 +150,6 @@ export default function MapPage() {
     setTimeout(() => setView("map"), 300);
   };
 
-  // Mobile viewport
   useEffect(() => {
     const setVH = () =>
       document.documentElement.style.setProperty(
@@ -169,7 +165,6 @@ export default function MapPage() {
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  // Popup
   const openPopup = useCallback(async (map, lat, lng) => {
     if (!map) return;
     const freeData = buildFreePointData(lat, lng);
@@ -226,7 +221,7 @@ export default function MapPage() {
         />
       );
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const schedulePopup = useCallback((map, lat, lng) => {
     if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
@@ -246,16 +241,22 @@ export default function MapPage() {
       markerZoomAnimation: false,
     }).setView([initialLat, initialLon], 9);
 
-    const hintPopup = L.popup({ closeButton: true, autoClose: true, closeOnClick: true })
-      .setLatLng([66.5, 25.7])
-      .setContent(`
-        <div class="map-hint-popup">
-          <strong>Explore aurora forecast</strong>
-          <p>Tap anywhere on the map to view live aurora probability and conditions.</p>
-        </div>
-      `)
-      .addTo(map);
-    hintPopupRef.current = hintPopup;
+    // Tarkistetaan, tullaanko sivulle suoraan jostain tietystä paikasta (URL-parametrit lat & lon löytyvät)
+    const hasDirectCoords = searchParams.get("lat") && searchParams.get("lon");
+
+    // KORJATTU: Luodaan ohje-popup VAIN jos sivulle saavutaan yleisesti (ilman valittua paikkaa)
+    if (!hasDirectCoords) {
+      const hintPopup = L.popup({ closeButton: true, autoClose: true, closeOnClick: true })
+        .setLatLng([66.5, 25.7])
+        .setContent(`
+          <div class="map-hint-popup">
+            <strong>Explore aurora forecast</strong>
+            <p>Tap anywhere on the map to view live aurora probability and conditions.</p>
+          </div>
+        `)
+        .addTo(map);
+      hintPopupRef.current = hintPopup;
+    }
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -277,7 +278,6 @@ export default function MapPage() {
     }
 
     map.on("click", (e) => {
-      // Sulje hint-popup kun käyttäjä klikkaa karttaa
       if (hintPopupRef.current) {
         hintPopupRef.current.remove();
         hintPopupRef.current = null;
@@ -286,8 +286,8 @@ export default function MapPage() {
     });
     mapInstance.current = map;
 
-    if (searchParams.get("lat") && searchParams.get("lon")) {
-      map.flyTo([initialLat, initialLon], isSighting ? 11 : 7, { duration: 1.5 });
+    if (hasDirectCoords) {
+      map.setView([initialLat, initialLon], isSighting ? 11 : 7);
       schedulePopup(map, initialLat, initialLon);
       const marker = L.marker([initialLat, initialLon], {
         icon: auroraIconRef.current,
@@ -337,21 +337,18 @@ export default function MapPage() {
 
       <Header />
 
-      {/* Hakukenttä — vain karttanäkymässä */}
       {view === "map" && (
         <div className="map-search-wrap">
           <SearchBox onSelect={handleSearchSelect} />
         </div>
       )}
 
-      {/* Kartta — aina mountattu, piilotetaan sun-näkymässä */}
       <div
         id="map"
         ref={mapRef}
         className={view === "sun" ? "map--hidden" : ""}
       />
 
-      {/* MidnightSun-paneeli */}
       {view === "sun" && (
         <div className={`map-sun-panel ${sunVisible ? "map-sun-panel--visible" : ""}`}>
           <MidnightSunV2
@@ -361,7 +358,6 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* Toggle — alareunan keskellä, aina näkyvissä */}
       <div className="map-view-toggle">
         <button
           className={`map-toggle-btn ${view === "map" ? "map-toggle-btn--active" : ""}`}
