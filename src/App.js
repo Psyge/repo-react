@@ -13,6 +13,7 @@ import PremiumSuccessPage from "./PremiumSuccessPage";
 import Contact from "./Contact";
 import MidnightSunV2 from "./components/MidnightSunV2";
 import CookieBanner from "./components/CookieBanner";
+import PlacePage from "./PlacePage";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/premium-success" element={<PremiumSuccessPage />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/MidNightSunV2" element={<MidnightSunV2 />} />
+          <Route path="/places/:slug" element={<PlacePage />} />
         </Routes>
 
         
