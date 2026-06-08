@@ -3,7 +3,10 @@
 ======================================== */
 
 .leaflet-popup {
-  margin-bottom: 0;
+    margin-bottom: 20px;
+    margin-left: -128px;
+    position: absolute;
+    text-align: center;
 }
 
 .leaflet-popup-content-wrapper {
@@ -25,7 +28,7 @@
 .leaflet-popup-content {
   margin: 0 !important;
   width: auto !important;
-  padding: 0 !important;
+  padding: 15px !important;
 }
 
 /* Nuoli — keskitetään tarkasti */

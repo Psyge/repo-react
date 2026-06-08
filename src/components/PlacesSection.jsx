@@ -204,13 +204,13 @@ export default function PlacesSection({ kp: kpProp = null }) {
                   </span>
                 </div>
                 <div className="data-item">
-                  <span className="label">{t("weather.clouds")}</span>
+                  <span className="label">{t("row.clouds")}</span>
                   <span className="value">
                     {data?.clouds != null ? `${data.clouds}%` : "--"}
                   </span>
                 </div>
                 <div className="data-item">
-                  <span className="label">{t("weather.temp")}</span>
+                  <span className="label">{t("row.temp")}</span>
                   <span className="value">
                     {data?.temp != null ? `${data.temp}°` : "--"}
                   </span>
