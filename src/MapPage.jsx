@@ -86,14 +86,14 @@ async function fetchPremiumAuroraPoint(lat, lon) {
   const deviceKey = premium.deviceKey;
   const cacheKey = premiumPointCacheKey(lat, lon, deviceKey);
   return sessionCachedJson(cacheKey, PREMIUM_POINT_TTL_MS, async () => {
-    const res = await fetch(`${BASE}/api/aurora/calc`, {
+    const res = await fetch(`${BASE}/api/aurora/forecast`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lat, lon, deviceKey }),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new Error(`calc ${res.status}: ${text.slice(0, 120)}`);
+      throw new Error(`forecast ${res.status}: ${text.slice(0, 120)}`);
     }
     return res.json();
   });
