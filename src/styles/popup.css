@@ -370,3 +370,58 @@
   .ap-frow-bar-bg { height: 10px; }
   .ap-frow-pct { font-size: 10px; width: 26px; }
 }
+/* TABS */
+.ap-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.ap-tab {
+  flex: 1;
+  padding: 7px 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.ap-tab--active {
+  background: rgba(255,255,255,0.08);
+  color: var(--fg);
+}
+
+/* STATUS — iso teksti, pieni prosentti */
+.ap-status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ap-status-level {
+  font-size: 36px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.ap-status-prob {
+  font-size: 18px;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .ap-status-level { font-size: 28px; }
+  .ap-status-prob { font-size: 15px; }
+  .ap-tab { font-size: 11px; padding: 6px 0; }
+}
