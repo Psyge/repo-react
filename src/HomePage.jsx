@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "./components/Header";
-import Aurorahero from "./components/Auroraheroero";
+import Aurorahero from "./components/Aurorahero";
 import Sightings from "./components/Sightings";
 import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
@@ -265,7 +265,7 @@ export default function HomePage() {
 
       <main>
         {/* HERO */}
-       <AuroraHero forecast={forecast} />
+       <Aurorahero forecast={forecast} />
 
         {/* FORECAST */}
         <section className="block">
