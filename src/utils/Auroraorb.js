@@ -116,6 +116,8 @@ export function createAuroraOrb(canvas, opts = {}) {
         float t = clamp(vNoise * 0.5 + 0.5, 0.0, 1.0);
         vec3 col = mix(cLow, cMid, smoothstep(0.0, 0.6, t));
         col = mix(col, cHigh, smoothstep(0.5, 1.0, t) * (0.4 + 0.6 * uIntensity));
+        // korkea aktiivisuus → koko pallo vihertää (revontulia näkyvissä)
+        col = mix(col, cHigh, uIntensity * 0.7);
         // fresnel-reuna kirkastaa siluetin
         float fres = pow(1.0 - abs(vNormal.z), 2.5);
         col += fres * (0.3 + 0.5 * uIntensity);
