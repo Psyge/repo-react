@@ -197,3 +197,77 @@
     transform: none;
   }
 }
+/* ========================================================================
+   LISÄÄ TÄMÄN SISÄLTÖ OLEMASSA OLEVAAN places.css:ään
+
+   Hero-osion paikkamerkit (Kilpisjärvi / Saariselkä / Levi).
+   Ei törmää vanhoihin .place-row -tyyleihin (eri luokat: .ah-place*).
+======================================================================== */
+
+.ah-places {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 30px;
+  padding-top: 22px;
+  width: 100%;
+  max-width: 760px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ah-place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--fg-muted);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.ah-place:hover {
+  color: var(--fg);
+  transform: translateY(-2px);
+}
+
+.ah-place.is-active {
+  color: var(--accent, #00ffc6);
+}
+
+.ah-place .ah-pin {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.ah-place .ah-place-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ah-place .ah-place-sub {
+  font-size: 0.72rem;
+  color: var(--fg-dim);
+}
+
+/* ---- mobiili ---- */
+@media (max-width: 768px) {
+  .ah-places {
+    gap: 14px;
+    margin-top: 22px;
+  }
+  .ah-place .ah-place-name {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .ah-places {
+    gap: 10px;
+  }
+  .ah-place .ah-place-sub {
+    display: none;
+  }
+}

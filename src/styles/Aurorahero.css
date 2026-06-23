@@ -1,12 +1,14 @@
 /* ========================================================================
    AURORA HERO  —  yhdistetty hero + ilmoitus (vain etusivu)
 
-   Kaksi kerrosta:
-   1) CSS-POHJA  (.ah-orb--css)  → näkyy AINA, latautuu heti, ei riippuvuuksia
-   2) THREE.JS   (.ah-canvas)    → häivytetään päälle vain jos laite/yhteys kestää
+   SISÄLTÄÄ VAIN: hero-osio, orbi (CSS + three.js), tilateksti, badge,
+   kp-aaltoviiva, extra-slotin kehys, animaatiot.
 
-   Käyttää olemassa olevia teemamuuttujia:
-   --fg, --fg-muted, --fg-dim, --accent, --gradient-aurora, --space-*
+   HUOM: hero-paikkamerkit (.ah-places) ovat places.css:ssä
+         ja Sightings-palkki (.ah-sightings-bar) on sightings.css:ssä.
+
+   Käyttää teemamuuttujia: --fg, --fg-muted, --fg-dim, --accent,
+   --gradient-aurora, --space-*
 ======================================================================== */
 
 .aurora-hero {
@@ -24,7 +26,7 @@
   text-align: center;
 }
 
-/* sumea revontuli-taustahehku (sama henki kuin vanhassa .hero-split::before) */
+/* sumea revontuli-taustahehku */
 .aurora-hero::before {
   content: "";
   position: absolute;
@@ -39,7 +41,7 @@
 }
 
 /* ========================================================================
-   ORBI  —  yhteinen kehys CSS- ja three.js-kerroksille
+   ORBI
 ======================================================================== */
 
 .ah-orb-wrap {
@@ -55,7 +57,7 @@
   place-items: center;
 }
 
-/* takana oleva pehmeä hehkukehä (yhteinen molemmille kerroksille) */
+/* takana oleva pehmeä hehkukehä */
 .ah-orb-wrap::after {
   content: "";
   position: absolute;
@@ -94,7 +96,6 @@
       #00ffc6
     );
 
-  /* "elävä" virtaus ilman three.js:ää */
   background-size: 100% 100%, 180% 180%;
   animation:
     ah-spin 18s linear infinite,
@@ -178,7 +179,6 @@
   height: 100%;
   border-radius: 50%;
 
-  /* alkaa näkymättömänä; AuroraHero asettaa is-ready kun scene on valmis */
   opacity: 0;
   transition: opacity 1s ease;
   pointer-events: none;
@@ -194,7 +194,7 @@
 }
 
 /* ========================================================================
-   TILATEKSTI  (otsikko + "next awakening" + probability)
+   TILATEKSTI
 ======================================================================== */
 
 .ah-status {
@@ -225,7 +225,7 @@
   font-weight: 700;
 }
 
-/* badge-rivi (Premium / level) */
+/* badge-rivi */
 .ah-badges {
   position: absolute;
   top: 16px;
@@ -248,59 +248,7 @@
 }
 
 /* ========================================================================
-   SIJAINTIMERKIT
-======================================================================== */
-
-.ah-places {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 22px;
-  margin-top: 30px;
-  padding-top: 22px;
-  width: 100%;
-  max-width: 760px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.ah-place {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  color: var(--fg-muted);
-  transition: color 0.15s ease, transform 0.15s ease;
-}
-
-.ah-place:hover {
-  color: var(--fg);
-  transform: translateY(-2px);
-}
-
-.ah-place.is-active {
-  color: var(--accent, #00ffc6);
-}
-
-.ah-place .ah-pin {
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.ah-place .ah-place-name {
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.ah-place .ah-place-sub {
-  font-size: 0.72rem;
-  color: var(--fg-dim);
-}
-
-/* ========================================================================
-   KP-AALTOVIIVA  (SVG, ei three.js)
+   KP-AALTOVIIVA  (SVG)
 ======================================================================== */
 
 .ah-wave {
@@ -349,7 +297,7 @@
 }
 
 /* ========================================================================
-   EXTRA-SLOT  (esim. Sightings paikkojen alapuolella)
+   EXTRA-SLOT  (kehys; itse Sightings-palkki on sightings.css:ssä)
 ======================================================================== */
 
 .ah-extra {
@@ -362,7 +310,8 @@
 }
 
 /* ========================================================================
-   ANIMAATIOT
+   ANIMAATIOT  (jaetut — myös places.css/sightings.css voivat käyttää näitä,
+   koska kaikki tyylit ladataan samaan dokumenttiin index.css:n kautta)
 ======================================================================== */
 
 @keyframes ah-spin {
@@ -380,8 +329,7 @@
 }
 
 /* ========================================================================
-   SAAVUTETTAVUUS  —  kunnioita reduced motion
-   (kevyt versio: ei pyörimistä, ei three.js-eskalaatiota)
+   SAAVUTETTAVUUS
 ======================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
@@ -397,7 +345,7 @@
 }
 
 /* ========================================================================
-   MOBIILI
+   MOBIILI  (vain hero — paikkojen/palkin mobiili omissa tiedostoissaan)
 ======================================================================== */
 
 @media (max-width: 768px) {
@@ -407,33 +355,15 @@
   }
 
   .ah-orb-wrap {
-    width: clamp(200px, 64vw, 300px);
+    width: clamp(170px, 56vw, 260px);
   }
 
   .ah-status h1 {
     font-size: 1.55rem;
   }
 
-  .ah-places {
-    gap: 14px;
-    margin-top: 22px;
-  }
-
-  .ah-place .ah-place-name {
-    font-size: 0.78rem;
-  }
-
   .ah-badges {
     top: 10px;
     right: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .ah-places {
-    gap: 10px;
-  }
-  .ah-place .ah-place-sub {
-    display: none;
   }
 }

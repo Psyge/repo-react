@@ -1,29 +1,29 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-
 import useTranslation from "../hooks/useTranslation";
+import ReportButton from "./ReportButton";
 
-const BASE =
-  import.meta.env.VITE_API_BASE ||
-  "https://report.masto84.workers.dev";
+/* ========================================================================
+   SightingsBar  —  napakka korvike Sightings-listalle (hero-alueelle)
+
+   Ei listaa paikkoja. Vasemmalla raportointinappi, oikealla tilayhteenveto:
+     - premium + havaintoja  → "🟢 N havaintoa"  (+ viimeisin n min sitten)
+     - premium + ei havaintoja → "Ei havaintoja juuri nyt"
+     - free                   → "🔒 Premium — näe live-havainnot"
+
+   Raportointi toimii kaikille (ReportButton). Vain havaintojen NÄKEMINEN
+   on premium-ominaisuus, kuten ennenkin.
+======================================================================== */
+
+const BASE = import.meta.env.VITE_API_BASE || "https://report.masto84.workers.dev";
 
 const SIGHTINGS_CACHE_KEY = "aurora_session_cache:sightings:clusters:v1";
 const SIGHTINGS_TTL_MS = 10 * 60 * 1000; // 10 min
 
 function readPremium() {
   try {
-    const p = JSON.parse(
-      localStorage.getItem("aurora_premium") || "null"
-    );
-
-    if (!p || !p.deviceKey || !p.expiresAt) {
-      return null;
-    }
-
-    if (p.expiresAt < Date.now()) {
-      return null;
-    }
-
+    const p = JSON.parse(localStorage.getItem("aurora_premium") || "null");
+    if (!p || !p.deviceKey || !p.expiresAt) return null;
+    if (p.expiresAt < Date.now()) return null;
     return p;
   } catch {
     return null;
@@ -32,22 +32,15 @@ function readPremium() {
 
 function readSessionCache(key, ttlMs) {
   if (typeof window === "undefined") return null;
-
   try {
     const raw = sessionStorage.getItem(key);
     if (!raw) return null;
-
     const cached = JSON.parse(raw);
-
-    if (!cached || typeof cached.savedAt !== "number") {
-      return null;
-    }
-
+    if (!cached || typeof cached.savedAt !== "number") return null;
     if (ttlMs && Date.now() - cached.savedAt > ttlMs) {
       sessionStorage.removeItem(key);
       return null;
     }
-
     return cached.data ?? null;
   } catch {
     sessionStorage.removeItem(key);
@@ -57,18 +50,9 @@ function readSessionCache(key, ttlMs) {
 
 function writeSessionCache(key, data) {
   if (typeof window === "undefined") return;
-
   try {
-    sessionStorage.setItem(
-      key,
-      JSON.stringify({
-        savedAt: Date.now(),
-        data,
-      })
-    );
-  } catch {
-    // sessionStorage voi olla täynnä/estetty — ei kaadeta sivua.
-  }
+    sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
+  } catch { /* storage estetty */ }
 }
 
 async function sessionCachedJson(key, ttlMs, fetcher, { force = false } = {}) {
@@ -76,43 +60,31 @@ async function sessionCachedJson(key, ttlMs, fetcher, { force = false } = {}) {
     const cached = readSessionCache(key, ttlMs);
     if (cached) return cached;
   }
-
   const data = await fetcher();
   writeSessionCache(key, data);
   return data;
 }
 
-export default function Sightings() {
-  const [clusters, setClusters] = useState([]);
-
+export default function SightingsBar() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-
   const premium = useMemo(() => readPremium(), []);
+
+  const [clusters, setClusters] = useState([]);
 
   const loadClusters = useCallback(
     async ({ force = false } = {}) => {
-      // Free-käyttäjä ei kuluta Workeria.
-      if (!premium) return;
-
+      if (!premium) return; // free ei kuluta Workeria
       try {
         const data = await sessionCachedJson(
           SIGHTINGS_CACHE_KEY,
           SIGHTINGS_TTL_MS,
           async () => {
-            const res = await fetch(`${BASE}/api/sightings/clusters`, {
-              cache: "default",
-            });
-
-            if (!res.ok) {
-              throw new Error(`sightings ${res.status}`);
-            }
-
+            const res = await fetch(`${BASE}/api/sightings/clusters`, { cache: "default" });
+            if (!res.ok) throw new Error(`sightings ${res.status}`);
             return res.json();
           },
           { force }
         );
-
         setClusters(data.clusters || []);
       } catch (e) {
         console.error(e);
@@ -126,88 +98,55 @@ export default function Sightings() {
       setClusters([]);
       return;
     }
-
     loadClusters();
-
-    const interval = setInterval(() => {
-      loadClusters({ force: true });
-    }, SIGHTINGS_TTL_MS);
-
-    window.__refreshSightings = () => {
-      loadClusters({ force: true });
-    };
-
+    const interval = setInterval(() => loadClusters({ force: true }), SIGHTINGS_TTL_MS);
+    window.__refreshSightings = () => loadClusters({ force: true });
     return () => {
       clearInterval(interval);
       delete window.__refreshSightings;
     };
   }, [loadClusters, premium]);
 
-  // FREE upsell — ei Worker-kutsua.
+  // yhteenveto
+  const totalCount = clusters.reduce((sum, c) => sum + (c.count || 0), 0);
+  const latestMin = clusters.length
+    ? Math.min(...clusters.map((c) => (typeof c.minutesAgo === "number" ? c.minutesAgo : Infinity)))
+    : null;
+
+  let status;
   if (!premium) {
-    return (
-      <div className="sightings-empty">
-        🔒{" "}
-        {t("sightings.premiumRequired") ||
-          "Premium required to view live aurora sightings"}
-      </div>
+    status = (
+      <span className="ah-sb-status is-locked">
+        🔒 {t("sightings.premiumShort") || "Premium — see live sightings"}
+      </span>
+    );
+  } else if (totalCount > 0) {
+    status = (
+      <span className="ah-sb-status is-active">
+        <span className="ah-sb-dot" />
+        {String(t("sightings.countShort") || "{n} sightings").replace("{n}", totalCount)}
+        {latestMin != null && Number.isFinite(latestMin) && (
+          <span className="ah-sb-sub">
+            {" · "}
+            {String(t("sightings.latest") || "latest {m} min ago").replace("{m}", latestMin)}
+          </span>
+        )}
+      </span>
+    );
+  } else {
+    status = (
+      <span className="ah-sb-status">
+        {t("sightings.none") || "No sightings right now"}
+      </span>
     );
   }
 
   return (
-    <div className="sightings-list">
-      {clusters.length === 0 ? (
-        <div className="sightings-empty">
-          {t("sightings.empty")}
-        </div>
-      ) : (
-        clusters.map((c, i) => (
-          <div
-            key={`${c.region}-${c.latestTs || i}`}
-            className="sighting-row"
-            onClick={() => {
-              navigate(
-                `/map?lat=${c.lat}&lon=${c.lon}&sighting=1`
-              );
-            }}
-            style={{
-              cursor: "pointer",
-            }}
-          >
-            <div className="sighting-main">
-              <div className="sighting-place">
-                📍 {c.region}
-              </div>
-
-              <div className="sighting-time">
-                {c.minutesAgo} min ago
-              </div>
-            </div>
-
-            <div className="sighting-meta">
-              <div className="sighting-item">
-                <span className="label">
-                  Reports
-                </span>
-
-                <span className="value">
-                  {c.count}
-                </span>
-              </div>
-
-              <div className="sighting-item">
-                <span className="label">
-                  Status
-                </span>
-
-                <span className="value">
-                  Active
-                </span>
-              </div>
-            </div>
-          </div>
-        ))
-      )}
+    <div className="ah-sightings-bar">
+      <div className="ah-sb-left">
+        <ReportButton />
+      </div>
+      <div className="ah-sb-right">{status}</div>
     </div>
   );
 }
