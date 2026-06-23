@@ -1,4 +1,8 @@
 {
+  "sightings.none": "Ei havaintoja juuri nyt",
+  "sightings.latest": "viimeisin {m} min sitten",
+  "sightings.countShort": "{n} havaintoa",
+  "sightings.premiumShort": "Premium — näe live-havainnot",
   "aurora.calm": "Taivas on rauhallinen.",
 "aurora.active": "Taivas on hereillä.",
 "aurora.next": "Seuraava herääminen noin {h} h kuluttua.",

@@ -1,4 +1,8 @@
 {
+  "sightings.none": "No sightings right now",
+  "sightings.latest": "latest {m} min ago",
+  "sightings.countShort": "{n} sightings",
+  "sightings.premiumShort": "Premium — see live sightings",
   "aurora.calm": "The skies are calm.",
 "aurora.active": "The skies are awake.",
 "aurora.next": "Next awakening expected in {h} hours.",
