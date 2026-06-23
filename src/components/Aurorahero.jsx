@@ -189,7 +189,7 @@ function buildWave(slots, tier) {
 }
 
 /* ======================================================================== */
-export default function Aurorahero({ forecast }) {
+export default function Aurorahero({ forecast, children }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -264,17 +264,22 @@ export default function Aurorahero({ forecast }) {
     }
   }, [probability]);
 
-  /* ---- otsikkotekstit (i18n-fallbackilla) ---- */
+  /* ---- otsikkotekstit (käännösavaimet — lisää avaimet käännöstiedostoihin) ---- */
   const calm = level == null || level === "low";
-  const headline = calm
-    ? (t("aurora.calm") || "The skies are calm.")
-    : (t("aurora.active") || "The skies are awake.");
+  const isActive = level === "high" || level === "veryhigh";
+
+  const headline = calm ? t("aurora.calm") : t("aurora.active");
   const nextLine = awakening
-    ? (t("aurora.next") || "Next awakening expected in {h} hours.").replace("{h}", awakening.hours)
-    : (t("aurora.quiet") || "No strong activity expected soon.");
+    ? String(t("aurora.next")).replace("{h}", awakening.hours)
+    : t("aurora.quiet");
+
+  const probLabel = t("probability.label");
+  const unlockLabel = t("forecast.unlock48");
 
   return (
-    <section className={`aurora-hero ${threeReady ? "three-active" : ""}`}>
+    <section
+      className={`aurora-hero ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""}`}
+    >
       {/* badge */}
       <div className="ah-badges">
         {tier === "premium" && <span className="ah-badge">Premium</span>}
@@ -282,7 +287,10 @@ export default function Aurorahero({ forecast }) {
 
       {/* ORBI: CSS-pohja + (mahdollinen) three.js-canvas */}
       <div className="ah-orb-wrap">
-        <div className="ah-orb--css" aria-hidden="true" />
+        <div
+          className={`ah-orb--css ${isActive ? "is-active" : ""}`}
+          aria-hidden="true"
+        />
         <canvas
           ref={canvasRef}
           className={`ah-canvas ${threeReady ? "is-ready" : ""}`}
@@ -296,26 +304,9 @@ export default function Aurorahero({ forecast }) {
           {headline} {nextLine}
         </h1>
         <div className="ah-prob">
-          {(t("probability.label") || "Aurora Probability")}:{" "}
+          {probLabel}:{" "}
           <strong>{probability != null ? `${probability}%` : "--"}</strong>
         </div>
-      </div>
-
-      {/* SIJAINNIT */}
-      <div className="ah-places">
-        {PLACES.map((p, i) => (
-          <div
-            key={p.name}
-            className={`ah-place ${i === 0 ? "is-active" : ""}`}
-            onClick={() => navigate(`/map?lat=${p.lat}&lon=${p.lon}`)}
-          >
-            <span className="ah-pin">📍</span>
-            <span className="ah-place-name">{p.name}</span>
-            {i === 0 && kp != null && (
-              <span className="ah-place-sub">Kp {kp}</span>
-            )}
-          </div>
-        ))}
       </div>
 
       {/* KP-AALTOVIIVA (SVG) */}
@@ -340,13 +331,33 @@ export default function Aurorahero({ forecast }) {
               <>
                 <path className="ah-wave-line is-locked" d={wave.lockPath} />
                 <text className="ah-wave-lock" x={(wave.lockX ?? WAVE_W) + 6} y="16">
-                  🔒 {t("forecast.unlock48") || "Unlock 48h — Premium"}
+                  🔒 {unlockLabel}
                 </text>
               </>
             )}
           </svg>
         </div>
       )}
+
+      {/* SIJAINNIT */}
+      <div className="ah-places">
+        {PLACES.map((p, i) => (
+          <div
+            key={p.name}
+            className={`ah-place ${i === 0 ? "is-active" : ""}`}
+            onClick={() => navigate(`/map?lat=${p.lat}&lon=${p.lon}`)}
+          >
+            <span className="ah-pin">📍</span>
+            <span className="ah-place-name">{p.name}</span>
+            {i === 0 && kp != null && (
+              <span className="ah-place-sub">Kp {kp}</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* SIGHTINGS (tai muu sisältö) — renderöidään paikkojen alle */}
+      {children && <div className="ah-extra">{children}</div>}
     </section>
   );
 }

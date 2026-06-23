@@ -1,4 +1,9 @@
 {
+  "aurora.calm": "The skies are calm.",
+"aurora.active": "The skies are awake.",
+"aurora.next": "Next awakening expected in {h} hours.",
+"aurora.quiet": "No strong activity expected soon.",
+"forecast.unlock48": "Unlock 48h — Premium",
   "places.readMore": "Read more",
   "places.viewAuroraMap": "View aurora conditions on map",
    "contact.privacy": "Information submitted through this form is used solely for responding to your inquiry and is not shared with third parties.",

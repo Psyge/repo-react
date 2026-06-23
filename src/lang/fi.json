@@ -1,4 +1,9 @@
 {
+  "aurora.calm": "Taivas on rauhallinen.",
+"aurora.active": "Taivas on hereillä.",
+"aurora.next": "Seuraava herääminen noin {h} h kuluttua.",
+"aurora.quiet": "Ei voimakasta aktiivisuutta lähiaikoina.",
+"forecast.unlock48": "Avaa 48 h — Premium",
   "places.readMore": "Lue lisää",
   "places.viewAuroraMap": "Katso revontulien tilanne kartalta",
    "contact.privacy": "Lomakkeen kautta lähetettyjä tietoja käytetään ainoastaan yhteydenottoosi vastaamiseen eikä niitä luovuteta kolmansille osapuolille.",
