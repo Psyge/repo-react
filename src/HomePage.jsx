@@ -266,13 +266,8 @@ export default function HomePage() {
       <main>
         {/* HERO */}
        <Aurorahero forecast={forecast}>
-  <div className="section-head">
-    <div>
-      <h2>{t("sightings.title")}</h2>
-      <p>{t("sightings.sub")}</p>
-    </div>
-    <ReportButton />
-  </div>
+  
+   
   <Sightings />
 </Aurorahero>
 
