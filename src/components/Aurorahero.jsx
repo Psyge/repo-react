@@ -189,7 +189,7 @@ function buildWave(slots, tier) {
 }
 
 /* ======================================================================== */
-export default function AuroraHero({ forecast }) {
+export default function Aurorahero({ forecast }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -237,7 +237,7 @@ export default function AuroraHero({ forecast }) {
     let tooLate = false;
     const timer = setTimeout(() => { tooLate = true; }, THREE_LOAD_TIMEOUT_MS);
 
-    import("./auroraOrb")
+    import("../utils/Auroraorb")
       .then(({ createAuroraOrb }) => {
         if (cancelled || tooLate || !canvasRef.current) return;
         orbRef.current = createAuroraOrb(canvasRef.current, {
