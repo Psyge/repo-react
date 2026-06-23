@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 import { calculateAurora } from "../utils/auroraEngine";
-
+import "../styles/auroraHero.css"; // <-- säädä polku omaan rakenteeseesi
 
 /* ========================================================================
    AuroraHero  —  yhdistetty hero + ilmoitus (vain etusivulla)
@@ -193,7 +193,8 @@ export default function AuroraHero({ forecast }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const slots = forecast?.slots ?? [];
+  // useMemo → vakaa viite, ettei alla olevat useMemot aja joka renderissä
+  const slots = useMemo(() => forecast?.slots ?? [], [forecast]);
   const tier  = forecast?.tier ?? "free";
 
   const [kp, setKp]     = useState(null);
@@ -203,6 +204,7 @@ export default function AuroraHero({ forecast }) {
 
   const canvasRef = useRef(null);
   const orbRef    = useRef(null);
+  const probRef   = useRef(null); // viimeisin probability ilman effektin uudelleenajoa
 
   /* solar → probability/level */
   useEffect(() => {
@@ -222,6 +224,7 @@ export default function AuroraHero({ forecast }) {
   );
   const probability = aurora?.probability ?? null;
   const level = aurora?.level ?? null;
+  probRef.current = probability;
 
   const awakening = useMemo(() => nextAwakening(slots), [slots]);
   const wave = useMemo(() => buildWave(slots, tier), [slots, tier]);
@@ -234,11 +237,11 @@ export default function AuroraHero({ forecast }) {
     let tooLate = false;
     const timer = setTimeout(() => { tooLate = true; }, THREE_LOAD_TIMEOUT_MS);
 
-    import("../utils/Auroraorb")
+    import("./auroraOrb")
       .then(({ createAuroraOrb }) => {
         if (cancelled || tooLate || !canvasRef.current) return;
         orbRef.current = createAuroraOrb(canvasRef.current, {
-          intensity: (probability ?? 20) / 100,
+          intensity: (probRef.current ?? 20) / 100,
         });
         setThreeReady(true);
       })
