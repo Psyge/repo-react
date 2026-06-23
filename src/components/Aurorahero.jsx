@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 import { calculateAurora } from "../utils/auroraEngine";
-import "../styles/auroraHero.css"; // <-- säädä polku omaan rakenteeseesi
+
 
 /* ========================================================================
    AuroraHero  —  yhdistetty hero + ilmoitus (vain etusivulla)
