@@ -6,7 +6,7 @@ import Sightings from "./components/Sightings";
 import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
 import Forecast from "./components/Forecast";
-import PlacesSection from "./components/PlacesSection";
+
 import SEO from "./components/SEO";
 import { client } from "./lib/contentfulClient";
 
