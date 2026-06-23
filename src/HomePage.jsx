@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "./components/Header";
-import Hero from "./components/Hero";
+import Aurorahero from "./components/Auroraheroero";
 import Sightings from "./components/Sightings";
 import ReportButton from "./components/ReportButton";
 import useTranslation from "./hooks/useTranslation";
@@ -265,14 +265,7 @@ export default function HomePage() {
 
       <main>
         {/* HERO */}
-        <section className="block">
-          <div className="container">
-            <div className="hero-banner">
-              <img src="/images/reposet.png" alt="Northern Lights" />
-            </div>
-            <Hero />
-          </div>
-        </section>
+       <AuroraHero forecast={forecast} />
 
         {/* FORECAST */}
         <section className="block">

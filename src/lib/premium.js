@@ -12,7 +12,7 @@ const BASE =
 
 const LS_KEY = "aurora_premium";
 const INSTALL_KEY = "aurora_install_id";
-const CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1h
+const CHECK_INTERVAL_MS = 2 * 60 * 60 * 1000; // 1h
 
 function read() {
   if (typeof window === "undefined") return null;
