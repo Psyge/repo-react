@@ -5,7 +5,7 @@ import { calculateAurora } from "../utils/auroraEngine";
 import staticPlaces from "../data/places"; // Polku korjattu data-kansioon
 
 /* ========================================================================
-   AuroraHero  —  KOMPONENTTI ILMAN INLINE-TYYLEJÄ
+   AuroraHero — TÄYDELLINEN VERSIO (Kaikki logiikat palautettu)
 ======================================================================= */
 
 const NOAA_KP_URL     = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
@@ -185,7 +185,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
   const [threeReady, setThreeReady] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Käytetään datakansiosta tuotuja paikkoja ja liitetään niihin Contentful-määreet jos löytyy
+  // Käytetään datakansiosta tuotuja paikkoja ja liitetään niihin Contentful-kuvaukset dynaamisesti
   const placesList = useMemo(() => {
     return staticPlaces.map((sp) => {
       const cfMatch = Array.isArray(contentfulPlaces) 
@@ -268,7 +268,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     }
   }, [placesList]);
 
-  /* Three.js */
+  /* Three.js tehosteet */
   useEffect(() => {
     if (!shouldEnhanceWith3D()) return;
 
@@ -311,7 +311,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     : (!calm ? "" : t("aurora.quiet"));
 
   return (
-    <section className={`aurora-hero ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep} tier-${tier}`}>
+    <section className={`aurora-hero-container ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep} tier-${tier}`}>
       
       {/* TAIVAS ELEMENTTI */}
       <div className="ah-sky-wrap">
@@ -319,21 +319,48 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         <canvas ref={canvasRef} className="ah-canvas" aria-hidden="true" />
       </div>
 
-      {/* TILATEKSTIT KÄÄNNÖKSILLÄ */}
-      <div className="ah-status">
-        <h1>
-          {headline} {nextLine}
-        </h1>
-        
-        <div className="ah-prob">
-          {t("probability.label")}:{" "}
-          {isPremium ? (
-            <strong>{probability != null ? `${probability}%` : "--"}</strong>
-          ) : (
-            <span className="ah-prob-lock" onClick={() => navigate('/premium')}>
-              🔒 {t("forecast.unlock48")}
-            </span>
-          )}
+      <div className="ah-content-layout">
+        {/* Vasen puoli: Otsikot ja tilat */}
+        <div className="ah-text-side">
+          <h1 className="ah-main-title">
+            {headline} {nextLine}
+          </h1>
+          
+          <div className="ah-probability-box">
+            <span className="ah-prob-label">{t("probability.label")}:</span>
+            {isPremium ? (
+              <strong className="ah-premium-prob-value">{probability != null ? `${probability}%` : "--"}</strong>
+            ) : (
+              <button className="ah-premium-link-btn" onClick={() => navigate('/premium')}>
+                🔒 {t("forecast.unlock48")}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Oikea puoli: Sivuttain rullaava raide places.js-tiedostosta */}
+        <div className="ah-carousel-side">
+          <div className="ah-horizontal-scroll-track">
+            {placesList.map((p) => {
+              const isSelected = p.id === activePlace.id;
+              return (
+                <div
+                  key={p.id}
+                  className={`ah-carousel-item-box ${isSelected ? "is-active-item" : ""}`}
+                  onClick={() => {
+                    setActivePlace(p);
+                    setIsPopupOpen(true);
+                  }}
+                >
+                  <div className="ah-item-dot-indicator" />
+                  <span className="ah-item-name-label">{p.name}</span>
+                  {isSelected && kp != null && (
+                    <span className="ah-place-kp-value">Kp {kp.toFixed(1)}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -342,31 +369,6 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         <svg viewBox="0 0 1440 180" className="ah-mountain-svg">
           <path d="M0,140 L160,115 C320,90 640,60 960,100 C1280,140 1360,165 1440,170 L1440,180 L0,180 Z" />
         </svg>
-      </div>
-
-      {/* SIVUTTAIN RULLAAVA KARUSELLI */}
-      <div className="ah-places-horizon">
-        <div className="ah-places-carousel">
-          {placesList.map((p) => {
-            const isSelected = p.id === activePlace.id;
-            return (
-              <div
-                key={p.id}
-                className={`ah-place-box ${isSelected ? "is-selected" : ""}`}
-                onClick={() => {
-                  setActivePlace(p);
-                  setIsPopupOpen(true);
-                }}
-              >
-                <div className="ah-node-indicator" />
-                <span className="ah-place-label">{p.name}</span>
-                {isSelected && kp != null && (
-                  <span className="ah-place-kp-value">Kp {kp.toFixed(1)}</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {/* ENNUSTEAALTOVIIVA */}
@@ -397,7 +399,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         </div>
       )}
 
-      {/* POPUP-KORTTI CONTENTFUL DATASTA */}
+      {/* POPUP-KORTTI DYNAAMISELLA CONTENTFUL-DATALLA */}
       {isPopupOpen && (
         <div className="ah-popup-backdrop" onClick={() => setIsPopupOpen(false)}>
           <div className="ah-popup-card" onClick={(e) => e.stopPropagation()}>
@@ -426,7 +428,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         </div>
       )}
 
-      {children && <div className="ah-extra">{children}</div>}
+      {children && <div className="ah-extra-wrapper">{children}</div>}
     </section>
   );
 }
