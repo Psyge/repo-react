@@ -1,5 +1,5 @@
 /* ========================================================================
-   AuroraHero — TÄYDELLISET TYYLIT (Kaikki rivit ja animaatiot palautettu)
+   AuroraHero — Korjattu asettelu ja tiivistetyt elementit
 ======================================================================= */
 
 .aurora-hero-container {
@@ -14,7 +14,6 @@
   justify-content: center;
 }
 
-/* Taivas-alue ja revontulitaustat */
 .ah-sky-wrap {
   position: absolute;
   top: 0;
@@ -47,10 +46,7 @@
   transition: opacity 0.8s ease-in-out;
 }
 
-/* Portaittaiset värikorostukset säädatan mukaan */
-.kp-step-1 .ah-sky--css {
-  opacity: 0.5;
-}
+.kp-step-1 .ah-sky--css { opacity: 0.5; }
 .kp-step-2 .ah-sky--css {
   opacity: 0.8;
   background: radial-gradient(circle at 50% 10%, rgba(20, 224, 255, 0.22) 0%, transparent 60%);
@@ -60,7 +56,6 @@
   background: radial-gradient(circle at 50% 10%, rgba(125, 95, 255, 0.3) 0%, transparent 60%);
 }
 
-/* Flex-pääleiska (Tekstit vasemmalla, karuselli oikealla) */
 .ah-content-layout {
   position: relative;
   z-index: 10;
@@ -74,7 +69,6 @@
   gap: 3rem;
 }
 
-/* Vasen puoli: Tekstit ja Premium-painikkeet */
 .ah-text-side {
   flex: 1;
   max-width: 450px;
@@ -86,7 +80,7 @@
   color: #ffffff;
   line-height: 1.2;
   margin-bottom: 1.5rem;
-  letter-spacing: -0.02,5em;
+  letter-spacing: -0.025em;
 }
 
 .ah-probability-box {
@@ -117,25 +111,16 @@
   padding: 0;
   cursor: pointer;
   text-decoration: underline;
-  transition: color 0.2s ease;
 }
 
-.ah-premium-link-btn:hover {
-  color: #67e8f9;
-}
-
-/* Oikea puoli: Sivuttain rullaava karuselli */
+/* Karuselli */
 .ah-carousel-side {
   flex: 2;
   width: 100%;
   overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  padding: 1rem 0;
+  scrollbar-width: none;
 }
-
-.ah-carousel-side::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
+.ah-carousel-side::-webkit-scrollbar { display: none; }
 
 .ah-horizontal-scroll-track {
   display: flex;
@@ -144,68 +129,76 @@
   padding-right: 2rem;
 }
 
-/* Yksittäinen kaunis pyöristetty paikkalaatikko */
+/* UUDET DATARIKKAAT LAATIKOT */
 .ah-carousel-item-box {
   flex: 0 0 auto;
   display: inline-flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 110px;
-  height: 80px;
-  padding: 0.5rem 1rem;
-  background-color: rgba(11, 17, 30, 0.45);
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 125px;
+  height: 95px;
+  padding: 0.75rem;
+  background-color: rgba(11, 17, 30, 0.5);
   border: 1px solid #1e293b;
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ah-carousel-item-box:hover {
   border-color: #334155;
-  background-color: rgba(15, 23, 42, 0.6);
+  background-color: rgba(15, 23, 42, 0.65);
   transform: translateY(-2px);
 }
 
-/* Aktiivisen kohteen korostus */
 .ah-carousel-item-box.is-active-item {
   border-color: #22d3ee;
   background-color: rgba(6, 182, 212, 0.08);
-  box-shadow: 0 0 14px rgba(34, 211, 238, 0.15);
-  transform: scale(1.04);
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.15);
+}
+
+.ah-item-top-row {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .ah-item-dot-indicator {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 9999px;
   background-color: #475569;
-  margin-bottom: 0.5rem;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
-
 .ah-carousel-item-box.is-active-item .ah-item-dot-indicator {
   background-color: #22d3ee;
   box-shadow: 0 0 8px #22d3ee;
 }
 
+.ah-place-mini-prob {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 700;
+}
+
 .ah-item-name-label {
   color: #ffffff;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.015em;
+  margin-top: auto;
+  margin-bottom: 0.15rem;
 }
 
-.ah-place-kp-value {
-  font-size: 0.75rem;
-  font-family: monospace;
-  color: #67e8f9;
-  margin-top: 0.125rem;
+.ah-place-kp-badge {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
-/* Tunturiprofiilin siluetti */
+/* Tunturit ja aalto */
 .ah-mountain-silhouet {
   position: absolute;
   bottom: 120px;
@@ -214,14 +207,8 @@
   z-index: 2;
   pointer-events: none;
 }
+.ah-mountain-svg { width: 100%; height: auto; fill: #02040a; }
 
-.ah-mountain-svg {
-  width: 100%;
-  height: auto;
-  fill: #02040a;
-}
-
-/* Kp Ennusteaalto */
 .ah-wave {
   position: relative;
   z-index: 5;
@@ -230,40 +217,22 @@
   margin: 2rem auto 0 auto;
   padding: 0 1rem;
 }
+.ah-wave-line { fill: none; stroke: url(#ah-wave-grad); stroke-width: 3; stroke-linecap: round; }
+.ah-wave-line.is-locked { stroke: #1e293b; stroke-dasharray: 4 4; }
+.ah-wave-now { stroke: rgba(255, 255, 255, 0.2); stroke-width: 1; stroke-dasharray: 2 2; }
+.ah-wave-lock { font-size: 11px; fill: #67e8f9; font-weight: bold; }
 
-.ah-wave-line {
-  fill: none;
-  stroke: url(#ah-wave-grad);
-  stroke-width: 3;
-  stroke-linecap: round;
-}
-
-.ah-wave-line.is-locked {
-  stroke: #1e293b;
-  stroke-dasharray: 4 4;
-}
-
-.ah-wave-now {
-  stroke: rgba(255, 255, 255, 0.2);
-  stroke-width: 1;
-  stroke-dasharray: 2 2;
-}
-
-.ah-wave-lock {
-  font-size: 11px;
-  fill: #67e8f9;
-  font-weight: bold;
-}
-
-/* Extra-lapsielementit */
+/* KORJATTU "I SEE" JA LAPSIPALKAT: RAJATTU LEVEYS */
 .ah-extra-wrapper {
   position: relative;
   z-index: 10;
   width: 100%;
-  margin-top: 2rem;
+  max-width: 760px; /* Ei enää leviä koko ruudun leveydelle */
+  margin: 2rem auto 0 auto;
+  padding: 0 1rem;
 }
 
-/* Popup-Kortti (Bottom Sheet mobiilia varten) */
+/* POPUP-KORTTI (Rajattu leveyteen, ei koko ruudun peittävä työpöydällä) */
 .ah-popup-backdrop {
   position: fixed;
   top: 0;
@@ -276,16 +245,19 @@
   z-index: 999;
   display: flex;
   align-items: flex-end;
+  justify-content: center; /* Keskittää kortin työpöydällä */
 }
 
 .ah-popup-card {
   width: 100%;
+  max-width: 760px; /* Sama mukautuva leveys kuin ennustelaatikolla */
   background-color: #0b111e;
-  border-top: 1px solid #1e293b;
+  border: 1px solid #1e293b;
+  border-bottom: none;
   border-radius: 1.5rem 1.5rem 0 0;
   padding: 1.25rem 1.5rem 2.5rem 1.5rem;
-  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
-  animation: ahSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
+  animation: ahSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ah-popup-drag-handle {
@@ -294,36 +266,12 @@
   background-color: #334155;
   border-radius: 2px;
   margin: 0 auto 1.25rem auto;
-  cursor: pointer;
 }
 
-.ah-popup-card h3 {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 0.5rem;
-}
-
-.ah-popup-content p {
-  color: #cbd5e1;
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-
-.ah-popup-more-badge {
-  font-size: 0.75rem;
-  color: #22d3ee;
-  font-weight: 600;
-  display: block;
-  margin-top: 0.5rem;
-}
-
-.ah-popup-empty {
-  color: #64748b;
-  font-size: 0.875rem;
-  font-style: italic;
-  margin: 0.75rem 0;
-}
+.ah-popup-card h3 { font-size: 1.35rem; font-weight: 700; color: #ffffff; }
+.ah-popup-content p { color: #cbd5e1; font-size: 0.9rem; line-height: 1.55; }
+.ah-popup-more-badge { font-size: 0.75rem; color: #22d3ee; font-weight: 600; display: block; margin-top: 0.5rem; }
+.ah-popup-empty { color: #64748b; font-size: 0.875rem; font-style: italic; }
 
 .ah-popup-map-btn {
   width: 100%;
@@ -336,37 +284,17 @@
   margin-top: 1.5rem;
   border: none;
   cursor: pointer;
-  transition: opacity 0.2s ease;
 }
 
-.ah-popup-map-btn:hover {
-  opacity: 0.9;
-}
-
-/* Animaatio popupin nousulle */
 @keyframes ahSlideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
 
-/* Responsiivisuussäännöt kapeille näytöille / mobiiliin */
 @media (max-width: 768px) {
-  .ah-content-layout {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.5rem;
-  }
-  
-  .ah-text-side {
-    max-width: 100%;
-  }
-  
-  .ah-main-title {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-  }
-  
-  .ah-mountain-silhouet {
-    bottom: 150px;
-  }
+  .ah-content-layout { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .ah-text-side { max-width: 100%; }
+  .ah-main-title { font-size: 2rem; }
+  .ah-mountain-silhouet { bottom: 150px; }
+  .ah-popup-card { max-width: 100%; } /* Mobiilissa pohja täyttää alareunan täysin */
 }

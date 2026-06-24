@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 import { calculateAurora } from "../utils/auroraEngine";
-import staticPlaces from "../data/places"; // Polku korjattu data-kansioon
+import staticPlaces from "../data/places";
 
 /* ========================================================================
-   AuroraHero — TÄYDELLINEN VERSIO (Kaikki logiikat palautettu)
+   AuroraHero — Päivitetty versio datarikkailla laatikkoilla
 ======================================================================= */
 
 const NOAA_KP_URL     = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
@@ -185,18 +185,30 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
   const [threeReady, setThreeReady] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Käytetään datakansiosta tuotuja paikkoja ja liitetään niihin Contentful-kuvaukset dynaamisesti
+  // Lasketaan jokaiselle paikalle sen dynaaminen todennäköisyys annettujen koordinaattien pohjalta
   const placesList = useMemo(() => {
     return staticPlaces.map((sp) => {
       const cfMatch = Array.isArray(contentfulPlaces) 
         ? contentfulPlaces.find((cf) => cf.id === sp.id || cf.slug === sp.slug)
         : null;
+
+      // Lasketaan paikallinen revontulien suhde leveysasteen mukaan
+      const localAurora = calculateAurora({ 
+        kp: kp ?? 2.0, 
+        speed: wind ?? 400, 
+        density: 5, 
+        bz: bz ?? 0, 
+        cloudCover: 20, 
+        latitude: sp.lat
+      });
+
       return {
         ...sp,
         description: cfMatch?.description || cfMatch?.desc || "",
+        prob: localAurora?.probability ?? 0,
       };
     });
-  }, [contentfulPlaces]);
+  }, [contentfulPlaces, kp, wind, bz]);
 
   const [activePlace, setActivePlace] = useState(placesList[0] || staticPlaces[0]);
 
@@ -208,7 +220,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     if (placesList.length > 0) setActivePlace(placesList[0]);
   }, [placesList]);
 
-  /* Solar-datan haku */
+  /* Solar data fetch */
   useEffect(() => {
     let cancelled = false;
     fetchHeroSolarData()
@@ -220,10 +232,9 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     return () => { cancelled = true; };
   }, []);
 
-  /* Auroradata */
   const aurora = useMemo(
-    () => calculateAurora({ kp, speed: wind, density: 5, bz, cloudCover: 50, latitude: 67.5 }),
-    [kp, wind, bz]
+    () => calculateAurora({ kp, speed: wind, density: 5, bz, cloudCover: 50, latitude: activePlace?.lat || 66.5 }),
+    [kp, wind, bz, activePlace]
   );
   const probability = aurora?.probability ?? null;
   probRef.current = probability;
@@ -231,7 +242,6 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
   const awakening = useMemo(() => nextAwakening(slots), [slots]);
   const wave = useMemo(() => buildWave(slots, tier), [slots, tier]);
 
-  /* Kp-portaistus visualisoinnille (0–3) */
   const kpStep = useMemo(() => {
     if (kp == null || kp < 1.5) return 0;
     if (kp < 3.5) return 1;
@@ -246,7 +256,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     return 1.0;
   }, [kpStep]);
 
-  /* Automaattinen GPS-haku lähimmälle paikalle */
+  /* GPS seuranta lähimmälle pisteelle */
   useEffect(() => {
     if (typeof window !== "undefined" && navigator.geolocation && placesList.length > 0) {
       navigator.geolocation.getCurrentPosition((position) => {
@@ -268,10 +278,9 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     }
   }, [placesList]);
 
-  /* Three.js tehosteet */
+  /* Three.js */
   useEffect(() => {
     if (!shouldEnhanceWith3D()) return;
-
     let cancelled = false;
     let tooLate = false;
     const timer = setTimeout(() => { tooLate = true; }, THREE_LOAD_TIMEOUT_MS);
@@ -279,27 +288,20 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     import("../utils/auroraSky")
       .then(({ createAuroraSky }) => {
         if (cancelled || tooLate || !canvasRef.current) return;
-        skyRef.current = createAuroraSky(canvasRef.current, {
-          intensity: targetIntensity,
-        });
+        skyRef.current = createAuroraSky(canvasRef.current, { intensity: targetIntensity });
         setThreeReady(true);
       })
-      .catch((e) => console.warn("[AuroraHero] Three.js lataus virhe:", e));
+      .catch((e) => console.warn(e));
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      if (skyRef.current) {
-        skyRef.current.destroy();
-        skyRef.current = null;
-      }
+      if (skyRef.current) { skyRef.current.destroy(); skyRef.current = null; }
     };
   }, [targetIntensity]);
 
   useEffect(() => {
-    if (skyRef.current) {
-      skyRef.current.setIntensity(targetIntensity);
-    }
+    if (skyRef.current) skyRef.current.setIntensity(targetIntensity);
   }, [targetIntensity]);
 
   const calm = kpStep <= 1;
@@ -311,16 +313,15 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     : (!calm ? "" : t("aurora.quiet"));
 
   return (
-    <section className={`aurora-hero-container ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep} tier-${tier}`}>
+    <section className={`aurora-hero-container ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
       
-      {/* TAIVAS ELEMENTTI */}
       <div className="ah-sky-wrap">
         {kpStep > 0 && <div className="ah-sky--css" aria-hidden="true" />}
         <canvas ref={canvasRef} className="ah-canvas" aria-hidden="true" />
       </div>
 
       <div className="ah-content-layout">
-        {/* Vasen puoli: Otsikot ja tilat */}
+        {/* Vasen puoli */}
         <div className="ah-text-side">
           <h1 className="ah-main-title">
             {headline} {nextLine}
@@ -338,7 +339,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
           </div>
         </div>
 
-        {/* Oikea puoli: Sivuttain rullaava raide places.js-tiedostosta */}
+        {/* Oikea puoli: Datarikkaat paikkalaatikot */}
         <div className="ah-carousel-side">
           <div className="ah-horizontal-scroll-track">
             {placesList.map((p) => {
@@ -352,11 +353,14 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
                     setIsPopupOpen(true);
                   }}
                 >
-                  <div className="ah-item-dot-indicator" />
+                  <div className="ah-item-top-row">
+                    <div className="ah-item-dot-indicator" />
+                    <span className="ah-place-mini-prob">{p.prob}%</span>
+                  </div>
                   <span className="ah-item-name-label">{p.name}</span>
-                  {isSelected && kp != null && (
-                    <span className="ah-place-kp-value">Kp {kp.toFixed(1)}</span>
-                  )}
+                  <span className="ah-place-kp-badge">
+                    Kp {kp ? kp.toFixed(1) : "2.0"}
+                  </span>
                 </div>
               );
             })}
@@ -364,17 +368,17 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         </div>
       </div>
 
-      {/* TUNTURISILUETTI */}
+      {/* Tunturit */}
       <div className="ah-mountain-silhouet" aria-hidden="true">
         <svg viewBox="0 0 1440 180" className="ah-mountain-svg">
           <path d="M0,140 L160,115 C320,90 640,60 960,100 C1280,140 1360,165 1440,170 L1440,180 L0,180 Z" />
         </svg>
       </div>
 
-      {/* ENNUSTEAALTOVIIVA */}
+      {/* Ennusteaalto */}
       {wave && (
         <div className="ah-wave">
-          <svg viewBox={`0 0 ${WAVE_W} ${WAVE_H}`} role="img" aria-label="Kp forecast wave">
+          <svg viewBox={`0 0 ${WAVE_W} ${WAVE_H}`}>
             <defs>
               <linearGradient id="ah-wave-grad" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%"  stopColor="#00ffc6" />
@@ -382,24 +386,19 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
                 <stop offset="100%" stopColor="#7d5fff" />
               </linearGradient>
             </defs>
-            {wave.nowX != null && (
-              <line className="ah-wave-now" x1={wave.nowX} y1="0" x2={wave.nowX} y2={WAVE_H} />
-            )}
+            {wave.nowX != null && <line className="ah-wave-now" x1={wave.nowX} y1="0" x2={wave.nowX} y2={WAVE_H} />}
             <path className="ah-wave-line" d={wave.openPath} />
-            
             {wave.lockPath && !isPremium && (
               <>
                 <path className="ah-wave-line is-locked" d={wave.lockPath} />
-                <text className="ah-wave-lock" x={(wave.lockX ?? WAVE_W) + 6} y="16">
-                  🔒 {t("forecast.unlock48")}
-                </text>
+                <text className="ah-wave-lock" x={(wave.lockX ?? WAVE_W) + 6} y="16">🔒 {t("forecast.unlock48")}</text>
               </>
             )}
           </svg>
         </div>
       )}
 
-      {/* POPUP-KORTTI DYNAAMISELLA CONTENTFUL-DATALLA */}
+      {/* KORJATTU JA RAJATTU POPUP-KORTTI */}
       {isPopupOpen && (
         <div className="ah-popup-backdrop" onClick={() => setIsPopupOpen(false)}>
           <div className="ah-popup-card" onClick={(e) => e.stopPropagation()}>
