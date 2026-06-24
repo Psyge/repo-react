@@ -6,18 +6,23 @@ import { Link } from "react-router-dom";
 
 import SEO from "./components/SEO";
 
+// Nosta versiota jos muutat suostumustekstien sanamuotoa
+const CONSENT_TEXT_VERSION = "v1";
+
 export default function PremiumPage() {
   const { t, lang } = useTranslation();
-  const fi = lang === "fi";
 
   const [activeDays, setActiveDays] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // --- PAKOLLISET SUOSTUMUKSET (digitaalisen sisällön peruuttamisoikeus) ---
+  const [immediate, setImmediate] = useState(false);
+  const [waiver, setWaiver] = useState(false);
+  const consentGiven = immediate && waiver;
+
   useEffect(() => {
-    document.title = fi
-      ? "Aurora Premium — Avaa täysi ennuste"
-      : "Aurora Premium — Unlock the full forecast";
-  }, [fi]);
+    document.title = t("premium.pagetitle");
+  }, [t, lang]);
 
   useEffect(() => {
     if (isActive()) {
@@ -34,33 +39,36 @@ export default function PremiumPage() {
     } else {
       setActiveDays(null);
     }
-  }, [fi]);
+  }, [lang]);
 
   const handleBuy = async (e, tier) => {
     e.preventDefault();
 
     setErrorMsg("");
 
+    // Estä maksu jos suostumukset puuttuvat
+    if (!consentGiven) {
+      setErrorMsg(t("premium.consent.required"));
+      return;
+    }
+
     const btn = e.currentTarget;
     const originalText = btn.textContent;
 
     btn.disabled = true;
-
-    btn.textContent = fi
-      ? "Ladataan…"
-      : "Loading…";
+    btn.textContent = t("common.loading");
 
     try {
-      await openCheckout(tier);
+      // Välitä suostumus checkoutille → tallentuu Stripe-metadataan + tokeniin
+      await openCheckout(tier, {
+        immediateDelivery: immediate,
+        waiveWithdrawal: waiver,
+        textVersion: CONSENT_TEXT_VERSION,
+      });
     } catch {
-      setErrorMsg(
-        fi
-          ? "Maksun aloitus epäonnistui."
-          : "Could not start checkout."
-      );
+      setErrorMsg(t("premium.error"));
     } finally {
       btn.disabled = false;
-
       btn.textContent = originalText;
     }
   };
@@ -68,65 +76,38 @@ export default function PremiumPage() {
   const tiers = [
     {
       id: "1d",
-      title: fi ? "1 päivä" : "1 Day",
+      title: t("premium.tier.1d.title"),
       price: "2,99",
-      meta: fi
-        ? "24 tuntia premiumia"
-        : "24 hours premium",
-      features: fi
-        ? [
-            "✓ Täysi ennuste",
-            "✓ Pilvisyys & Bz",
-            "✓ 3 laitetta",
-          ]
-        : [
-            "✓ Full forecast",
-            "✓ Cloud cover & Bz",
-            "✓ 3 devices",
-          ],
-      cta: fi ? "Osta" : "Buy",
+      meta: t("premium.tier.1d.meta"),
+      features: [
+        t("premium.tier.1d.f1"),
+        t("premium.tier.1d.f2"),
+        t("premium.tier.1d.f3"),
+      ],
       featured: false,
     },
     {
       id: "3d",
-      title: fi ? "3 päivää" : "3 Days",
+      title: t("premium.tier.3d.title"),
       price: "4,99",
-      meta: fi
-        ? "Paras revontulireissulle"
-        : "Perfect for aurora trips",
-      features: fi
-        ? [
-            "✓ Kaikki ominaisuudet",
-            "✓ Usean yön suunnittelu",
-            "✓ 3 laitetta",
-          ]
-        : [
-            "✓ All features",
-            "✓ Multi-night planning",
-            "✓ 3 devices",
-          ],
-      cta: fi ? "Osta" : "Buy",
+      meta: t("premium.tier.3d.meta"),
+      features: [
+        t("premium.tier.3d.f1"),
+        t("premium.tier.3d.f2"),
+        t("premium.tier.3d.f3"),
+      ],
       featured: true,
     },
     {
       id: "7d",
-      title: fi ? "1 viikko" : "1 Week",
+      title: t("premium.tier.7d.title"),
       price: "9,99",
-      meta: fi
-        ? "Paras arvo"
-        : "Best value",
-      features: fi
-        ? [
-            "✓ Kaikki ominaisuudet",
-            "✓ Paras hinta/päivä",
-            "✓ 3 laitetta",
-          ]
-        : [
-            "✓ All features",
-            "✓ Best price/day",
-            "✓ 3 devices",
-          ],
-      cta: fi ? "Osta" : "Buy",
+      meta: t("premium.tier.7d.meta"),
+      features: [
+        t("premium.tier.7d.f1"),
+        t("premium.tier.7d.f2"),
+        t("premium.tier.7d.f3"),
+      ],
       featured: false,
     },
   ];
@@ -142,21 +123,14 @@ export default function PremiumPage() {
           <Header />
     <main className="premium-page container">
       <section className="premium-hero">
-        <h1>Aurora Premium</h1>
+        <h1>Northern Lights Premium</h1>
 
-        <p className="premium-sub">
-          {fi
-            ? "Avaa täydellinen revontuliennuste kaikkialle maailmassa."
-            : "Unlock the complete aurora forecast worldwide."}
-        </p>
+        <p className="premium-sub">{t("premium.sub")}</p>
 
         {activeDays != null && (
           <div className="premium-active">
-            ✓ {fi ? "Premium aktiivinen" : "Premium active"} —
-            {" "}
-            {activeDays}
-            {" "}
-            {fi ? "päivää jäljellä" : "days left"}
+            ✓ {t("premium.activeBadge")} —{" "}
+            {activeDays} {t("premium.daysLeft")}
           </div>
         )}
 
@@ -165,6 +139,29 @@ export default function PremiumPage() {
             {errorMsg}
           </div>
         )}
+      </section>
+
+      {/* PAKOLLISET SUOSTUMUKSET — napit lukossa kunnes molemmat rastitettu */}
+      <section className="premium-consent">
+        <label className="premium-consent-row">
+          <input
+            type="checkbox"
+            checked={immediate}
+            onChange={(e) => setImmediate(e.target.checked)}
+          />
+          <span>{t("premium.consent.immediate")}</span>
+        </label>
+
+        <label className="premium-consent-row">
+          <input
+            type="checkbox"
+            checked={waiver}
+            onChange={(e) => setWaiver(e.target.checked)}
+          />
+          <span>{t("premium.consent.waiver")}</span>
+        </label>
+
+        <p className="premium-consent-note">{t("premium.consent.note")}</p>
       </section>
 
       <section className="pricing-grid">
@@ -176,9 +173,7 @@ export default function PremiumPage() {
             }`}
           >
             {tier.featured && (
-              <div className="badge">
-                {fi ? "Suosituin" : "Popular"}
-              </div>
+              <div className="badge">{t("premium.popular")}</div>
             )}
 
             <h3>{tier.title}</h3>
@@ -187,13 +182,11 @@ export default function PremiumPage() {
               <span>{tier.price}</span> €
             </div>
 
-            <p className="meta">
-              {tier.meta}
-            </p>
+            <p className="meta">{tier.meta}</p>
 
             <ul>
               {tier.features.map((f, i) => (
-                <li key={i}>{f}</li>
+                <li key={i}>✓ {f}</li>
               ))}
             </ul>
 
@@ -202,28 +195,19 @@ export default function PremiumPage() {
               className={`buy-btn${
                 tier.featured ? " primary" : ""
               }`}
-              onClick={(e) =>
-                handleBuy(e, tier.id)
-              }
+              disabled={!consentGiven}
+              title={!consentGiven ? t("premium.consent.required") : undefined}
+              onClick={(e) => handleBuy(e, tier.id)}
             >
-              {tier.cta}
+              {t("premium.cta")}
             </button>
           </article>
         ))}
       </section>
 
       <section className="premium-footer">
-        <p>
-          {fi
-            ? "Kertamaksu · Ei tilausta"
-            : "One-time payment · No subscription"}
-        </p>
-
-        <p>
-          {fi
-            ? "Aktivointi jopa 3 laitteelle"
-            : "Activate on up to 3 devices"}
-        </p>
+        <p>{t("premium.footer.oneTime")}</p>
+        <p>{t("premium.footer.devices")}</p>
       </section>
     </main>
     <footer className="footer">

@@ -1,6 +1,7 @@
 /**
  * Aurora Premium — React-friendly client helper.
  * Updated: installId-based activation + env API base + safer polling.
+ *          openCheckout välittää nyt ostosuostumuksen (consent).
  *
  * Usage:
  *   import { isActive, openCheckout, activate, bySession, read } from "@/lib/premium";
@@ -112,11 +113,17 @@ export async function activate(token) {
   return data;
 }
 
-export async function openCheckout(tier) {
+/**
+ * Avaa Stripe Checkout.
+ * @param {string} tier  "1d" | "3d" | "7d"
+ * @param {object} consent  { immediateDelivery, waiveWithdrawal, textVersion }
+ *   PAKOLLINEN: worker hylkää maksun (400) jos suostumus puuttuu.
+ */
+export async function openCheckout(tier, consent) {
   const res = await fetch(`${BASE}/api/checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tier }),
+    body: JSON.stringify({ tier, consent }),
   });
 
   const data = await res.json().catch(() => ({}));
@@ -126,7 +133,8 @@ export async function openCheckout(tier) {
       alert("Too many requests. Please wait a moment and try again.");
       return;
     }
-    alert((data && (data.detail || data.error)) || "Checkout could not be started.");
+    // Näytä myös consent-virheen viesti jos suostumus puuttui
+    alert((data && (data.message || data.detail || data.error)) || "Checkout could not be started.");
     return;
   }
 
