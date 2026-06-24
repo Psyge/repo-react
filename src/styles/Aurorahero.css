@@ -1,269 +1,194 @@
 /* ========================================================================
-   AURORA HERO  —  yhdistetty hero + ilmoitus (vain etusivu)
-
-   SISÄLTÄÄ VAIN: hero-osio, orbi (CSS + three.js), tilateksti, badge,
-   kp-aaltoviiva, extra-slotin kehys, animaatiot.
-
-   HUOM: hero-paikkamerkit (.ah-places) ovat places.css:ssä
-         ja Sightings-palkki (.ah-sightings-bar) on sightings.css:ssä.
-
-   Käyttää teemamuuttujia: --fg, --fg-muted, --fg-dim, --accent,
-   --gradient-aurora, --space-*
-======================================================================== */
+   AuroraHero — Puhtaat CSS-tyylit ilman tiedostokohtaista inline-hässäkkää
+======================================================================= */
 
 .aurora-hero {
   position: relative;
+  width: 100%;
+  min-height: 500px;
+  background-color: #02040a;
   overflow: hidden;
-  z-index: 0;
-
   display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  padding: 56px var(--space-md) var(--space-lg);
-  min-height: 560px;
-
-  text-align: center;
+  flex-col: column;
+  justify-content: space-between;
+  padding-bottom: 2rem;
 }
 
-/* sumea revontuli-taustahehku */
-.aurora-hero::before {
-  content: "";
+/* Taivas-alue ja revontulianimaatiot */
+.ah-sky-wrap {
   position: absolute;
-  inset: -25%;
-  z-index: 0;
-  pointer-events: none;
-
-  background:
-    radial-gradient(circle at 32% 18%, rgba(0, 255, 204, 0.16), transparent 42%),
-    radial-gradient(circle at 70% 60%, rgba(125, 95, 255, 0.16), transparent 45%);
-  filter: blur(90px);
-}
-
-/* ========================================================================
-   ORBI
-======================================================================== */
-
-.ah-orb-wrap {
-  position: relative;
-  z-index: 1;
-
-  width: clamp(190px, 32vw, 300px);
-  aspect-ratio: 1 / 1;
-
-  margin-bottom: 8px;
-
-  display: grid;
-  place-items: center;
-}
-
-/* takana oleva pehmeä hehkukehä */
-.ah-orb-wrap::after {
-  content: "";
-  position: absolute;
-  inset: -18%;
-  border-radius: 50%;
-  z-index: 0;
-  pointer-events: none;
-
-  background: radial-gradient(
-    circle,
-    rgba(0, 255, 180, 0.22),
-    rgba(125, 95, 255, 0.10) 45%,
-    transparent 70%
-  );
-  filter: blur(28px);
-
-  animation: ah-breathe 7s ease-in-out infinite;
-}
-
-/* ---- CSS-POHJAKERROS: animoitu gradienttipallo ---- */
-
-.ah-orb--css {
-  position: absolute;
-  inset: 8%;
-  border-radius: 50%;
-  z-index: 1;
-
-  background:
-    radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.55), transparent 38%),
-    conic-gradient(
-      from 0deg,
-      #00ffc6,
-      #14e0ff,
-      #7d5fff,
-      #00ffaa,
-      #00ffc6
-    );
-
-  background-size: 100% 100%, 180% 180%;
-  animation:
-    ah-spin 18s linear infinite,
-    ah-breathe 7s ease-in-out infinite;
-
-  box-shadow:
-    inset 0 0 60px rgba(0, 0, 0, 0.45),
-    inset 0 0 30px rgba(125, 95, 255, 0.35),
-    0 0 50px rgba(0, 255, 180, 0.30);
-
-  filter: saturate(1.1);
-  transition: opacity 0.9s ease;
-}
-
-/* AKTIIVITILA: revontulia näkyvissä → pallo muuttuu vihreäksi */
-.ah-orb--css.is-active {
-  background:
-    radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.55), transparent 38%),
-    conic-gradient(
-      from 0deg,
-      #16ff8a,
-      #00ffc6,
-      #6bff5a,
-      #00e676,
-      #16ff8a
-    );
-  box-shadow:
-    inset 0 0 60px rgba(0, 0, 0, 0.4),
-    inset 0 0 30px rgba(0, 255, 130, 0.4),
-    0 0 70px rgba(0, 255, 130, 0.45);
-}
-
-/* aktiivitilassa myös taustahehku vihertää */
-.aurora-hero.is-active .ah-orb-wrap::after {
-  background: radial-gradient(
-    circle,
-    rgba(0, 255, 120, 0.30),
-    rgba(0, 255, 180, 0.12) 45%,
-    transparent 70%
-  );
-}
-
-/* sisempi pyörivä "auroravirta" pinnan päällä */
-.ah-orb--css::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 180deg,
-    transparent 0deg,
-    rgba(0, 255, 200, 0.35) 60deg,
-    transparent 140deg,
-    rgba(125, 95, 255, 0.30) 240deg,
-    transparent 320deg
-  );
-  mix-blend-mode: screen;
-  animation: ah-spin 26s linear infinite reverse;
-}
-
-/* lasinen huippuvalo */
-.ah-orb--css::after {
-  content: "";
-  position: absolute;
-  top: 12%;
-  left: 22%;
-  width: 36%;
-  height: 26%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.65), transparent 70%);
-  filter: blur(4px);
-}
-
-/* ---- THREE.JS-KERROS ---- */
-
-.ah-canvas {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-
-  opacity: 0;
-  transition: opacity 1s ease;
+  z-index: 1;
   pointer-events: none;
+}
+
+.ah-canvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
 }
 
 .ah-canvas.is-ready {
   opacity: 1;
 }
 
-/* kun three.js on valmis, himmennetään CSS-pohja pois pehmeästi */
-.aurora-hero.three-active .ah-orb--css {
+.ah-sky--css {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 10%, rgba(0, 255, 198, 0.15) 0%, transparent 70%);
   opacity: 0;
+  transition: opacity 0.8s ease;
 }
 
-/* ========================================================================
-   TILATEKSTI
-======================================================================== */
+.kp-step-1 .ah-sky--css { opacity: 0.4; }
+.kp-step-2 .ah-sky--css { opacity: 0.7; background: radial-gradient(circle at 50% 10%, rgba(20, 224, 255, 0.25) 0%, transparent 60%); }
+.kp-step-3 .ah-sky--css { opacity: 1; background: radial-gradient(circle at 50% 10%, rgba(125, 95, 255, 0.35) 0%, transparent 60%); }
 
+/* Tilat ja Otsikot */
 .ah-status {
   position: relative;
-  z-index: 1;
-  max-width: 620px;
-  margin-top: 4px;
+  z-index: 10;
+  text-align: center;
+  padding: 3rem 1.5rem 1rem 1.5rem;
 }
 
 .ah-status h1 {
-  font-size: clamp(1.6rem, 3.4vw, 2.5rem);
-  line-height: 1.18;
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  margin-bottom: 0.75rem;
+}
+
+.ah-prob {
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+.ah-prob strong {
+  color: #00ffc6;
+  font-size: 1.125rem;
+}
+
+.ah-prob-lock {
+  color: #22d3ee;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0;
-  animation: ah-fade-up 0.9s ease-out;
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
 
-.ah-status .ah-prob {
-  margin-top: 14px;
-  font-size: 0.95rem;
-  color: var(--fg-muted);
-  animation: ah-fade-up 1.2s ease-out;
+.ah-prob-lock:hover {
+  color: #67e8f9;
 }
 
-.ah-status .ah-prob strong {
-  color: var(--fg);
-  font-weight: 700;
-}
-
-/* badge-rivi */
-.ah-badges {
+/* Tunturiprofiili */
+.ah-mountain-silhouet {
   position: absolute;
-  top: 16px;
-  right: 18px;
-  z-index: 3;
-  display: flex;
-  gap: 8px;
-}
-
-.ah-badge {
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  background: rgba(0, 255, 180, 0.12);
-  border: 1px solid rgba(0, 255, 180, 0.30);
-  color: var(--accent, #00ffc6);
-  backdrop-filter: blur(8px);
-}
-
-/* ========================================================================
-   KP-AALTOVIIVA  (SVG)
-======================================================================== */
-
-.ah-wave {
-  position: relative;
-  z-index: 1;
+  bottom: 100px;
+  left: 0;
   width: 100%;
-  max-width: 760px;
-  margin-top: 26px;
+  z-index: 2;
+  pointer-events: none;
 }
 
-.ah-wave svg {
+.ah-mountain-svg {
   width: 100%;
   height: auto;
-  display: block;
-  overflow: visible;
+  fill: #02040a;
+}
+
+/* --- HORISONTAALINEN PAREMPI KARUSELLI (Laatikot vierekkäin sivuttaisrullauksella) --- */
+.ah-places-horizon {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 1rem 1.5rem;
+  margin-top: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.ah-places-horizon::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.ah-places-carousel {
+  display: inline-flex;
+  gap: 1rem;
+  padding-right: 2rem;
+}
+
+/* Yksittäinen paikkalaatikko */
+.ah-place-box {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  background-color: rgba(11, 17, 30, 0.65);
+  border: 1px solid #1e293b;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ah-place-box:hover {
+  border-color: #334155;
+  transform: translateY(-2px);
+}
+
+.ah-place-box.is-selected {
+  background-color: rgba(6, 182, 212, 0.15);
+  border-color: #22d3ee;
+  transform: scale(1.05);
+}
+
+.ah-node-indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: #64748b;
+  margin-bottom: 0.25rem;
+  transition: background-color 0.2s ease;
+}
+
+.ah-place-box.is-selected .ah-node-indicator {
+  background-color: #22d3ee;
+  box-shadow: 0 0 8px #22d3ee;
+}
+
+.ah-place-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
+.ah-place-kp-value {
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #67e8f9;
+  margin-top: 0.125rem;
+}
+
+/* Aaltoviiva */
+.ah-wave {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  max-width: 760px;
+  margin: 1rem auto 0 auto;
+  padding: 0 1rem;
 }
 
 .ah-wave-line {
@@ -271,115 +196,110 @@
   stroke: url(#ah-wave-grad);
   stroke-width: 3;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 6px rgba(0, 255, 180, 0.5));
 }
 
 .ah-wave-line.is-locked {
-  stroke-dasharray: 6 7;
-  opacity: 0.55;
+  stroke: #334155;
+  stroke-dasharray: 4 4;
 }
 
 .ah-wave-now {
-  stroke: rgba(255, 255, 255, 0.35);
+  stroke: rgba(255, 255, 255, 0.25);
   stroke-width: 1;
-  stroke-dasharray: 3 4;
-}
-
-.ah-wave-label {
-  fill: var(--fg-dim);
-  font-size: 11px;
+  stroke-dasharray: 2 2;
 }
 
 .ah-wave-lock {
-  fill: var(--fg-muted);
   font-size: 11px;
-  font-weight: 600;
+  fill: #67e8f9;
+  font-weight: bold;
 }
 
-/* ========================================================================
-   EXTRA-SLOT  (kehys; itse Sightings-palkki on sightings.css:ssä)
-======================================================================== */
+/* Popup-Kortit (Bottom Sheet dynaamisesta Contentful datasta) */
+.ah-popup-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(2, 4, 10, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+
+.ah-popup-card {
+  width: 100%;
+  background-color: #0b111e;
+  border-top: 1px solid #1e293b;
+  border-radius: 1.5rem 1.5rem 0 0;
+  padding: 1.25rem 1.5rem 2.5rem 1.5rem;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ah-popup-drag-handle {
+  width: 40px;
+  height: 4px;
+  background-color: #334155;
+  border-radius: 2px;
+  margin: 0 auto 1.25rem auto;
+  cursor: pointer;
+}
+
+.ah-popup-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.ah-popup-content p {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.ah-popup-more-badge {
+  font-size: 0.75rem;
+  color: #22d3ee;
+  font-weight: 600;
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.ah-popup-empty {
+  color: #64748b;
+  font-size: 0.875rem;
+  font-style: italic;
+  margin: 0.75rem 0;
+}
+
+.ah-popup-map-btn {
+  width: 100%;
+  background-color: #ffffff;
+  color: #02040a;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  margin-top: 1.25rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.ah-popup-map-btn:hover {
+  opacity: 0.9;
+}
 
 .ah-extra {
   position: relative;
-  z-index: 1;
+  z-index: 10;
   width: 100%;
-  max-width: 760px;
-  margin-top: 26px;
-  text-align: left;
 }
 
-/* ========================================================================
-   ANIMAATIOT  (jaetut — myös places.css/sightings.css voivat käyttää näitä,
-   koska kaikki tyylit ladataan samaan dokumenttiin index.css:n kautta)
-======================================================================== */
-
-@keyframes ah-spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes ah-breathe {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.05); }
-}
-
-@keyframes ah-fade-up {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ========================================================================
-   SAAVUTETTAVUUS
-======================================================================== */
-
-@media (prefers-reduced-motion: reduce) {
-  .ah-orb--css,
-  .ah-orb--css::before,
-  .ah-orb-wrap::after {
-    animation: none;
-  }
-  .ah-status h1,
-  .ah-status .ah-prob {
-    animation: none;
-  }
-}
-
-/* ========================================================================
-   MOBIILI  (vain hero — paikkojen/palkin mobiili omissa tiedostoissaan)
-======================================================================== */
-
-@media (max-width: 768px) {
-  .aurora-hero {
-    padding: 110px 14px 18px;
-    min-height: 480px;
-  }
-
-  .ah-orb-wrap {
-    width: clamp(170px, 56vw, 260px);
-  }
-
-  .ah-status h1 {
-    font-size: 1.55rem;
-  }
-
-  .ah-badges {
-    top: 10px;
-    right: 12px;
-  }
-}
-/* Kun Kp on nollassa tai matala, piilotetaan hehkut kokonaan */
-.aurora-hero.kp-step-0 .ah-sky--css {
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-/* Kp 1.5 - 3.5: Kevyt, hillitty vihreä kuiskaus taustalla */
-.aurora-hero.kp-step-1 .ah-sky--css {
-  background: radial-gradient(circle at bottom, rgba(5, 150, 105, 0.2) 0%, transparent 70%);
-  opacity: 1;
-}
-
-/* Kp 3.5+: Syvemmät ja laajemmat sähköiset värit */
-.aurora-hero.kp-step-2 .ah-sky--css {
-  background: radial-gradient(circle at bottom, rgba(6, 182, 212, 0.4) 0%, rgba(15, 23, 42, 0) 80%);
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
