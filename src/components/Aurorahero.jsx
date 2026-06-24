@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 import { calculateAurora } from "../utils/auroraEngine";
 import staticPlaces from "../data/places";
+import { client } from "../lib/contentfulClient";
 
 /* ========================================================================
-   AuroraHero — Päivitetty versio datarikkailla laatikkoilla
+   AuroraHero — Päivitetty Contentful-haulla ja kielitukituksella
 ======================================================================= */
 
 const NOAA_KP_URL     = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
@@ -171,9 +172,9 @@ function buildWave(slots, tier) {
 }
 
 /* ======================================================================== */
-export default function Aurorahero({ forecast, contentfulPlaces, children }) {
+export default function AuroraHero({ forecast, children }) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { currentLanguage, t } = useTranslation();
 
   const slots = useMemo(() => forecast?.slots ?? [], [forecast]);
   const tier  = forecast?.tier ?? "free";
@@ -184,15 +185,49 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
   const [bz, setBz]     = useState(null);
   const [threeReady, setThreeReady] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  
+  // Contentful-paikat tallennetaan tänne raw-muodossa
+  const [contentfulPlaces, setContentfulPlaces] = useState([]);
 
-  // Lasketaan jokaiselle paikalle sen dynaaminen todennäköisyys annettujen koordinaattien pohjalta
+  const lang = currentLanguage === "en" ? "en-US" : "fi-FI";
+
+  // Apuohjelma lokalisoitujen kenttien purkamiseen (sama kuin blogissasi)
+  function getField(field) {
+    if (!field) return "";
+    if (typeof field === "object" && !Array.isArray(field)) {
+      return field[lang] || field["fi-FI"] || "";
+    }
+    return field;
+  }
+
+  // HAETAAN PAIKAT CONTENTFULISTÄ (Content Type: place)
+  useEffect(() => {
+    client.withAllLocales
+      .getEntries({
+        content_type: "place",
+        limit: 100,
+      })
+      .then((response) => {
+        setContentfulPlaces(response.items || []);
+      })
+      .catch((err) => {
+        console.error("Contentful places error:", err);
+      });
+  }, []);
+
+  // Yhdistetään säädata, staattiset paikat ja Contentfulista ladatut tekstit
   const placesList = useMemo(() => {
     return staticPlaces.map((sp) => {
-      const cfMatch = Array.isArray(contentfulPlaces) 
-        ? contentfulPlaces.find((cf) => cf.id === sp.id || cf.slug === sp.slug)
-        : null;
+      // Etsitään vastaava paikka Contentful-datasta slugin tai ID:n avulla
+      const cfMatch = contentfulPlaces.find((item) => {
+        const slugField = item.fields?.slug;
+        if (typeof slugField === "object") {
+          return slugField?.["fi-FI"] === sp.slug || slugField?.["en-US"] === sp.slug;
+        }
+        return slugField === sp.slug;
+      });
 
-      // Lasketaan paikallinen revontulien suhde leveysasteen mukaan
+      // Lasketaan dynaaminen todennäköisyys
       const localAurora = calculateAurora({ 
         kp: kp ?? 2.0, 
         speed: wind ?? 400, 
@@ -202,23 +237,36 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         latitude: sp.lat
       });
 
+      // Puretaan kuvausteksti Contentfulin rakenteesta
+      const description = cfMatch ? getField(cfMatch.fields.description || cfMatch.fields.desc) : "";
+
       return {
         ...sp,
-        description: cfMatch?.description || cfMatch?.desc || "",
+        description: description,
         prob: localAurora?.probability ?? 0,
       };
     });
-  }, [contentfulPlaces, kp, wind, bz]);
+  }, [contentfulPlaces, kp, wind, bz, currentLanguage]);
 
-  const [activePlace, setActivePlace] = useState(placesList[0] || staticPlaces[0]);
+  const [activePlace, setActivePlace] = useState(null);
+
+  // Asetetaan aktiivinen paikka heti kun lista on valmis tai päivittyy
+  useEffect(() => {
+    if (placesList.length > 0) {
+      // Pysytään valitussa paikassa, tai otetaan listan ensimmäinen
+      setActivePlace((prev) => {
+        if (prev) {
+          const updated = placesList.find((p) => p.id === prev.id);
+          if (updated) return updated;
+        }
+        return placesList[0];
+      });
+    }
+  }, [placesList]);
 
   const canvasRef = useRef(null);
   const skyRef    = useRef(null);
   const probRef   = useRef(null);
-
-  useEffect(() => {
-    if (placesList.length > 0) setActivePlace(placesList[0]);
-  }, [placesList]);
 
   /* Solar data fetch */
   useEffect(() => {
@@ -339,11 +387,11 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
           </div>
         </div>
 
-        {/* Oikea puoli: Datarikkaat paikkalaatikot */}
+        {/* Oikea puoli */}
         <div className="ah-carousel-side">
           <div className="ah-horizontal-scroll-track">
             {placesList.map((p) => {
-              const isSelected = p.id === activePlace.id;
+              const isSelected = activePlace && p.id === activePlace.id;
               return (
                 <div
                   key={p.id}
@@ -398,8 +446,8 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         </div>
       )}
 
-      {/* KORJATTU JA RAJATTU POPUP-KORTTI */}
-      {isPopupOpen && (
+      {/* POPUP-MODAALI */}
+      {isPopupOpen && activePlace && (
         <div className="ah-popup-backdrop" onClick={() => setIsPopupOpen(false)}>
           <div className="ah-popup-card" onClick={(e) => e.stopPropagation()}>
             <div className="ah-popup-drag-handle" onClick={() => setIsPopupOpen(false)} />
@@ -411,7 +459,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
                 <span className="ah-popup-more-badge">✨ {t("places.readMore")}</span>
               </div>
             ) : (
-              <p className="ah-popup-empty">Ei lisätietoja saatavilla kohteelle.</p>
+              <p className="ah-popup-empty">Ei kuvausta saatavilla valitulla kielellä.</p>
             )}
 
             <button
