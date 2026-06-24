@@ -215,37 +215,55 @@ export default function AuroraHero({ forecast, children }) {
   }, []);
 
   // Yhdistetään säädata, staattiset paikat ja Contentful-tekstit
+// Yhdistetään säädata, staattiset paikat ja Contentful-tekstit
   const placesList = useMemo(() => {
     return staticPlaces.map((sp) => {
+      // 1. Etsitään paikkakohtainen sää- ja ennustedata 'forecast'-propseista, jos saatavilla
+      // Jos forecast-objektissasi on paikkakohtaiset tiedot (esim. forecast[sp.id] tai forecast.places[sp.id]), muuta polku sen mukaan.
+      // Tässä oletetaan, että forecast sisältää paikan ID:llä varustetun sääolion.
+      const localForecast = forecast?.places?.[sp.id] || forecast?.[sp.id];
+      
+      const localKp     = localForecast?.kp ?? (kp ?? 2.0);
+      const localWind   = localForecast?.wind ?? (wind ?? 400);
+      const localClouds = localForecast?.clouds ?? 20; // Otetaan paikkakohtainen pilvisyys
+
+      // 2. Etsitään vastaava paikka Contentful-datasta
       const cfMatch = contentfulPlaces.find((item) => {
-        const slugField = item.fields?.slug;
+        const slugField = item?.fields?.slug;
         if (typeof slugField === "object") {
           return slugField?.["fi-FI"] === sp.slug || slugField?.["en-US"] === sp.slug;
         }
         return slugField === sp.slug;
       });
 
+      // 3. Lasketaan dynaaminen todennäköisyys PAIKKAKOHTAISILLA arvoilla
       const localAurora = calculateAurora({ 
-        kp: kp ?? 2.0, 
-        speed: wind ?? 400, 
+        kp: localKp, 
+        speed: localWind, 
         density: 5, 
         bz: bz ?? 0, 
-        cloudCover: 20, 
+        cloudCover: localClouds, 
         latitude: sp.lat
       });
 
-      // UUSI TURVALLINEN VERSIO:
-const description = cfMatch?.fields 
-  ? getField(cfMatch.fields.description || cfMatch.fields.desc, lang) 
-  : "";
+      // 4. Puretaan Contentful-kuvaus ja nimi varmistetusti
+      const rawDescription = cfMatch?.fields?.description || cfMatch?.fields?.desc;
+      const description = cfMatch?.fields ? getField(rawDescription, lang) : "";
+      
+      // Jos haluat tuoda myös nimen Contentfulista staattisen sijaan:
+      const rawName = cfMatch?.fields?.name || cfMatch?.fields?.title;
+      const displayName = cfMatch?.fields ? getField(rawName, lang) : sp.name;
 
       return {
         ...sp,
+        name: displayName || sp.name,
         description: description,
         prob: localAurora?.probability ?? 0,
+        currentKp: localKp, // Tallennetaan paikkakohtainen Kp korttia varten
+        currentClouds: localClouds
       };
     });
-  }, [contentfulPlaces, kp, wind, bz, lang]); // 'lang' korvasi 'currentLanguage' riippuvuutena
+  }, [contentfulPlaces, kp, wind, bz, lang, forecast]);
 
   const [activePlace, setActivePlace] = useState(null);
 
@@ -404,8 +422,8 @@ const description = cfMatch?.fields
                   </div>
                   <span className="ah-item-name-label">{p.name}</span>
                   <span className="ah-place-kp-badge">
-                    Kp {kp ? kp.toFixed(1) : "2.0"}
-                  </span>
+  Kp {p.currentKp ? p.currentKp.toFixed(1) : "2.0"}
+</span>
                 </div>
               );
             })}
