@@ -86,49 +86,90 @@ export function createAuroraOrb(canvas, opts = {}) {
   const uIntensity = { value: initialIntensity };
 
   /* ---- pää-orbi: noise-vääristetty hehkuva pinta ---- */
+ /* ---- pää-orbi: kierteinen, läpinäkyvä energiapyörre ---- */
   const coreMat = new THREE.ShaderMaterial({
     transparent: true,
+    blending: THREE.AdditiveBlending, // Muutetaan valomaiseksi sekoitukseksi
+    depthWrite: false,
     uniforms: { uTime, uIntensity },
     vertexShader: /* glsl */ `
       ${NOISE_GLSL}
       uniform float uTime;
       uniform float uIntensity;
       varying vec3 vNormal;
+      varying vec3 vViewPosition;
       varying float vNoise;
+      
       void main() {
         vNormal = normalize(normalMatrix * normal);
-        float n = snoise(normal * 1.8 + vec3(0.0, uTime * 0.25, 0.0));
-        vNoise = n;
-        float disp = (0.06 + 0.10 * uIntensity) * n;
+        
+        // Luodaan kierteinen koordinaatisto kohinalle (Twist-efekti)
+        float angle = position.y * 1.5;
+        float c = cos(angle + uTime * 0.1);
+        float s = sin(angle + uTime * 0.1);
+        vec3 twistedPos = vec3(
+          position.x * c - position.z * s,
+          position.y,
+          position.x * s + position.z * c
+        );
+
+        // Haetaan monitasoinen kohina (Fractal Noise) orgaanisemman muodon saamiseksi
+        float n1 = snoise(twistedPos * 1.5 + vec3(0.0, uTime * 0.2, 0.0));
+        float n2 = snoise(twistedPos * 3.0 - vec3(uTime * 0.1, 0.0, uTime * 0.1));
+        float combinedNoise = n1 * 0.7 + n2 * 0.3;
+        vNoise = combinedNoise;
+
+        // Vääristetään muotoa aktiivisuuden mukaan
+        float disp = (0.04 + 0.12 * uIntensity) * combinedNoise;
         vec3 pos = position + normal * disp;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        
+        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+        vViewPosition = -mvPosition.xyz;
+        gl_Position = projectionMatrix * mvPosition;
       }
     `,
     fragmentShader: /* glsl */ `
       uniform float uIntensity;
       varying vec3 vNormal;
+      varying vec3 vViewPosition;
       varying float vNoise;
+      
       void main() {
-        // värit: syvä violetti → cyan → vihreä, noise + aktiivisuus ohjaa
-        vec3 cLow  = vec3(0.18, 0.10, 0.45);   // violetti
-        vec3 cMid  = vec3(0.05, 0.85, 1.00);   // cyan
-        vec3 cHigh = vec3(0.20, 1.00, 0.65);   // revontulivihreä
+        // Alkuperäiset värit hienosäädettynä neon-sävyihin
+        vec3 cLow   = vec3(0.05, 0.02, 0.25);  // Erittäin tumma, syvä violetti
+        vec3 cMid   = vec3(0.02, 0.45, 0.90);  // Sähköinen Cyan / Magneettinen sininen
+        vec3 cHigh  = vec3(0.05, 0.95, 0.50);  // Kirkas, mystinen revontulivihreä
+        
+        // Muutetaan kohina puhtaaksi virtaustiedoksi (0..1)
         float t = clamp(vNoise * 0.5 + 0.5, 0.0, 1.0);
-        vec3 col = mix(cLow, cMid, smoothstep(0.0, 0.6, t));
-        col = mix(col, cHigh, smoothstep(0.5, 1.0, t) * (0.4 + 0.6 * uIntensity));
-        // korkea aktiivisuus → koko pallo vihertää (revontulia näkyvissä)
-        col = mix(col, cHigh, uIntensity * 0.7);
-        // fresnel-reuna kirkastaa siluetin
-        float fres = pow(1.0 - abs(vNormal.z), 2.5);
-        col += fres * (0.3 + 0.5 * uIntensity);
-        gl_FragColor = vec4(col, 0.92);
+        
+        // Dynamic color mix
+        vec3 col = mix(cLow, cMid, smoothstep(0.1, 0.5, t));
+        col = mix(col, cHigh, smoothstep(0.4, 0.9, t) * (0.3 + 0.7 * uIntensity));
+        col = mix(col, cHigh, uIntensity * 0.5); // Yleinen aktiivisuus voimistaa vihreää
+        
+        // KRIITTINEN SIVUKUVAN KORJAUS (Fresnel):
+        // Pakotetaan pallon suoraan kameraa kohti oleva keskiosa pimeäksi/läpinäkyväksi.
+        // Valo kerääntyy reunoille ja kohinan huippuihin, aivan kuten kuvien kaasumaisessa kuvussa.
+        vec3 normalDir = normalize(vNormal);
+        vec3 viewDir = normalize(vViewPosition);
+        float edgeAlpha = pow(1.0 - max(dot(normalDir, viewDir), 0.0), 2.0);
+        
+        // Kohina säätelee myös läpinäkyvyyttä (luo repaleiset revontuliverhot pallon sisään)
+        float opacity = edgeAlpha * (0.15 + 0.85 * smoothstep(0.2, 0.7, t));
+        
+        // Voimakas reunahehku (Edge rim)
+        float rim = pow(1.0 - max(dot(normalDir, viewDir), 0.0), 3.5);
+        col += rim * (0.4 + 0.6 * uIntensity) * cMid;
+
+        gl_FragColor = vec4(col * (0.6 + 0.4 * uIntensity), opacity * 0.85);
       }
     `,
   });
-  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 24), coreMat);
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 32), coreMat); // Nostettu resoluutiota (24 -> 32) sileämpään jälkeen
   scene.add(core);
 
-  /* ---- atmosfääri: additiivinen ulkohehku (korvaa bloomin) ---- */
+  /* ---- atmosfääri: pehmeä, utumainen ulkokuori ---- */
   const glowMat = new THREE.ShaderMaterial({
     transparent: true,
     blending: THREE.AdditiveBlending,
@@ -137,22 +178,33 @@ export function createAuroraOrb(canvas, opts = {}) {
     uniforms: { uIntensity },
     vertexShader: /* glsl */ `
       varying vec3 vNormal;
+      varying vec3 vViewPos;
       void main() {
         vNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position * 1.35, 1.0);
+        vec4 mvPosition = modelViewMatrix * vec4(position * 1.45, 1.0); // Kasvatettu sädettä (1.35 -> 1.45) sumeampaan loistoon
+        vViewPos = -mvPosition.xyz;
+        gl_Position = projectionMatrix * mvPosition;
       }
     `,
     fragmentShader: /* glsl */ `
       uniform float uIntensity;
       varying vec3 vNormal;
+      varying vec3 vViewPos;
       void main() {
-        float glow = pow(1.0 - abs(vNormal.z), 3.0);
-        vec3 col = mix(vec3(0.0, 0.9, 0.7), vec3(0.45, 0.35, 1.0), 0.4);
-        gl_FragColor = vec4(col, glow * (0.5 + 0.5 * uIntensity));
+        vec3 normalDir = normalize(vNormal);
+        vec3 viewDir = normalize(vViewPos);
+        
+        // Pehmeämpi ja laajempi häivytys reunoille
+        float glow = pow(1.0 - max(dot(normalDir, viewDir), 0.0), 4.0);
+        
+        // Värisävy, joka taittaa violetista syvään smaragdiin
+        vec3 col = mix(vec3(0.02, 0.85, 0.60), vec3(0.30, 0.15, 0.90), 0.3);
+        
+        gl_FragColor = vec4(col, glow * (0.2 + 0.5 * uIntensity));
       }
     `,
   });
-  const glow = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 12), glowMat);
+  const glow = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 16), glowMat);
   scene.add(glow);
 
   /* ---- koko ---- */
