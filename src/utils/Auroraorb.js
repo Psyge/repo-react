@@ -1,23 +1,20 @@
 /* ========================================================================
-   auroraOrb.js  —  three.js-revontuliorbi (LAZY-LADATTAVA)
+   auroraSky.js  —  three.js-revontulitaivas (HORISONTATIVIERITYS)
 
    Tätä EI importata staattisesti missään. AuroraHero kutsuu
-   dynaamisesti: const { createAuroraOrb } = await import("./auroraOrb");
+   dynaamisesti: const { createAuroraSky } = await import("./auroraSky");
    → Vite pilkkoo tämän + three:n omaan chunkkiin, joka ladataan
      vain tehokkailla laitteilla/yhteyksillä.
 
-   Vain core "three" -import → ei postprocessing-riippuvuuksia.
-   Hehku tehdään additiivisella "atmosfääri"-pallolla + CSS-taustahehkulla.
-
    API:
-     const orb = createAuroraOrb(canvas, { intensity: 0.22 });
-     orb.setIntensity(0.6);   // 0..1, esim. aurora.probability/100
-     orb.destroy();           // siivoaa kaiken (WebGL, RAF, listenerit)
+     const sky = createAuroraSky(canvas, { intensity: 0.22 });
+     sky.setIntensity(0.6);   // 0..1, ohjaa valoverhojen rajutta ja väriä
+     sky.destroy();           // siivoaa WebGL:n, RAF:n ja kuuntelijat
 ======================================================================== */
 
 import * as THREE from "three";
 
-/* ---- jaettu 3D simplex noise (Ashima/Stefan Gustavson, julkinen) ---- */
+/* ---- jaettu 3D simplex noise (Ashima/Stefan Gustavson) ---- */
 const NOISE_GLSL = /* glsl */ `
 vec4 permute(vec4 x){ return mod(((x*34.0)+1.0)*x, 289.0); }
 vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
@@ -66,12 +63,12 @@ float snoise(vec3 v){
 }
 `;
 
-export function createAuroraOrb(canvas, opts = {}) {
+export function createAuroraSky(canvas, opts = {}) {
   const initialIntensity = clamp01(opts.intensity ?? 0.25);
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    alpha: true,            // läpinäkyvä → komposiitti CSS-taustan päälle
+    alpha: true,            // Läpinäkyvä pohja, jotta sulautuu täydellisesti mustaan taustaan
     antialias: true,
     powerPreference: "high-performance",
   });
@@ -79,135 +76,91 @@ export function createAuroraOrb(canvas, opts = {}) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.z = 3.1;
+  
+  // Kamera asetetaan matalalle katsomaan yläviistoon kohti horisonttia
+  const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+  camera.position.set(0, -0.8, 2.0);
+  camera.rotation.set(0.3, 0, 0); // Kevyt kallistus ylöspäin
 
   const uTime = { value: 0 };
   const uIntensity = { value: initialIntensity };
 
-  /* ---- pää-orbi: noise-vääristetty hehkuva pinta ---- */
- /* ---- pää-orbi: kierteinen, läpinäkyvä energiapyörre ---- */
-  const coreMat = new THREE.ShaderMaterial({
+  /* ---- Päätaivas: Verhomaiset, poimuilevat revontulinauhat ---- */
+  const skyMat = new THREE.ShaderMaterial({
     transparent: true,
-    blending: THREE.AdditiveBlending, // Muutetaan valomaiseksi sekoitukseksi
+    blending: THREE.AdditiveBlending, // Valomainen sekoitus luo neonhohdon
     depthWrite: false,
+    side: THREE.DoubleSide,
     uniforms: { uTime, uIntensity },
     vertexShader: /* glsl */ `
       ${NOISE_GLSL}
       uniform float uTime;
       uniform float uIntensity;
-      varying vec3 vNormal;
-      varying vec3 vViewPosition;
+      varying vec2 vUv;
       varying float vNoise;
-      
-      void main() {
-        vNormal = normalize(normalMatrix * normal);
-        
-        // Luodaan kierteinen koordinaatisto kohinalle (Twist-efekti)
-        float angle = position.y * 1.5;
-        float c = cos(angle + uTime * 0.1);
-        float s = sin(angle + uTime * 0.1);
-        vec3 twistedPos = vec3(
-          position.x * c - position.z * s,
-          position.y,
-          position.x * s + position.z * c
-        );
 
-        // Haetaan monitasoinen kohina (Fractal Noise) orgaanisemman muodon saamiseksi
-        float n1 = snoise(twistedPos * 1.5 + vec3(0.0, uTime * 0.2, 0.0));
-        float n2 = snoise(twistedPos * 3.0 - vec3(uTime * 0.1, 0.0, uTime * 0.1));
+      void main() {
+        vUv = uv;
+        
+        // Lasketaan poimuileva liike. Tehdään pystysuoria "verhoja" vääristämällä Z-akselia (syvyys).
+        // x-akselin kerroin määrää kuinka monta "aaltoa" taivaalla näkyy rinnakkain.
+        vec3 noisePos = vec3(position.x * 0.7, position.y * 0.3, uTime * 0.12);
+        float n1 = snoise(noisePos);
+        float n2 = snoise(noisePos * 2.3 - vec3(uTime * 0.05, 0.0, 0.0));
         float combinedNoise = n1 * 0.7 + n2 * 0.3;
         vNoise = combinedNoise;
 
-        // Vääristetään muotoa aktiivisuuden mukaan
-        float disp = (0.04 + 0.12 * uIntensity) * combinedNoise;
-        vec3 pos = position + normal * disp;
-        
-        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-        vViewPosition = -mvPosition.xyz;
-        gl_Position = projectionMatrix * mvPosition;
+        // Vääristetään pintaa syvyyssuunnassa aktiivisuuden mukaan
+        float disp = (0.15 + 0.35 * uIntensity) * combinedNoise;
+        vec3 pos = position + vec3(0.0, 0.0, disp);
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
       }
     `,
     fragmentShader: /* glsl */ `
       uniform float uIntensity;
-      varying vec3 vNormal;
-      varying vec3 vViewPosition;
+      varying vec2 vUv;
       varying float vNoise;
-      
+
       void main() {
-        // Alkuperäiset värit hienosäädettynä neon-sävyihin
-        vec3 cLow   = vec3(0.05, 0.02, 0.25);  // Erittäin tumma, syvä violetti
-        vec3 cMid   = vec3(0.02, 0.45, 0.90);  // Sähköinen Cyan / Magneettinen sininen
-        vec3 cHigh  = vec3(0.05, 0.95, 0.50);  // Kirkas, mystinen revontulivihreä
-        
-        // Muutetaan kohina puhtaaksi virtaustiedoksi (0..1)
+        // Neonvärit säädetty skandinaavisen revontuliyön mukaisiksi
+        vec3 cBottom = vec3(0.02, 0.45, 0.85); // Sähkönsininen/cyan alareunassa
+        vec3 cMid    = vec3(0.05, 0.95, 0.45); // Klassinen revontulivihreä keskellä
+        vec3 cTop    = vec3(0.40, 0.10, 0.70); // Harvinainen violetti/purppura yläreunassa
+
         float t = clamp(vNoise * 0.5 + 0.5, 0.0, 1.0);
-        
-        // Dynamic color mix
-        vec3 col = mix(cLow, cMid, smoothstep(0.1, 0.5, t));
-        col = mix(col, cHigh, smoothstep(0.4, 0.9, t) * (0.3 + 0.7 * uIntensity));
-        col = mix(col, cHigh, uIntensity * 0.5); // Yleinen aktiivisuus voimistaa vihreää
-        
-        // KRIITTINEN SIVUKUVAN KORJAUS (Fresnel):
-        // Pakotetaan pallon suoraan kameraa kohti oleva keskiosa pimeäksi/läpinäkyväksi.
-        // Valo kerääntyy reunoille ja kohinan huippuihin, aivan kuten kuvien kaasumaisessa kuvussa.
-        vec3 normalDir = normalize(vNormal);
-        vec3 viewDir = normalize(vViewPosition);
-        float edgeAlpha = pow(1.0 - max(dot(normalDir, viewDir), 0.0), 2.0);
-        
-        // Kohina säätelee myös läpinäkyvyyttä (luo repaleiset revontuliverhot pallon sisään)
-        float opacity = edgeAlpha * (0.15 + 0.85 * smoothstep(0.2, 0.7, t));
-        
-        // Voimakas reunahehku (Edge rim)
-        float rim = pow(1.0 - max(dot(normalDir, viewDir), 0.0), 3.5);
-        col += rim * (0.4 + 0.6 * uIntensity) * cMid;
 
-        gl_FragColor = vec4(col * (0.6 + 0.4 * uIntensity), opacity * 0.85);
+        // Sekoitetaan värit orgaanisesti kohinan perusteella
+        vec3 auroraColor = mix(cBottom, cMid, smoothstep(0.1, 0.5, t));
+        auroraColor = mix(auroraColor, cTop, smoothstep(0.5, 0.9, t) * (0.2 + 0.8 * uIntensity));
+        
+        // Jos aktiivisuus on korkea, voimistetaan vihreää loistetta
+        auroraColor = mix(auroraColor, cMid, uIntensity * 0.4);
+
+        // Häivytetään revontuliverhon ylä- ja alareunat pehmeästi (Fade)
+        // Tämä estää sen, että taivas katkeaisi rumasti suoraan viivaan.
+        float verticalFade = smoothstep(0.0, 0.3, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
+        
+        // Sivuhäivytys, jotta nauha sulautuu reunoilta pimeyteen
+        float horizontalFade = smoothstep(0.0, 0.2, vUv.x) * smoothstep(1.0, 0.8, vUv.x);
+        
+        float finalAlpha = verticalFade * horizontalFade * (0.15 + 0.85 * smoothstep(0.2, 0.8, t));
+
+        // Lisätään hienon hieno pystysuuntainen "säiekasvusto" (Ray effect) matkimaan aitoja verhoja
+        float rays = sin(vUv.x * 120.0 + vNoise * 5.0) * 0.08 * verticalFade;
+        auroraColor += rays * cMid;
+
+        gl_FragColor = vec4(auroraColor * (0.7 + 0.3 * uIntensity), finalAlpha * (0.4 + 0.6 * uIntensity));
       }
     `,
   });
-  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 32), coreMat); // Nostettu resoluutiota (24 -> 32) sileämpään jälkeen
-  scene.add(core);
 
-  /* ---- atmosfääri: pehmeä, utumainen ulkokuori ---- */
-  const glowMat = new THREE.ShaderMaterial({
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    side: THREE.BackSide,
-    depthWrite: false,
-    uniforms: { uIntensity },
-    vertexShader: /* glsl */ `
-      varying vec3 vNormal;
-      varying vec3 vViewPos;
-      void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vec4 mvPosition = modelViewMatrix * vec4(position * 1.45, 1.0); // Kasvatettu sädettä (1.35 -> 1.45) sumeampaan loistoon
-        vViewPos = -mvPosition.xyz;
-        gl_Position = projectionMatrix * mvPosition;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uIntensity;
-      varying vec3 vNormal;
-      varying vec3 vViewPos;
-      void main() {
-        vec3 normalDir = normalize(vNormal);
-        vec3 viewDir = normalize(vViewPos);
-        
-        // Pehmeämpi ja laajempi häivytys reunoille
-        float glow = pow(1.0 - max(dot(normalDir, viewDir), 0.0), 4.0);
-        
-        // Värisävy, joka taittaa violetista syvään smaragdiin
-        vec3 col = mix(vec3(0.02, 0.85, 0.60), vec3(0.30, 0.15, 0.90), 0.3);
-        
-        gl_FragColor = vec4(col, glow * (0.2 + 0.5 * uIntensity));
-      }
-    `,
-  });
-  const glow = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 16), glowMat);
-  scene.add(glow);
+  // Luodaan laaja taso, joka toimii valkokankaana taivaalla (leveys 5, korkeus 2.5)
+  const sky = new THREE.Mesh(new THREE.PlaneGeometry(5, 2.5, 40, 20), skyMat);
+  sky.position.set(0, 0.4, 0); // Nostetaan hieman ylöspäin, jotta alareuna jää tunturien taakse
+  scene.add(sky);
 
-  /* ---- koko ---- */
+  /* ---- Koko ja Responsiivisuus ---- */
   function resize() {
     const r = canvas.getBoundingClientRect();
     const w = Math.max(1, r.width);
@@ -226,7 +179,7 @@ export function createAuroraOrb(canvas, opts = {}) {
     window.addEventListener("resize", resize);
   }
 
-  /* ---- animaatiosilmukka (pysähtyy kun välilehti piilossa) ---- */
+  /* ---- Animaatiosilmukka (Pysähtyy kun taustalla akun säästämiseksi) ---- */
   const clock = new THREE.Clock();
   let rafId = null;
   let running = true;
@@ -235,8 +188,10 @@ export function createAuroraOrb(canvas, opts = {}) {
     if (!running) return;
     rafId = requestAnimationFrame(loop);
     uTime.value = clock.getElapsedTime();
-    core.rotation.y += 0.0016;
-    glow.rotation.y = core.rotation.y;
+    
+    // Hienovaraista taivaankannen keinuntaa sivusuunnassa
+    sky.position.x = Math.sin(uTime.value * 0.05) * 0.1;
+    
     renderer.render(scene, camera);
   }
 
@@ -246,7 +201,7 @@ export function createAuroraOrb(canvas, opts = {}) {
       if (rafId) cancelAnimationFrame(rafId);
     } else if (!running) {
       running = true;
-      clock.getDelta(); // nollaa hyppy
+      clock.getDelta(); // Estetään laskennan hyppäys tauon jälkeen
       loop();
     }
   }
@@ -254,7 +209,7 @@ export function createAuroraOrb(canvas, opts = {}) {
 
   loop();
 
-  /* ---- julkinen API ---- */
+  /* ---- Julkinen API (Säilytetty täysin samana) ---- */
   return {
     setIntensity(v) {
       uIntensity.value = clamp01(v);
@@ -265,10 +220,8 @@ export function createAuroraOrb(canvas, opts = {}) {
       document.removeEventListener("visibilitychange", onVisibility);
       if (ro) ro.disconnect();
       else window.removeEventListener("resize", resize);
-      core.geometry.dispose();
-      coreMat.dispose();
-      glow.geometry.dispose();
-      glowMat.dispose();
+      sky.geometry.dispose();
+      skyMat.dispose();
       renderer.dispose();
     },
   };
