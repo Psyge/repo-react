@@ -374,3 +374,38 @@
 .ah-popup-readmore-btn:active {
   transform: scale(1);
 }
+/* ========================================================================
+   LISÄÄ tyyleihisi (esim. sightings.css tai Aurorahero.css)
+
+   "Kokeile onneasi" -teaser raportointinapin yläpuolella (vain free).
+======================================================================== */
+
+.ah-spin-teaser {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--fg, #e6e9ef);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 255, 198, 0.12),
+    rgba(123, 95, 255, 0.12)
+  );
+  border: 1px solid rgba(0, 255, 198, 0.25);
+  box-shadow: 0 0 18px rgba(0, 255, 180, 0.12);
+  animation: ah-teaser-pulse 3s ease-in-out infinite;
+}
+
+@keyframes ah-teaser-pulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(0, 255, 180, 0.12); }
+  50%      { box-shadow: 0 0 26px rgba(0, 255, 180, 0.30); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-spin-teaser { animation: none; }
+}

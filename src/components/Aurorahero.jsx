@@ -550,7 +550,17 @@ export default function AuroraHero({ forecast, children }) {
         </div>
       )}
 
-      {children && <div className="ah-extra-wrapper">{children}</div>}
+      {children && (
+  <div className="ah-extra-wrapper">
+    {!isPremium && (
+      <div className="ah-spin-teaser">
+        🎰 {t("spin.teaser") ||
+          "Spotted the lights? Report a sighting and spin to win free Premium."}
+      </div>
+    )}
+    {children}
+  </div>
+)}
     </section>
   );
 }
