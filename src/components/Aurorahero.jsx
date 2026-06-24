@@ -3,36 +3,40 @@ import { useNavigate } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 import { calculateAurora } from "../utils/auroraEngine";
 
-
 /* ========================================================================
-   AuroraHero  —  yhdistetty hero + ilmoitus (vain etusivulla)
+   AuroraHero  —  UUSI HORISONTATIVIERITYS & TAIVASNÄKYMÄ
 
-   - CSS-orbi näkyy AINA (ei riippuvuuksia, latautuu heti)
-   - three.js-orbi ladataan LAZY vain jos laite/yhteys kestää
-   - probability/level: calculateAurora (sama logiikka kuin vanhassa Herossa)
-   - "next awakening" + kp-aalto: forecast.slots[] = { tsUtc, kp, level }
-
-   Props:
-     forecast = { slots: [], current, tier, genAt }   (HomePage-tilasta)
-======================================================================== */
+   - CSS-taustavärit ja Tunturijono (SVG) latautuvat heti ilman lagia.
+   - three.js-taivas (auroraSky) ladataan LAZY taustalle jos yhteys sallii.
+   - GPS hakee automaattisesti lähimmän paikkakunnan ja aktivoi sen.
+   - Paikan nimen klikkaus avaa tyylikkään alhaalta nousevan info-kortin.
+======================================================================= */
 
 const NOAA_KP_URL     = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
 const NOAA_PLASMA_URL = "https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json";
 const NOAA_MAG_URL    = "https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json";
 
-const HERO_SOLAR_CACHE_KEY = "aurora_session_cache:hero:solar:v1"; // sama avain → jaettu cache
+const HERO_SOLAR_CACHE_KEY = "aurora_session_cache:hero:solar:v1";
 const HERO_SOLAR_TTL_MS    = 30 * 60 * 1000;
+const THREE_LOAD_TIMEOUT_MS = 4000;
 
-const THREE_LOAD_TIMEOUT_MS = 4000; // jos 3D ei ehdi tässä ajassa → pysytään CSS:ssä
-
-/* Sijainnit (sama henki kuin mockupissa). Säädä vapaasti. */
 const PLACES = [
-  { name: "Kilpisjärvi", lat: 69.05, lon: 20.79 },
-  { name: "Saariselkä",  lat: 68.42, lon: 27.41 },
-  { name: "Levi",        lat: 67.80, lon: 24.80 },
+  { name: "Kilpisjärvi", lat: 69.05, lon: 20.79, desc: "Suomen revontulipääkaupunki. Korkea sijainti takaa loiston lähes joka selkeänä yönä." },
+  { name: "Saariselkä",  lat: 68.42, lon: 27.41, desc: "Upeat tunturimaisemat. Kauniit revontulikaaret tanssivat usein suoraan Kaunispään huipun yllä." },
+  { name: "Levi",        lat: 67.80, lon: 24.80, desc: "Helposti saavutettava bongauspaikka. Kittilän tunturijonot tarjoavat loistavat taustat valokuvaukseen." },
 ];
 
-/* ---------------- session cache (kevyt) ---------------- */
+/* Haversine-kaava etäisyyden laskemiseen GPS:ää varten */
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+/* ---------------- session cache ja fetchit ---------------- */
 function readSessionCache(key, ttlMs) {
   if (typeof window === "undefined") return null;
   try {
@@ -50,12 +54,14 @@ function readSessionCache(key, ttlMs) {
     return null;
   }
 }
+
 function writeSessionCache(key, data) {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
-  } catch { /* storage estetty */ }
+  } catch { /* Varalla */ }
 }
+
 async function fetchJsonSafe(url, label) {
   const res = await fetch(url, { cache: "no-store" });
   const text = await res.text();
@@ -63,6 +69,7 @@ async function fetchJsonSafe(url, label) {
   if (!text.trim()) throw new Error(`${label}: empty`);
   return JSON.parse(text);
 }
+
 function lastValidRow(rows, colIndex) {
   if (!Array.isArray(rows)) return null;
   for (let i = rows.length - 1; i >= 1; i--) {
@@ -71,6 +78,7 @@ function lastValidRow(rows, colIndex) {
   }
   return null;
 }
+
 async function fetchHeroSolarData() {
   const cached = readSessionCache(HERO_SOLAR_CACHE_KEY, HERO_SOLAR_TTL_MS);
   if (cached) return cached;
@@ -99,36 +107,23 @@ async function fetchHeroSolarData() {
   return data;
 }
 
-/* ---------------- adaptiivinen capability-tarkistus ---------------- */
 function shouldEnhanceWith3D() {
   if (typeof window === "undefined") return false;
-
-  // reduced motion → ei raskasta animaatiota
   const rm = window.matchMedia?.("(prefers-reduced-motion: reduce)");
   if (rm && rm.matches) return false;
-
   const conn = navigator.connection || navigator.webkitConnection || {};
   if (conn.saveData) return false;
-  if (conn.effectiveType && !/4g/i.test(conn.effectiveType)) return false; // 2g/3g → skip
-
+  if (conn.effectiveType && !/4g/i.test(conn.effectiveType)) return false;
   const cores = navigator.hardwareConcurrency;
   if (cores && cores < 4) return false;
-
-  const mem = navigator.deviceMemory; // ei kaikissa selaimissa
-  if (mem != null && mem < 4) return false;
-
-  // WebGL saatavilla?
   try {
     const cv = document.createElement("canvas");
     const gl = cv.getContext("webgl2") || cv.getContext("webgl");
     if (!gl) return false;
-  } catch {
-    return false;
-  }
+  } catch { return false; }
   return true;
 }
 
-/* ---------------- forecast → "next awakening" ---------------- */
 function nextAwakening(slots) {
   if (!Array.isArray(slots) || !slots.length) return null;
   const now = Date.now();
@@ -143,7 +138,6 @@ function nextAwakening(slots) {
   return { hours, kp: hit.kp };
 }
 
-/* ---------------- forecast → SVG-aaltopolku ---------------- */
 const WAVE_W = 760;
 const WAVE_H = 120;
 function buildWave(slots, tier) {
@@ -162,7 +156,6 @@ function buildWave(slots, tier) {
   const x = (ms) => ((ms - t0) / span) * WAVE_W;
   const y = (kp) => WAVE_H - (Math.min(kp, maxKp) / maxKp) * (WAVE_H - 16) - 8;
 
-  // free-tason "lukko": näytetään viimeinen kolmannes katkoviivana
   const lockFromMs = tier === "free" ? t0 + span * 0.66 : null;
 
   const openPts = [];
@@ -172,7 +165,7 @@ function buildWave(slots, tier) {
     if (lockFromMs != null && p.ms >= lockFromMs) lockPts.push(pt);
     else openPts.push(pt);
   });
-  if (lockPts.length) openPts.push(lockPts[0]); // jatkuvuus
+  if (lockPts.length) openPts.push(lockPts[0]);
 
   const toPath = (arr) =>
     arr.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ");
@@ -193,7 +186,6 @@ export default function Aurorahero({ forecast, children }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // useMemo → vakaa viite, ettei alla olevat useMemot aja joka renderissä
   const slots = useMemo(() => forecast?.slots ?? [], [forecast]);
   const tier  = forecast?.tier ?? "free";
 
@@ -201,12 +193,16 @@ export default function Aurorahero({ forecast, children }) {
   const [wind, setWind] = useState(null);
   const [bz, setBz]     = useState(null);
   const [threeReady, setThreeReady] = useState(false);
+  
+  /* UUDET TILAT: GPS-aktiivinen paikka ja Popup-ikkuna */
+  const [activePlace, setActivePlace] = useState(PLACES[0]);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const canvasRef = useRef(null);
-  const orbRef    = useRef(null);
-  const probRef   = useRef(null); // viimeisin probability ilman effektin uudelleenajoa
+  const skyRef    = useRef(null); // Viittaus uuteen taivaaseen orbin sijaan
+  const probRef   = useRef(null);
 
-  /* solar → probability/level */
+  /* Auroradata */
   useEffect(() => {
     let cancelled = false;
     fetchHeroSolarData()
@@ -229,7 +225,32 @@ export default function Aurorahero({ forecast, children }) {
   const awakening = useMemo(() => nextAwakening(slots), [slots]);
   const wave = useMemo(() => buildWave(slots, tier), [slots, tier]);
 
-  /* ---- LAZY three.js ---- */
+  /* ---- GPS AUTOMAATTINEN SEURANTA ---- */
+  useEffect(() => {
+    if (typeof window !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const uLat = position.coords.latitude;
+          const uLon = position.coords.longitude;
+
+          let closest = PLACES[0];
+          let minDst = getDistance(uLat, uLon, PLACES[0].lat, PLACES[0].lon);
+
+          PLACES.forEach((p) => {
+            const dst = getDistance(uLat, uLon, p.lat, p.lon);
+            if (dst < minDst) {
+              minDst = dst;
+              closest = p;
+            }
+          });
+          setActivePlace(closest); // Asettaa automaattisesti lähimmän tunturipaikan
+        },
+        () => { /* Estetty tai virhe -> pysytään oletuksessa (Kilpisjärvi) */ }
+      );
+    }
+  }, []);
+
+  /* ---- LAZY UUSI THREE.JS TAIVAS ---- */
   useEffect(() => {
     if (!shouldEnhanceWith3D()) return;
 
@@ -237,34 +258,34 @@ export default function Aurorahero({ forecast, children }) {
     let tooLate = false;
     const timer = setTimeout(() => { tooLate = true; }, THREE_LOAD_TIMEOUT_MS);
 
-    import("../utils/Auroraorb")
-      .then(({ createAuroraOrb }) => {
+    // Kutsutaan uutta korjattua tiedostoa!
+    import("../utils/auroraSky")
+      .then(({ createAuroraSky }) => {
         if (cancelled || tooLate || !canvasRef.current) return;
-        orbRef.current = createAuroraOrb(canvasRef.current, {
+        skyRef.current = createAuroraSky(canvasRef.current, {
           intensity: (probRef.current ?? 20) / 100,
         });
         setThreeReady(true);
       })
-      .catch((e) => console.warn("[AuroraHero] three.js lataus epäonnistui:", e));
+      .catch((e) => console.warn("[AuroraHero] Three.js taivaan lataus epäonnistui:", e));
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      if (orbRef.current) {
-        orbRef.current.destroy();
-        orbRef.current = null;
+      if (skyRef.current) {
+        skyRef.current.destroy();
+        skyRef.current = null;
       }
     };
-  }, []); // ladataan vain kerran
+  }, []);
 
-  /* päivitä orbin intensiteetti kun todennäköisyys muuttuu */
+  /* Päivitetään taivaan voimakkuus */
   useEffect(() => {
-    if (orbRef.current && probability != null) {
-      orbRef.current.setIntensity(probability / 100);
+    if (skyRef.current && probability != null) {
+      skyRef.current.setIntensity(probability / 100);
     }
   }, [probability]);
 
-  /* ---- otsikkotekstit (käännösavaimet — lisää avaimet käännöstiedostoihin) ---- */
   const calm = level == null || level === "low";
   const isActive = level === "high" || level === "veryhigh";
 
@@ -277,39 +298,63 @@ export default function Aurorahero({ forecast, children }) {
   const unlockLabel = t("forecast.unlock48");
 
   return (
-    <section
-      className={`aurora-hero ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""}`}
-    >
-      {/* badge */}
+    <section className={`aurora-hero ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""}`}>
+      
+      {/* Premium Badge */}
       <div className="ah-badges">
         {tier === "premium" && <span className="ah-badge">Premium</span>}
       </div>
 
-      {/* ORBI: CSS-pohja + (mahdollinen) three.js-canvas */}
-      <div className="ah-orb-wrap">
-        <div
-          className={`ah-orb--css ${isActive ? "is-active" : ""}`}
-          aria-hidden="true"
-        />
-        <canvas
-          ref={canvasRef}
-          className={`ah-canvas ${threeReady ? "is-ready" : ""}`}
-          aria-hidden="true"
-        />
+      {/* HORISONTVASTINE: Laaja taivasalue korvaa pyöreän orbi-kääreen */}
+      <div className="ah-sky-wrap">
+        {/* CSS-taustapilvet heti lataukseen */}
+        <div className={`ah-sky--css ${isActive ? "is-active" : ""}`} aria-hidden="true" />
+        
+        {/* Korjattu Three.js Canvas vaakatasoiselle revontuliverholle */}
+        <canvas ref={canvasRef} className={`ah-canvas ${threeReady ? "is-ready" : ""}`} aria-hidden="true" />
       </div>
 
-      {/* TILATEKSTI */}
+      {/* TILATEKSTI (Leijuu taivaalla) */}
       <div className="ah-status">
         <h1>
           {headline} {nextLine}
         </h1>
         <div className="ah-prob">
-          {probLabel}:{" "}
-          <strong>{probability != null ? `${probability}%` : "--"}</strong>
+          {probLabel}: <strong>{probability != null ? `${probability}%` : "--"}</strong>
         </div>
       </div>
 
-      {/* KP-AALTOVIIVA (SVG) */}
+      {/* MAA-OSA: SVG Tunturiprofiili leikkaa taivaan ja luo horisontin */}
+      <div className="ah-mountain-silhouet" aria-hidden="true">
+        <svg viewBox="0 0 1440 180" className="w-full h-auto fill-[#02040a]">
+          <path d="M0,140 L160,115 C320,90 640,60 960,100 C1280,140 1360,165 1440,170 L1440,180 L0,180 Z" />
+        </svg>
+      </div>
+
+      {/* PAIKKAKUNNAT: Upotettu horisontaaliseksi tunturipalkiksi maahan */}
+      <div className="ah-places-horizon">
+        <div className="ah-places-carousel">
+          {PLACES.map((p) => {
+            const isSelected = p.name === activePlace.name;
+            return (
+              <div
+                key={p.name}
+                className={`ah-place-node ${isSelected ? "is-active" : ""}`}
+                onClick={() => {
+                  setActivePlace(p);
+                  setIsPopupOpen(true); // Klikkaus avaa infopopupin
+                }}
+              >
+                <div className="ah-node-dot" />
+                <span className="ah-place-name">{p.name}</span>
+                {isSelected && kp != null && <span className="ah-node-kp">Kp {kp}</span>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* KP-AALTOVIIVA (Säilytetty ennusteaaltona tunturipalkin alapuolella) */}
       {wave && (
         <div className="ah-wave">
           <svg viewBox={`0 0 ${WAVE_W} ${WAVE_H}`} role="img" aria-label="Kp forecast wave">
@@ -320,13 +365,10 @@ export default function Aurorahero({ forecast, children }) {
                 <stop offset="100%" stopColor="#7d5fff" />
               </linearGradient>
             </defs>
-
             {wave.nowX != null && (
               <line className="ah-wave-now" x1={wave.nowX} y1="0" x2={wave.nowX} y2={WAVE_H} />
             )}
-
             <path className="ah-wave-line" d={wave.openPath} />
-
             {wave.lockPath && (
               <>
                 <path className="ah-wave-line is-locked" d={wave.lockPath} />
@@ -339,24 +381,26 @@ export default function Aurorahero({ forecast, children }) {
         </div>
       )}
 
-      {/* SIJAINNIT */}
-      <div className="ah-places">
-        {PLACES.map((p, i) => (
-          <div
-            key={p.name}
-            className={`ah-place ${i === 0 ? "is-active" : ""}`}
-            onClick={() => navigate(`/map?lat=${p.lat}&lon=${p.lon}`)}
-          >
-            <span className="ah-pin">📍</span>
-            <span className="ah-place-name">{p.name}</span>
-            {i === 0 && kp != null && (
-              <span className="ah-place-sub">Kp {kp}</span>
-            )}
+      {/* PIKKU-ESITTELY POPUP (BottomSheet-tyylinen modal alalaidassa) */}
+      {isPopupOpen && (
+        <div className="ah-popup-backdrop" onClick={() => setIsPopupOpen(false)}>
+          <div className="ah-popup-card" onClick={(e) => e.stopPropagation()}>
+            <div className="ah-popup-drag-handle" onClick={() => setIsPopupOpen(false)} />
+            <h3>📍 {activePlace.name}</h3>
+            <p>{activePlace.desc}</p>
+            <button
+              className="ah-popup-map-btn"
+              onClick={() => {
+                setIsPopupOpen(false);
+                navigate(`/map?lat=${activePlace.lat}&lon=${activePlace.lon}`);
+              }}
+            >
+              Avaa Live-Kartta 🗺️
+            </button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* SIGHTINGS (tai muu sisältö) — renderöidään paikkojen alle */}
       {children && <div className="ah-extra">{children}</div>}
     </section>
   );
