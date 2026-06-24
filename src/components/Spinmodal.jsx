@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import useTranslation from "../hooks/useTranslation";
 
 const BASE =
   import.meta.env.VITE_API_BASE ||
@@ -7,20 +8,19 @@ const BASE =
 
 // Pyörän sektorit (8 kpl). 'no_win' toistuu, jotta "Try again" tuntuu yleiseltä.
 const SECTORS = [
-  { id: "1d",     label: "1 Day",     color: "#00ffcc", textColor: "#0b0d12" },
-  { id: "no_win", label: "Try again", color: "#1a2035", textColor: "#6a7a8a" },
-  { id: "3d",     label: "3 Days",    color: "#7b5fff", textColor: "#fff"    },
-  { id: "no_win", label: "Try again", color: "#1a2035", textColor: "#6a7a8a" },
-  { id: "1d",     label: "1 Day",     color: "#00ffcc", textColor: "#0b0d12" },
-  { id: "no_win", label: "Try again", color: "#1a2035", textColor: "#6a7a8a" },
-  { id: "7d",     label: "7 Days",    color: "#ff3b7f", textColor: "#fff"    },
-  { id: "no_win", label: "Try again", color: "#1a2035", textColor: "#6a7a8a" },
+  { id: "1d",     labelKey: "spin.days.1d", labelDef: "1 Day",     color: "#00ffcc", textColor: "#0b0d12" },
+  { id: "no_win", labelKey: "spin.tryShort", labelDef: "Try again", color: "#1a2035", textColor: "#6a7a8a" },
+  { id: "3d",     labelKey: "spin.days.3d", labelDef: "3 Days",    color: "#7b5fff", textColor: "#fff"    },
+  { id: "no_win", labelKey: "spin.tryShort", labelDef: "Try again", color: "#1a2035", textColor: "#6a7a8a" },
+  { id: "1d",     labelKey: "spin.days.1d", labelDef: "1 Day",     color: "#00ffcc", textColor: "#0b0d12" },
+  { id: "no_win", labelKey: "spin.tryShort", labelDef: "Try again", color: "#1a2035", textColor: "#6a7a8a" },
+  { id: "7d",     labelKey: "spin.days.7d", labelDef: "7 Days",    color: "#ff3b7f", textColor: "#fff"    },
+  { id: "no_win", labelKey: "spin.tryShort", labelDef: "Try again", color: "#1a2035", textColor: "#6a7a8a" },
 ];
 
 const SECTOR_COUNT = SECTORS.length;
 const SECTOR_DEG   = 360 / SECTOR_COUNT;
 
-/* Pysyvä laite-id (sama idea kuin maksavan premiumin aktivoinnissa) */
 function getInstallId() {
   try {
     let id = localStorage.getItem("aurora_install_id");
@@ -39,44 +39,6 @@ function prefersReducedMotion() {
     window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 }
 
-function drawWheel(canvas, rotation) {
-  const ctx  = canvas.getContext("2d");
-  const size = canvas.width;
-  const cx = size / 2, cy = size / 2, r = size / 2 - 4;
-  ctx.clearRect(0, 0, size, size);
-
-  SECTORS.forEach((sector, i) => {
-    const startAngle = ((i * SECTOR_DEG - 90 + rotation) * Math.PI) / 180;
-    const endAngle   = (((i + 1) * SECTOR_DEG - 90 + rotation) * Math.PI) / 180;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, startAngle, endAngle);
-    ctx.closePath();
-    ctx.fillStyle = sector.color;
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate((startAngle + endAngle) / 2);
-    ctx.textAlign = "right";
-    ctx.fillStyle = sector.textColor;
-    ctx.font = `bold ${size * 0.048}px Arial`;
-    ctx.fillText(sector.label, r * 0.88, size * 0.018);
-    ctx.restore();
-  });
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.07, 0, Math.PI * 2);
-  ctx.fillStyle = "#0b0d12";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.15)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-}
-
 export default function SpinModal({
   spinId,
   prize,
@@ -87,6 +49,16 @@ export default function SpinModal({
   onClose,
 }) {
   const navigate  = useNavigate();
+  const { t } = useTranslation();
+
+  // tr: käännös avaimella, fallback englantiin jos avain puuttuu, + {muuttuja}-täyttö
+  const tr = useCallback((key, fallback, vars) => {
+    let s = t(key);
+    if (s == null || s === key) s = fallback;
+    if (vars) for (const k of Object.keys(vars)) s = String(s).replace(`{${k}}`, vars[k]);
+    return s;
+  }, [t]);
+
   const canvasRef = useRef(null);
   const rafRef    = useRef(null);
   const rotRef    = useRef(0);
@@ -96,19 +68,55 @@ export default function SpinModal({
   const totalRounds = Array.isArray(results) ? results.length : 3;
 
   const [phase, setPhase]       = useState("intro"); // intro | spinning | between | win | lose | done
-  const [round, setRound]       = useState(-1);      // viimeksi valmistunut kierros
+  const [round, setRound]       = useState(-1);
   const [rotation, setRotation] = useState(0);
   const [email, setEmail]       = useState("");
   const [claiming, setClaiming] = useState(false);
   const [claimErr, setClaimErr] = useState("");
 
-  // Piirrä pyörä aina kun rotaatio muuttuu
+  const drawWheel = useCallback((canvas, rot) => {
+    const ctx  = canvas.getContext("2d");
+    const size = canvas.width;
+    const cx = size / 2, cy = size / 2, r = size / 2 - 4;
+    ctx.clearRect(0, 0, size, size);
+
+    SECTORS.forEach((sector, i) => {
+      const startAngle = ((i * SECTOR_DEG - 90 + rot) * Math.PI) / 180;
+      const endAngle   = (((i + 1) * SECTOR_DEG - 90 + rot) * Math.PI) / 180;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, startAngle, endAngle);
+      ctx.closePath();
+      ctx.fillStyle = sector.color;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate((startAngle + endAngle) / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = sector.textColor;
+      ctx.font = `bold ${size * 0.048}px Arial`;
+      ctx.fillText(tr(sector.labelKey, sector.labelDef), r * 0.88, size * 0.018);
+      ctx.restore();
+    });
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 0.07, 0, Math.PI * 2);
+    ctx.fillStyle = "#0b0d12";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }, [tr]);
+
   useEffect(() => {
     const c = canvasRef.current;
     if (c) drawWheel(c, rotation);
-  }, [rotation, phase]);
+  }, [rotation, phase, drawWheel]);
 
-  // Animoi yksi kierros annettuun sektoriin
   const animateRound = useCallback((idx) => {
     if (!Array.isArray(results) || idx >= results.length) return;
     if (spinningRef.current) return;
@@ -133,11 +141,10 @@ export default function SpinModal({
       else setPhase("between");
     };
 
-    // Reduced motion → ohita animaatio
     if (prefersReducedMotion()) { finish(); return; }
 
     const duration = 3200;
-    const easeOut = (t) => 1 - Math.pow(1 - t, 4);
+    const easeOut = (x) => 1 - Math.pow(1 - x, 4);
     let start = null;
 
     const step = (ts) => {
@@ -152,7 +159,6 @@ export default function SpinModal({
     rafRef.current = requestAnimationFrame(step);
   }, [results, prize]);
 
-  // Käynnistä 1. kierros kun backend-tulos saapuu
   useEffect(() => {
     if (spinId && Array.isArray(results) && results.length && !startedRef.current) {
       startedRef.current = true;
@@ -160,12 +166,13 @@ export default function SpinModal({
     }
   }, [spinId, results, animateRound]);
 
-  // Siivoa RAF
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
+
+  const prizeLabel = prize ? tr(`spin.days.${prize.id}`, prize.label) : "";
 
   const handleClaim = async () => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setClaimErr("Please enter a valid email address.");
+      setClaimErr(tr("spin.emailInvalid", "Please enter a valid email address."));
       return;
     }
     setClaiming(true);
@@ -178,7 +185,7 @@ export default function SpinModal({
       });
       const data = await res.json();
       if (!res.ok) {
-        setClaimErr(data.message || data.error || "Something went wrong.");
+        setClaimErr(data.message || data.error || tr("spin.errGeneric", "Something went wrong."));
         return;
       }
 
@@ -204,7 +211,7 @@ export default function SpinModal({
 
       setPhase("done");
     } catch {
-      setClaimErr("Network error. Please try again.");
+      setClaimErr(tr("spin.errNetwork", "Network error. Please try again."));
     } finally {
       setClaiming(false);
     }
@@ -227,49 +234,53 @@ export default function SpinModal({
         {/* INTRO */}
         {phase === "intro" && !alreadySpun && (
           <>
-            <div className="spin-title">🌌 You reported a sighting!</div>
-            <div className="spin-sub">Spin {totalRounds}× for a chance to win free Premium.</div>
+            <div className="spin-title">{tr("spin.reported", "🌌 You reported a sighting!")}</div>
+            <div className="spin-sub">
+              {tr("spin.intro", "Spin {n}× for a chance to win free Premium.", { n: totalRounds })}
+            </div>
             <Wheel />
-            <div className="spin-prizes-info"><span>1 day · 3 days · 7 days</span></div>
+            <div className="spin-prizes-info"><span>{tr("spin.prizes", "1 day · 3 days · 7 days")}</span></div>
             <button className="spin-btn" onClick={onSpin} disabled={spinLoading}>
-              {spinLoading ? "Getting ready…" : "🎰 Spin the wheel!"}
+              {spinLoading ? tr("spin.preparing", "Getting ready…") : tr("spin.spinBtn", "🎰 Spin the wheel!")}
             </button>
-            <button className="spin-skip" onClick={onClose}>No thanks</button>
+            <button className="spin-skip" onClick={onClose}>{tr("spin.noThanks", "No thanks")}</button>
           </>
         )}
 
         {/* JO PELATTU TÄNÄÄN */}
         {alreadySpun && (
           <>
-            <div className="spin-title">Already spun today</div>
-            <div className="spin-sub">You can spin once per day. Come back after reporting tomorrow!</div>
-            <button className="spin-btn" onClick={onClose}>OK</button>
+            <div className="spin-title">{tr("spin.alreadyTitle", "Already spun today")}</div>
+            <div className="spin-sub">
+              {tr("spin.alreadySub", "You can spin once per day. Come back after reporting tomorrow!")}
+            </div>
+            <button className="spin-btn" onClick={onClose}>{tr("common.ok", "OK")}</button>
           </>
         )}
 
         {/* PYÖRII */}
         {phase === "spinning" && (
           <>
-            <div className="spin-title">Spinning…</div>
+            <div className="spin-title">{tr("spin.spinning", "Spinning…")}</div>
             <Wheel />
-            <div className="spin-prizes-info"><span>Spin {round + 2} of {totalRounds}</span></div>
+            <div className="spin-prizes-info">
+              <span>{tr("spin.spinOf", "Spin {n} of {total}", { n: round + 2, total: totalRounds })}</span>
+            </div>
           </>
         )}
 
-        {/* KIERROSTEN VÄLISSÄ — Try again, pyöräytyksiä jäljellä */}
+        {/* KIERROSTEN VÄLISSÄ */}
         {phase === "between" && (
           <>
-            <div className="spin-title">Try again!</div>
+            <div className="spin-title">{tr("spin.tryAgain", "Try again!")}</div>
             <div className="spin-sub">
-              {spinsLeft === 1 ? "1 spin left." : `${spinsLeft} spins left.`}
+              {spinsLeft === 1
+                ? tr("spin.spinsLeftOne", "1 spin left.")
+                : tr("spin.spinsLeft", "{n} spins left.", { n: spinsLeft })}
             </div>
             <Wheel />
-            <button
-              className="spin-btn"
-              onClick={() => animateRound(round + 1)}
-              disabled={spinningRef.current}
-            >
-              🎰 Spin again
+            <button className="spin-btn" onClick={() => animateRound(round + 1)} disabled={spinningRef.current}>
+              {tr("spin.spinAgain", "🎰 Spin again")}
             </button>
           </>
         )}
@@ -277,23 +288,25 @@ export default function SpinModal({
         {/* VOITTO */}
         {phase === "win" && prize && (
           <>
-            <div className="spin-title">🎉 You won!</div>
+            <div className="spin-title">{tr("spin.wonTitle", "🎉 You won!")}</div>
             <Wheel />
-            <div className="spin-prize-label">{prize.label} of Aurora Premium</div>
+            <div className="spin-prize-label">
+              {tr("spin.wonPrize", "{label} of Aurora Premium", { label: prizeLabel })}
+            </div>
             <div className="spin-sub">
-              It activates instantly on this device. Add your email so you can re-open it later if needed.
+              {tr("spin.wonSub", "It activates instantly on this device. Add your email so you can re-open it later if needed.")}
             </div>
             <input
               type="email"
               className="spin-email-input"
-              placeholder="your@email.com"
+              placeholder={tr("spin.emailPlaceholder", "your@email.com")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleClaim()}
             />
             {claimErr && <div className="spin-error">{claimErr}</div>}
             <button className="spin-btn" onClick={handleClaim} disabled={claiming}>
-              {claiming ? "Activating…" : "Activate & email me the link"}
+              {claiming ? tr("spin.activating", "Activating…") : tr("spin.activateBtn", "Activate & email me the link")}
             </button>
           </>
         )}
@@ -301,23 +314,28 @@ export default function SpinModal({
         {/* HÄVIÖ */}
         {phase === "lose" && (
           <>
-            <div className="spin-title">Not this time!</div>
+            <div className="spin-title">{tr("spin.loseTitle", "Not this time!")}</div>
             <Wheel />
-            <div className="spin-sub">Better luck next time. Report another sighting tomorrow to try again!</div>
-            <button className="spin-btn" onClick={onClose}>OK</button>
+            <div className="spin-sub">
+              {tr("spin.loseSub", "Better luck next time. Report another sighting tomorrow to try again!")}
+            </div>
+            <button className="spin-btn" onClick={onClose}>{tr("common.ok", "OK")}</button>
           </>
         )}
 
         {/* VALMIS */}
         {phase === "done" && (
           <>
-            <div className="spin-title">✅ Premium activated!</div>
+            <div className="spin-title">{tr("spin.doneTitle", "✅ Premium activated!")}</div>
             <div className="spin-sub">
-              Your {prize?.label} of Premium is now active on this device.
-              We also emailed an activation link to <strong>{email}</strong> as a backup.
+              {tr(
+                "spin.doneSub",
+                "Your {label} of Premium is now active on this device. We also emailed an activation link to {email} as a backup.",
+                { label: prizeLabel, email }
+              )}
             </div>
             <button className="spin-btn" onClick={() => { onClose(); navigate("/"); }}>
-              Start exploring
+              {tr("spin.startExploring", "Start exploring")}
             </button>
           </>
         )}
