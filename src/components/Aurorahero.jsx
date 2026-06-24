@@ -234,8 +234,10 @@ export default function AuroraHero({ forecast, children }) {
         latitude: sp.lat
       });
 
-      // Kutsutaan ulkopuolista getField-funktiota ja välitetään 'lang' parametrina
-      const description = cfMatch ? getField(cfMatch.fields.description || cfMatch.fields.desc, lang) : "";[cite: 3]
+      // UUSI TURVALLINEN VERSIO:
+const description = cfMatch?.fields 
+  ? getField(cfMatch.fields.description || cfMatch.fields.desc, lang) 
+  : "";
 
       return {
         ...sp,
