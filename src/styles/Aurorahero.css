@@ -298,3 +298,79 @@
   .ah-mountain-silhouet { bottom: 150px; }
   .ah-popup-card { max-width: 100%; } /* Mobiilissa pohja täyttää alareunan täysin */
 }
+/* ========================================================================
+   LISÄÄ tämä hero-/places-tyyleihisi (esim. Aurorahero.css tai places.css)
+
+   Uudet mittarit korteissa (Kp + pilvisyys) ja popupissa.
+======================================================================== */
+
+/* Kortin Kp + pilvi -rivi */
+.ah-place-metrics {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.ah-place-kp-badge,
+.ah-place-cloud-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: var(--fg-muted);
+}
+
+.ah-place-kp-badge {
+  color: var(--accent, #00ffc6);
+  border-color: rgba(0, 255, 198, 0.25);
+}
+
+/* Popupin lukuarvot otsikon alla */
+.ah-popup-metrics {
+  display: flex;
+  gap: 14px;
+  margin: 6px 0 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.ah-popup-metrics span:last-child {
+  margin-left: auto;
+  color: var(--accent, #00ffc6);
+}
+
+/* Popupin "Lue lisää" -nappi → paikkasivulle */
+.ah-popup-readmore-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #0b132b;
+  background: linear-gradient(135deg, #a3e635 0%, #10b981 100%);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ah-popup-readmore-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.ah-popup-readmore-btn:active {
+  transform: scale(1);
+}

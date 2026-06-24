@@ -6,7 +6,9 @@ import staticPlaces from "../data/places";
 import { client } from "../lib/contentfulClient";
 
 /* ========================================================================
-   AuroraHero — Korjattu ESLint-riippuvuusvirhe (getField siirretty ulos)
+   AuroraHero — revontulitaivas-hero etusivulle
+   + paikkakohtainen pilvisyys (Open-Meteo)
+   + Contentful-kuvaus (place.short)
 ======================================================================= */
 
 const NOAA_KP_URL     = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
@@ -15,16 +17,17 @@ const NOAA_MAG_URL    = "https://services.swpc.noaa.gov/products/solar-wind/mag-
 
 const HERO_SOLAR_CACHE_KEY = "aurora_session_cache:hero:solar:v1";
 const HERO_SOLAR_TTL_MS    = 30 * 60 * 1000;
+const WEATHER_TTL_MS       = 60 * 60 * 1000;
 const THREE_LOAD_TIMEOUT_MS = 4000;
 
 const WAVE_W = 760;
 const WAVE_H = 120;
 
-// Apuohjelma lokalisoitujen kenttien purkamiseen siirretty komponentin ulkopuolelle[cite: 3]
+/* ---- lokalisoidun Contentful-kentän purku ---- */
 function getField(field, lang) {
   if (!field) return "";
   if (typeof field === "object" && !Array.isArray(field)) {
-    return field[lang] || field["fi-FI"] || "";
+    return field[lang] || field["fi-FI"] || field["en-US"] || Object.values(field)[0] || "";
   }
   return field;
 }
@@ -38,6 +41,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
+/* ---- session cache ---- */
 function readSessionCache(key, ttlMs) {
   if (typeof window === "undefined") return null;
   try {
@@ -55,12 +59,18 @@ function readSessionCache(key, ttlMs) {
     return null;
   }
 }
-
 function writeSessionCache(key, data) {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
   } catch {}
+}
+async function sessionCachedJson(key, ttlMs, fetcher) {
+  const cached = readSessionCache(key, ttlMs);
+  if (cached) return cached;
+  const data = await fetcher();
+  writeSessionCache(key, data);
+  return data;
 }
 
 async function fetchJsonSafe(url, label) {
@@ -70,7 +80,6 @@ async function fetchJsonSafe(url, label) {
   if (!text.trim()) throw new Error(`${label}: empty`);
   return JSON.parse(text);
 }
-
 function lastValidRow(rows, colIndex) {
   if (!Array.isArray(rows)) return null;
   for (let i = rows.length - 1; i >= 1; i--) {
@@ -79,7 +88,6 @@ function lastValidRow(rows, colIndex) {
   }
   return null;
 }
-
 async function fetchHeroSolarData() {
   const cached = readSessionCache(HERO_SOLAR_CACHE_KEY, HERO_SOLAR_TTL_MS);
   if (cached) return cached;
@@ -106,6 +114,40 @@ async function fetchHeroSolarData() {
   };
   writeSessionCache(HERO_SOLAR_CACHE_KEY, data);
   return data;
+}
+
+/* ---- paikkakohtainen pilvisyys (Open-Meteo, YKSI batch-kutsu) ----
+   Open-Meteo tukee montaa sijaintia pilkulla eroteltuna → skaalaa vaikka
+   places.js:ssä olisi kymmeniä paikkoja. Lisää paikkoja vain muokkaamalla
+   places.js:ää, mitään muuta ei tarvitse muuttaa. */
+function placesWeatherCacheKey(places) {
+  // avain riippuu paikkojen määrästä → uusi paikka invalidoi vanhan cachen
+  return `aurora_session_cache:hero:weather-all:${places.length}:v1`;
+}
+async function fetchAllPlacesWeather(places) {
+  if (!places.length) return {};
+  return sessionCachedJson(placesWeatherCacheKey(places), WEATHER_TTL_MS, async () => {
+    const url = new URL("https://api.open-meteo.com/v1/forecast");
+    url.searchParams.set("latitude",  places.map((p) => p.lat).join(","));
+    url.searchParams.set("longitude", places.map((p) => p.lon).join(","));
+    url.searchParams.set("current",   "temperature_2m,cloud_cover");
+    url.searchParams.set("timezone",  "auto");
+
+    const res  = await fetch(url, { cache: "default" });
+    const data = await res.json();
+    // 1 sijainti → objekti, monta → taulukko. Järjestys vastaa syötettä.
+    const arr = Array.isArray(data) ? data : [data];
+
+    const map = {};
+    places.forEach((p, i) => {
+      const c = arr[i]?.current || {};
+      map[p.id] = {
+        temp:   c.temperature_2m != null ? Math.round(c.temperature_2m) : null,
+        clouds: c.cloud_cover    != null ? Math.round(c.cloud_cover)     : null,
+      };
+    });
+    return map;
+  });
 }
 
 function shouldEnhanceWith3D() {
@@ -194,76 +236,80 @@ export default function AuroraHero({ forecast, children }) {
   const [bz, setBz]     = useState(null);
   const [threeReady, setThreeReady] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  
+
   const [contentfulPlaces, setContentfulPlaces] = useState([]);
+  const [placeWeather, setPlaceWeather] = useState({}); // { [id]: { clouds, temp } }
 
   const lang = currentLanguage === "en" ? "en-US" : "fi-FI";
 
-  // Haetaan paikat Contentfulistä (Content Type: place)
+  /* Contentful-paikat (Content Type: place) */
   useEffect(() => {
     client.withAllLocales
-      .getEntries({
-        content_type: "place",
-        limit: 100,
-      })
-      .then((response) => {
-        setContentfulPlaces(response.items || []);
-      })
-      .catch((err) => {
-        console.error("Contentful places error:", err);
-      });
+      .getEntries({ content_type: "place", limit: 100 })
+      .then((response) => setContentfulPlaces(response.items || []))
+      .catch((err) => console.error("Contentful places error:", err));
   }, []);
 
-  // Yhdistetään säädata, staattiset paikat ja Contentful-tekstit
-// Yhdistetään säädata, staattiset paikat ja Contentful-tekstit
+  /* Paikkakohtainen pilvisyys Open-Meteosta — yksi batch-kutsu (kerran mountissa) */
+  useEffect(() => {
+    let cancelled = false;
+    fetchAllPlacesWeather(staticPlaces)
+      .then((map) => { if (!cancelled) setPlaceWeather(map); })
+      .catch((e) => console.warn("Open-Meteo batch failed:", e));
+    return () => { cancelled = true; };
+  }, []);
+
+  /* Yhdistetään: staattiset paikat + globaali Kp/tuuli + paikan pilvisyys + Contentful-teksti */
   const placesList = useMemo(() => {
     return staticPlaces.map((sp) => {
-      // 1. Etsitään paikkakohtainen sää- ja ennustedata 'forecast'-propseista, jos saatavilla
-      // Jos forecast-objektissasi on paikkakohtaiset tiedot (esim. forecast[sp.id] tai forecast.places[sp.id]), muuta polku sen mukaan.
-      // Tässä oletetaan, että forecast sisältää paikan ID:llä varustetun sääolion.
-      const localForecast = forecast?.places?.[sp.id] || forecast?.[sp.id];
-      
-      const localKp     = localForecast?.kp ?? (kp ?? 2.0);
-      const localWind   = localForecast?.wind ?? (wind ?? 400);
-      const localClouds = localForecast?.clouds ?? 20; // Otetaan paikkakohtainen pilvisyys
+      // KP on planetaarinen → globaali arvo kaikille. Pilvisyys on paikkakohtainen.
+      const w = placeWeather[sp.id];
+      const localKp     = kp ?? null;
+      const localWind   = wind ?? 400;
+      const localClouds = w?.clouds ?? null;
 
-      // 2. Etsitään vastaava paikka Contentful-datasta
+      // Contentful-täsmäys slugilla (case-insensitive, kaikki localet)
       const cfMatch = contentfulPlaces.find((item) => {
         const slugField = item?.fields?.slug;
-        if (typeof slugField === "object") {
-          return slugField?.["fi-FI"] === sp.slug || slugField?.["en-US"] === sp.slug;
-        }
-        return slugField === sp.slug;
+        const vals = (slugField && typeof slugField === "object")
+          ? Object.values(slugField)
+          : [slugField];
+        return vals.some(
+          (v) => v != null && String(v).toLowerCase() === String(sp.slug).toLowerCase()
+        );
       });
 
-      // 3. Lasketaan dynaaminen todennäköisyys PAIKKAKOHTAISILLA arvoilla
-      const localAurora = calculateAurora({ 
-        kp: localKp, 
-        speed: localWind, 
-        density: 5, 
-        bz: bz ?? 0, 
-        cloudCover: localClouds, 
-        latitude: sp.lat
+      // Paikkakohtainen todennäköisyys oikealla pilvisyydellä + leveysasteella
+      const localAurora = calculateAurora({
+        kp: localKp ?? 0,
+        speed: localWind,
+        density: 5,
+        bz: bz ?? 0,
+        cloudCover: localClouds ?? 50,
+        latitude: sp.lat,
       });
 
-      // 4. Puretaan Contentful-kuvaus ja nimi varmistetusti
-      const rawDescription = cfMatch?.fields?.description || cfMatch?.fields?.desc;
-      const description = cfMatch?.fields ? getField(rawDescription, lang) : "";
-      
-      // Jos haluat tuoda myös nimen Contentfulista staattisen sijaan:
+      // Kuvaus: place-tyypin kenttä on 'short' (fallbackit varalta)
+      const rawDescription =
+        cfMatch?.fields?.short ||
+        cfMatch?.fields?.description ||
+        cfMatch?.fields?.desc;
+      const description = getField(rawDescription, lang);
+
       const rawName = cfMatch?.fields?.name || cfMatch?.fields?.title;
-      const displayName = cfMatch?.fields ? getField(rawName, lang) : sp.name;
+      const displayName = getField(rawName, lang) || sp.name;
 
       return {
         ...sp,
-        name: displayName || sp.name,
-        description: description,
+        name: displayName,
+        description,
         prob: localAurora?.probability ?? 0,
-        currentKp: localKp, // Tallennetaan paikkakohtainen Kp korttia varten
-        currentClouds: localClouds
+        currentKp: localKp,
+        currentClouds: localClouds,
+        currentTemp: w?.temp ?? null,
       };
     });
-  }, [contentfulPlaces, kp, wind, bz, lang, forecast]);
+  }, [contentfulPlaces, placeWeather, kp, wind, bz, lang]);
 
   const [activePlace, setActivePlace] = useState(null);
 
@@ -319,29 +365,24 @@ export default function AuroraHero({ forecast, children }) {
     return 1.0;
   }, [kpStep]);
 
-  /* GPS seuranta lähimmälle pisteelle */
+  /* GPS → lähin piste aktiiviseksi */
   useEffect(() => {
     if (typeof window !== "undefined" && navigator.geolocation && placesList.length > 0) {
       navigator.geolocation.getCurrentPosition((position) => {
         const uLat = position.coords.latitude;
         const uLon = position.coords.longitude;
-
         let closest = placesList[0];
         let minDst = getDistance(uLat, uLon, placesList[0].lat, placesList[0].lon);
-
         placesList.forEach((p) => {
           const dst = getDistance(uLat, uLon, p.lat, p.lon);
-          if (dst < minDst) {
-            minDst = dst;
-            closest = p;
-          }
+          if (dst < minDst) { minDst = dst; closest = p; }
         });
         setActivePlace(closest);
       });
     }
   }, [placesList]);
 
-  /* Three.js */
+  /* Three.js taivas */
   useEffect(() => {
     if (!shouldEnhanceWith3D()) return;
     let cancelled = false;
@@ -377,7 +418,7 @@ export default function AuroraHero({ forecast, children }) {
 
   return (
     <section className={`aurora-hero-container ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
-      
+
       <div className="ah-sky-wrap">
         {kpStep > 0 && <div className="ah-sky--css" aria-hidden="true" />}
         <canvas ref={canvasRef} className="ah-canvas" aria-hidden="true" />
@@ -389,7 +430,7 @@ export default function AuroraHero({ forecast, children }) {
           <h1 className="ah-main-title">
             {headline} {nextLine}
           </h1>
-          
+
           <div className="ah-probability-box">
             <span className="ah-prob-label">{t("probability.label")}:</span>
             {isPremium ? (
@@ -421,9 +462,14 @@ export default function AuroraHero({ forecast, children }) {
                     <span className="ah-place-mini-prob">{p.prob}%</span>
                   </div>
                   <span className="ah-item-name-label">{p.name}</span>
-                  <span className="ah-place-kp-badge">
-  Kp {p.currentKp ? p.currentKp.toFixed(1) : "2.0"}
-</span>
+                  <div className="ah-place-metrics">
+                    <span className="ah-place-kp-badge">
+                      Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "--"}
+                    </span>
+                    <span className="ah-place-cloud-badge">
+                      ☁ {p.currentClouds != null ? `${p.currentClouds}%` : "--"}
+                    </span>
+                  </div>
                 </div>
               );
             })}
@@ -467,11 +513,25 @@ export default function AuroraHero({ forecast, children }) {
           <div className="ah-popup-card" onClick={(e) => e.stopPropagation()}>
             <div className="ah-popup-drag-handle" onClick={() => setIsPopupOpen(false)} />
             <h3>📍 {activePlace.name}</h3>
-            
+
+            <div className="ah-popup-metrics">
+              <span>Kp {activePlace.currentKp != null ? activePlace.currentKp.toFixed(1) : "--"}</span>
+              <span>☁ {activePlace.currentClouds != null ? `${activePlace.currentClouds}%` : "--"}</span>
+              <span>{activePlace.prob}%</span>
+            </div>
+
             {activePlace.description ? (
               <div className="ah-popup-content">
                 <p>{activePlace.description}</p>
-                <span className="ah-popup-more-badge">✨ {t("places.readMore")}</span>
+                <button
+                  className="ah-popup-readmore-btn"
+                  onClick={() => {
+                    setIsPopupOpen(false);
+                    navigate(`/places/${activePlace.slug}`);
+                  }}
+                >
+                  ✨ {t("places.readMore")}
+                </button>
               </div>
             ) : (
               <p className="ah-popup-empty">Ei kuvausta saatavilla valitulla kielellä.</p>
