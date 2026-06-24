@@ -1,6 +1,6 @@
 import { useState } from "react";
 import useTranslation from "../hooks/useTranslation";
-import SpinModal from "./SpinModal";
+import SpinModal from "../components/Spinmodal";
 
 const BASE =
   import.meta.env.VITE_API_BASE ||
