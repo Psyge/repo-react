@@ -4,10 +4,7 @@ import useTranslation from "../hooks/useTranslation";
 import { calculateAurora } from "../utils/auroraEngine";
 
 /* ========================================================================
-   AuroraHero  —  KAUUPALLINEN PREMIUM/FREE EROTELTU HERO
-
-   - Free-käyttäjä: Näkee Kp-perusteisen tilan ja lukitun probabilityn.
-   - Premium-käyttäjä: Näkee tarkan solar-perusteisen ennusteen ja prossentin.
+   AuroraHero  —  KAUUPALLINEN PREMIUM/FREE EROTELTU HERO (Puhdistettu build-virheistä)
 ======================================================================= */
 
 const NOAA_KP_URL     = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
@@ -179,7 +176,6 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
 
   const slots = useMemo(() => forecast?.slots ?? [], [forecast]);
   
-  /* Otetaan tier-propsi suoraan */
   const tier  = forecast?.tier ?? "free";
   const isPremium = tier === "premium";
 
@@ -228,15 +224,12 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     [kp, wind, bz]
   );
   const probability = aurora?.probability ?? null;
-  
-  // Lasketaan 'level' Contentful-propsiin sidotun tierin mukaan
-  const level = aurora?.level ?? null;
   probRef.current = probability;
 
   const awakening = useMemo(() => nextAwakening(slots), [slots]);
   const wave = useMemo(() => buildWave(slots, tier), [slots, tier]);
 
-  /* Kp Portaistus (0–3) - Aina käytössä visuaalisuudelle */
+  /* Kp Portaistus (0–3) */
   const kpStep = useMemo(() => {
     if (kp == null || kp < 1.5) return 0;
     if (kp < 3.5) return 1;
@@ -273,7 +266,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     }
   }, [placesList]);
 
-  /* Three.js alustus */
+  /* Three.js alustus - Korjattu useEffect tuonti-riippuvuus */
   useEffect(() => {
     if (!shouldEnhanceWith3D()) return;
 
@@ -299,7 +292,7 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         skyRef.current = null;
       }
     };
-  }, []);
+  }, [targetIntensity]); // Lisätty targetIntensity vaadittuna riippuvuutena ESLintiä varten
 
   useEffect(() => {
     if (skyRef.current) {
@@ -307,31 +300,26 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
     }
   }, [targetIntensity]);
 
-  /* ---- KÄÄNNÖSTEKSTIT & PREMIUM-LOGIIKKA OTSIKOISSA ---- */
-  
-  /* 1. Määritellään, onko taivas aktiivinen visualisoinnille (aina Kp-perusteinen) */
-  const calm = kpStep <= 1; // Kp 0 - 3.5: rauhallinen
-  const isActive = kpStep >= 2; // Kp 3.5+: aktiivinen
+  /* Tekstit & säännöt */
+  const calm = kpStep <= 1;
+  const isActive = kpStep >= 2;
 
-  /* 2. Lasketaan otsikkoteksti KÄYTTÄJÄN TIERIN MUKAAN */
-  let headline = t("aurora.calm"); // Oletus: rauhallinen taivas
-  let nextLine = ""; // Oletus: tyhjä
+  let headline = t("aurora.calm");
+  let nextLine = "";
 
   if (isPremium) {
-    // Premium-käyttäjä: näkee ennustetason (calm/active) ja tarkan heräämisajan
     headline = calm ? t("aurora.calm") : t("aurora.active");
     nextLine = awakening
       ? String(t("aurora.next")).replace("{h}", awakening.hours)
       : t("aurora.quiet");
   } else {
-    // Free-käyttäjä: näkee vain staattisen tilan, ei ennustusta!
     headline = kpStep === 0 ? t("aurora.status.quiet") : t("aurora.status.dancing");
-    nextLine = t("aurora.status.checkKp"); // "Tarkista Kp alapuolelta"
+    nextLine = t("aurora.status.checkKp");
   }
 
   const probLabel = t("probability.label");
   const unlockLabel = t("forecast.unlock48");
-  const unlockProbLabel = t("probability.unlockPremium"); // "🔒 Unlock probability – Premium"
+  const unlockProbLabel = t("probability.unlockPremium");
 
   return (
     <section className={`aurora-hero ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep} tier-${tier}`}>
@@ -341,19 +329,16 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         {tier === "free" && <span className="ah-badge is-free">Free Account (Kp only)</span>}
       </div>
 
-      {/* TAIVAS ELEMENTTI (Aina Kp-perusteinen visuaalisesti) */}
       <div className="ah-sky-wrap">
         {kpStep > 0 && <div className="ah-sky--css is-active" aria-hidden="true" />}
         <canvas ref={canvasRef} className={`ah-canvas ${threeReady ? "is-ready" : ""}`} aria-hidden="true" />
       </div>
 
-      {/* TILATEKSTIT (Premium vs Free logiikalla) */}
       <div className="ah-status">
         <h1>
           {headline} {nextLine}
         </h1>
         
-        {/* PROBABILITY-LUKKO: Free-käyttäjä näkee lukon ja linkin */}
         <div className="ah-prob">
           {probLabel}:{" "}
           {isPremium ? (
@@ -366,14 +351,12 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         </div>
       </div>
 
-      {/* TUNTURISILUETTI */}
       <div className="ah-mountain-silhouet" aria-hidden="true">
         <svg viewBox="0 0 1440 180" className="w-full h-auto fill-[#02040a]">
           <path d="M0,140 L160,115 C320,90 640,60 960,100 C1280,140 1360,165 1440,170 L1440,180 L0,180 Z" />
         </svg>
       </div>
 
-      {/* PAIKKAKUNNAT KARUSELLI */}
       <div className="ah-places-horizon">
         <div className="ah-places-carousel">
           {placesList.map((p) => {
@@ -396,7 +379,6 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         </div>
       </div>
 
-      {/* KP-ENNUSTEAALTOVIIVA (Säilytetty mutta sidottu tähän prop-tier-tasoon) */}
       {wave && (
         <div className="ah-wave">
           <svg viewBox={`0 0 ${WAVE_W} ${WAVE_H}`} role="img" aria-label="Kp forecast wave">
@@ -412,7 +394,6 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
             )}
             <path className="ah-wave-line" d={wave.openPath} />
             
-            {/* Free-käyttäjä näkee lukon grafiikassa */}
             {wave.lockPath && !isPremium && (
               <>
                 <path className="ah-wave-line is-locked" d={wave.lockPath} />
@@ -425,7 +406,6 @@ export default function Aurorahero({ forecast, contentfulPlaces, children }) {
         </div>
       )}
 
-      {/* CONTENTFUL POPUP-KORTTI */}
       {isPopupOpen && (
         <div className="ah-popup-backdrop" onClick={() => setIsPopupOpen(false)}>
           <div className="ah-popup-card" onClick={(e) => e.stopPropagation()}>
