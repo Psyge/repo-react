@@ -459,16 +459,16 @@ export default function AuroraHero({ forecast, children }) {
                 >
                   <div className="ah-item-top-row">
                     <div className="ah-item-dot-indicator" />
-                    <span className="ah-place-mini-prob">{p.prob}%</span>
+                    <span className="ah-place-cloud-badge">
+                      ☁ {p.currentClouds != null ? `${p.currentClouds}%` : "--"}
+                    </span>
                   </div>
                   <span className="ah-item-name-label">{p.name}</span>
                   <div className="ah-place-metrics">
                     <span className="ah-place-kp-badge">
                       Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "--"}
                     </span>
-                    <span className="ah-place-cloud-badge">
-                      ☁ {p.currentClouds != null ? `${p.currentClouds}%` : "--"}
-                    </span>
+                    
                   </div>
                 </div>
               );
