@@ -367,3 +367,19 @@
     right: 12px;
   }
 }
+/* Kun Kp on nollassa tai matala, piilotetaan hehkut kokonaan */
+.aurora-hero.kp-step-0 .ah-sky--css {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+/* Kp 1.5 - 3.5: Kevyt, hillitty vihreä kuiskaus taustalla */
+.aurora-hero.kp-step-1 .ah-sky--css {
+  background: radial-gradient(circle at bottom, rgba(5, 150, 105, 0.2) 0%, transparent 70%);
+  opacity: 1;
+}
+
+/* Kp 3.5+: Syvemmät ja laajemmat sähköiset värit */
+.aurora-hero.kp-step-2 .ah-sky--css {
+  background: radial-gradient(circle at bottom, rgba(6, 182, 212, 0.4) 0%, rgba(15, 23, 42, 0) 80%);
+}
