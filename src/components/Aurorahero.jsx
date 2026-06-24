@@ -6,7 +6,7 @@ import staticPlaces from "../data/places";
 import { client } from "../lib/contentfulClient";
 
 /* ========================================================================
-   AuroraHero — Päivitetty Contentful-haulla ja kielitukituksella
+   AuroraHero — Korjattu ESLint-riippuvuusvirhe (getField siirretty ulos)
 ======================================================================= */
 
 const NOAA_KP_URL     = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
@@ -19,6 +19,15 @@ const THREE_LOAD_TIMEOUT_MS = 4000;
 
 const WAVE_W = 760;
 const WAVE_H = 120;
+
+// Apuohjelma lokalisoitujen kenttien purkamiseen siirretty komponentin ulkopuolelle[cite: 3]
+function getField(field, lang) {
+  if (!field) return "";
+  if (typeof field === "object" && !Array.isArray(field)) {
+    return field[lang] || field["fi-FI"] || "";
+  }
+  return field;
+}
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -186,21 +195,11 @@ export default function AuroraHero({ forecast, children }) {
   const [threeReady, setThreeReady] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   
-  // Contentful-paikat tallennetaan tänne raw-muodossa
   const [contentfulPlaces, setContentfulPlaces] = useState([]);
 
   const lang = currentLanguage === "en" ? "en-US" : "fi-FI";
 
-  // Apuohjelma lokalisoitujen kenttien purkamiseen (sama kuin blogissasi)
-  function getField(field) {
-    if (!field) return "";
-    if (typeof field === "object" && !Array.isArray(field)) {
-      return field[lang] || field["fi-FI"] || "";
-    }
-    return field;
-  }
-
-  // HAETAAN PAIKAT CONTENTFULISTÄ (Content Type: place)
+  // Haetaan paikat Contentfulistä (Content Type: place)
   useEffect(() => {
     client.withAllLocales
       .getEntries({
@@ -215,10 +214,9 @@ export default function AuroraHero({ forecast, children }) {
       });
   }, []);
 
-  // Yhdistetään säädata, staattiset paikat ja Contentfulista ladatut tekstit
+  // Yhdistetään säädata, staattiset paikat ja Contentful-tekstit
   const placesList = useMemo(() => {
     return staticPlaces.map((sp) => {
-      // Etsitään vastaava paikka Contentful-datasta slugin tai ID:n avulla
       const cfMatch = contentfulPlaces.find((item) => {
         const slugField = item.fields?.slug;
         if (typeof slugField === "object") {
@@ -227,7 +225,6 @@ export default function AuroraHero({ forecast, children }) {
         return slugField === sp.slug;
       });
 
-      // Lasketaan dynaaminen todennäköisyys
       const localAurora = calculateAurora({ 
         kp: kp ?? 2.0, 
         speed: wind ?? 400, 
@@ -237,8 +234,8 @@ export default function AuroraHero({ forecast, children }) {
         latitude: sp.lat
       });
 
-      // Puretaan kuvausteksti Contentfulin rakenteesta
-      const description = cfMatch ? getField(cfMatch.fields.description || cfMatch.fields.desc) : "";
+      // Kutsutaan ulkopuolista getField-funktiota ja välitetään 'lang' parametrina
+      const description = cfMatch ? getField(cfMatch.fields.description || cfMatch.fields.desc, lang) : "";[cite: 3]
 
       return {
         ...sp,
@@ -246,14 +243,12 @@ export default function AuroraHero({ forecast, children }) {
         prob: localAurora?.probability ?? 0,
       };
     });
-  }, [contentfulPlaces, kp, wind, bz, currentLanguage]);
+  }, [contentfulPlaces, kp, wind, bz, lang]); // 'lang' korvasi 'currentLanguage' riippuvuutena
 
   const [activePlace, setActivePlace] = useState(null);
 
-  // Asetetaan aktiivinen paikka heti kun lista on valmis tai päivittyy
   useEffect(() => {
     if (placesList.length > 0) {
-      // Pysytään valitussa paikassa, tai otetaan listan ensimmäinen
       setActivePlace((prev) => {
         if (prev) {
           const updated = placesList.find((p) => p.id === prev.id);
