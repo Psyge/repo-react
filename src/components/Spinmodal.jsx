@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 
@@ -226,7 +227,9 @@ export default function SpinModal({
 
   const spinsLeft = totalRounds - (round + 1);
 
-  return (
+  // Renderöi portaalilla suoraan bodyyn → pakenee transform/filter-ankkurin,
+  // jolloin peite kattaa koko ruudun ja modal keskittyy oikein.
+  return createPortal(
     <div className="spin-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="spin-modal">
         <button className="spin-close" onClick={onClose}>✕</button>
@@ -340,6 +343,7 @@ export default function SpinModal({
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

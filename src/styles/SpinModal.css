@@ -1,0 +1,182 @@
+/* ============================================================
+   SpinModal — Aurora Premium Wheel
+   ============================================================ */
+
+.spin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.spin-modal {
+  position: relative;
+  background: linear-gradient(180deg, #0d1220 0%, #080c18 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 36px 28px 28px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(0, 255, 200, 0.06);
+}
+
+.spin-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.15s;
+}
+
+.spin-close:hover { color: rgba(255, 255, 255, 0.8); }
+
+.spin-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.spin-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* Pyörä */
+.spin-wheel-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.spin-pointer {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  color: #fff;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.spin-canvas {
+  display: block;
+  border-radius: 50%;
+  box-shadow:
+    0 0 30px rgba(0, 255, 200, 0.15),
+    0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.spin-prizes-info {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+.spin-prize-label {
+  font-size: 22px;
+  font-weight: 800;
+  color: #00ffcc;
+  margin: 8px 0 6px;
+  letter-spacing: -0.02em;
+}
+
+/* Nappi */
+.spin-btn {
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #00ffcc, #7b5fff);
+  color: #0b0d12;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 14px;
+  transition: opacity 0.15s, transform 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.spin-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.spin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spin-skip {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 12px;
+  display: block;
+  width: 100%;
+  transition: color 0.15s;
+}
+
+.spin-skip:hover { color: rgba(255, 255, 255, 0.6); }
+
+/* Email input */
+.spin-email-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 14px;
+  margin-top: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.spin-email-input:focus {
+  border-color: rgba(0, 255, 200, 0.4);
+}
+
+.spin-email-input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.spin-error {
+  font-size: 12px;
+  color: #ff6b6b;
+  margin-top: 8px;
+  text-align: left;
+}
+
+/* Mobiili */
+@media (max-width: 400px) {
+  .spin-modal {
+    padding: 28px 18px 22px;
+  }
+
+  .spin-title { font-size: 18px; }
+  .spin-prize-label { font-size: 18px; }
+}
