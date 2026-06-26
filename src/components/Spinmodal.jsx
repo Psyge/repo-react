@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 
 const BASE =
@@ -49,7 +48,6 @@ export default function SpinModal({
   onSpin,
   onClose,
 }) {
-  const navigate  = useNavigate();
   const { t } = useTranslation();
 
   // tr: käännös avaimella, fallback englantiin jos avain puuttuu, + {muuttuja}-täyttö
@@ -125,7 +123,11 @@ export default function SpinModal({
     setPhase("spinning");
 
     const targetId  = results[idx];
-    const sectorIdx = Math.max(0, SECTORS.findIndex((s) => s.id === targetId));
+    // Arvo satunnainen osuva sektori (esim. 4× no_win) → pysähtyy eri kohtaan joka kerta
+    const matching  = SECTORS.map((s, i) => (s.id === targetId ? i : -1)).filter((i) => i >= 0);
+    const sectorIdx = matching.length
+      ? matching[Math.floor(Math.random() * matching.length)]
+      : 0;
     const restMod   = (((360 - (sectorIdx * SECTOR_DEG + SECTOR_DEG / 2)) % 360) + 360) % 360;
 
     const startRot = rotRef.current;
@@ -204,6 +206,7 @@ export default function SpinModal({
               expiresAt: actData.expiresAt,
               tier: actData.tier,
             }));
+            if (typeof document !== "undefined") document.body.classList.add("is-premium");
           }
         } catch {
           // laiteaktivointi epäonnistui — sähköpostilinkki toimii silti
@@ -337,7 +340,7 @@ export default function SpinModal({
                 { label: prizeLabel, email }
               )}
             </div>
-            <button className="spin-btn" onClick={() => { onClose(); navigate("/"); }}>
+            <button className="spin-btn" onClick={() => { window.location.assign("/"); }}>
               {tr("spin.startExploring", "Start exploring")}
             </button>
           </>
