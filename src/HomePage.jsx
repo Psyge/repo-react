@@ -326,9 +326,9 @@ export default function HomePage() {
     <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
   </div>
   <div className="footer-coop">
-    <p className="footer-coop-title">🤝 {t("footer.coop_title")}</p>
+    <p className="footer-coop-title">🤝 {t("coop_title")}</p>
     <p className="footer-coop-text">
-      {t("footer.coop_text")}{' '}
+      {t("coop_text")}{' '}
       <Link to="/contact" className="footer-coop-link">
         {t("footer.contact") || "Contact"}
       </Link>
