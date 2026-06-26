@@ -312,29 +312,32 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className="footer">
-        {/* Yhteistyö- ja web-kehitysosio */}
-  
-
-  {/* Alkuperäiset lakilinkit */}
-  <div className="footer-bottom">
-    <p>© RepoTracker</p>
-    <Link to="/privacy">{t("footer.privacy")}</Link>
-    {" - "}
-    <Link to="/terms">{t("privacy.q.terms")}</Link>
-    {" - "}
-    <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
-  </div>
-  <div className="footer-coop">
-    <p className="footer-coop-title">🤝 {t("coop_title")}</p>
+   <footer className="footer">
+  {/* 1. Yhteistyöosio siististi ylhäällä */}
+  <div className="footer-coop" style={{ marginBottom: "1.5rem", textAlign: "center" }}>
+    <p className="footer-coop-title" style={{ fontWeight: "600", marginBottom: "0.25rem" }}>
+      🤝 {t("footer.coop_title")}
+    </p>
     <p className="footer-coop-text">
-      {t("coop_text")}{' '}
-      <Link to="/contact" className="footer-coop-link">
+      {t("footer.coop_text")}{" "}
+      <Link to="/contact" className="footer-coop-link" style={{ color: "#00ffc6", textDecoration: "underline" }}>
         {t("footer.contact") || "Contact"}
       </Link>
     </p>
   </div>
-      </footer>
+
+  {/* 2. Lakilinkit ja copyright omalla rivillään aivan alhaalla */}
+  <div className="footer-bottom" style={{ textAlign: "center", opacity: 0.6, fontSize: "0.9rem" }}>
+    <p style={{ marginBottom: "0.5rem" }}>© RepoTracker</p>
+    <div className="footer-links">
+      <Link to="/privacy">{t("footer.privacy")}</Link>
+      {" - "}
+      <Link to="/terms">{t("privacy.q.terms")}</Link>
+      {" - "}
+      <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
+    </div>
+  </div>
+</footer>
     </div>
   );
 }
