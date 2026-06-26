@@ -63,10 +63,19 @@ const SECTIONS = [
     body: [
       'privacy.a.rights1',
       'privacy.a.rights2',
-      'privacy.a.rights3'
+      'privacy.a.rights3',
+      'privacy.a.rights4'
     ]
   },
-
+  {
+    q: 'privacy.q.security',
+    body: [
+      'privacy.a.security1',
+      'privacy.a.security2',
+      'privacy.a.security3',
+      'privacy.a.security4'
+    ]
+  },
   {
     q: 'privacy.q.controller',
     body: [

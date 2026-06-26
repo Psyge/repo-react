@@ -5,81 +5,68 @@
 
 .premium-hero {
   text-align: center;
-
   margin-bottom: 56px;
 }
 
 .premium-hero h1 {
   font-size: 52px;
-
   font-family: var(--font-display);
-
   background: var(--gradient-aurora);
-
   -webkit-background-clip: text;
   background-clip: text;
-
   color: transparent;
 }
 
 .premium-sub {
   max-width: 620px;
-
-  margin:
-    16px auto 0;
-
+  margin: 16px auto 0;
   color: var(--fg-muted);
-
   font-size: 18px;
-
   line-height: 1.6;
 }
 
 .premium-active {
   margin-top: 18px;
-
   color: var(--accent);
-
   font-weight: 600;
 }
 
-.premium-error {
-  margin-top: 14px;
-
+/* Päivitetty turvallinen virhebanneri */
+.premium-error-banner {
+  background: rgba(255, 75, 75, 0.12);
+  border: 1px solid rgba(255, 118, 118, 0.4);
   color: #ff8a8a;
+  padding: 12px 20px;
+  border-radius: 12px;
+  max-width: 500px;
+  margin: 20px auto 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
+/* --- HINNOITTELURUUDUKKO --- */
 .pricing-grid {
   display: grid;
-
-  grid-template-columns:
-    repeat(auto-fit, minmax(260px, 1fr));
-
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 24px;
 }
 
 .pricing-card {
   position: relative;
-
   display: flex;
   flex-direction: column;
-
   padding: 32px 24px;
-
   border-radius: 24px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.04),
-      rgba(255,255,255,0.02)
-    );
-
-  border:
-    1px solid rgba(255,255,255,0.08);
-
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
-
   transition:
     transform .2s ease,
     border-color .2s ease,
@@ -88,54 +75,38 @@
 
 .pricing-card:hover {
   transform: translateY(-4px);
-
-  border-color:
-    rgba(0,255,204,0.3);
-
-  box-shadow:
-    0 12px 32px rgba(0,0,0,0.25);
+  border-color: rgba(0, 255, 204, 0.3);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 }
 
 .pricing-card.featured {
-  border-color:
-    rgba(0,255,204,0.45);
-
+  border-color: rgba(0, 255, 204, 0.45);
   box-shadow:
-    0 0 0 1px rgba(0,255,204,0.12),
-    0 16px 40px rgba(0,255,204,0.08);
+    0 0 0 1px rgba(0, 255, 204, 0.12),
+    0 16px 40px rgba(0, 255, 204, 0.08);
 }
 
 .badge {
   position: absolute;
-
   top: 16px;
   right: 16px;
-
   padding: 6px 10px;
-
   border-radius: 999px;
-
   background: var(--accent);
-
   color: #071018;
-
   font-size: 11px;
   font-weight: 700;
-
   text-transform: uppercase;
-
   letter-spacing: .08em;
 }
 
 .pricing-card h3 {
   font-size: 24px;
-
   margin-bottom: 14px;
 }
 
 .price {
   margin-bottom: 10px;
-
   font-size: 38px;
   font-weight: 700;
 }
@@ -146,55 +117,40 @@
 
 .meta {
   margin-bottom: 24px;
-
   color: var(--fg-muted);
-
   font-size: 14px;
 }
 
 .pricing-card ul {
   display: flex;
   flex-direction: column;
-
   gap: 12px;
-
   padding: 0;
-
-  margin:
-    0 0 28px;
-
+  margin: 0 0 28px;
   list-style: none;
 }
 
 .pricing-card li {
   font-size: 15px;
-
   color: var(--fg);
 }
 
+/* --- PAINIKKEET JA LUKITUKSET --- */
 .buy-btn {
   margin-top: auto;
-
   width: 100%;
-
   padding: 14px 18px;
-
   border: 0;
-
   border-radius: 16px;
-
-  background:
-    rgba(255,255,255,0.06);
-
+  background: rgba(255, 255, 255, 0.06);
   color: var(--fg);
-
   font-weight: 700;
-
   cursor: pointer;
-
   transition:
     transform .15s ease,
-    opacity .15s ease;
+    background-color .15s ease,
+    color .15s ease,
+    border .15s ease;
 }
 
 .buy-btn:hover {
@@ -203,24 +159,141 @@
 
 .buy-btn.primary {
   background: var(--gradient-aurora);
-
   color: #071018;
 }
 
+/* Ostobuttonien lukitustila ilman ristiriitoja */
+.buy-btn.is-locked {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--fg-muted) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.1) !important;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* --- SUOSTUMUSOSIO (PÄIVITETTY TYYLI) --- */
+.premium-consent-box {
+  background: rgba(15, 23, 42, 0.6); /* Sopii saumattomasti RepoTrackerin taustaan */
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 28px;
+  max-width: 640px;
+  margin: 48px auto 24px auto;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Aktivoitunut vihreä hohto */
+.premium-consent-box.is-approved {
+  border-color: rgba(0, 255, 198, 0.4);
+  box-shadow: 0 0 24px rgba(0, 255, 198, 0.05);
+}
+
+.consent-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.premium-consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.consent-text {
+  color: var(--fg-muted);
+  font-size: 15px;
+  line-height: 1.45;
+  transition: color 0.2s ease;
+}
+
+.premium-consent-row:hover .consent-text {
+  color: var(--fg);
+}
+
+/* Kustomoidut valintaruudut */
+.checkbox-wrapper {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.checkbox-wrapper input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.custom-checkbox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-wrapper:hover .custom-checkbox {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.checkbox-wrapper input:checked ~ .custom-checkbox {
+  background: #00ffc6;
+  border-color: #00ffc6;
+}
+
+/* Väkänen (linjattu tarkasti sisälle) */
+.custom-checkbox:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #071018;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-wrapper input:checked ~ .custom-checkbox:after {
+  display: block;
+}
+
+.premium-consent-note {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 8px 0 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 14px;
+  line-height: 1.5;
+}
+
+/* --- ALATUNNISTEET --- */
 .premium-footer {
   margin-top: 64px;
-
   text-align: center;
-
   color: var(--fg-muted);
-
   font-size: 14px;
-
   line-height: 1.8;
 }
 
-@media (max-width: 768px) {
+/* ========================================
+   RESPONSIIVISUUS (MOBIILIOPTIMOINTI)
+======================================== */
 
+@media (max-width: 768px) {
   .premium-page {
     padding-top: 36px;
     padding-bottom: 56px;
@@ -232,48 +305,43 @@
 
   .premium-hero h1 {
     font-size: 34px;
-
     line-height: 1.1;
   }
 
   .premium-sub {
     margin-top: 14px;
-
     font-size: 15px;
-
     line-height: 1.65;
-
     padding: 0 4px;
   }
 
-  .premium-active,
-  .premium-error {
+  .premium-active {
     font-size: 14px;
+  }
+  
+  .premium-error-banner {
+    font-size: 14px;
+    padding: 10px 16px;
+    margin-top: 16px;
   }
 
   .pricing-grid {
     grid-template-columns: 1fr;
-
     gap: 18px;
   }
 
   .pricing-card {
-    padding:
-      24px
-      18px;
-
+    padding: 24px 18px;
     border-radius: 20px;
   }
 
   .pricing-card h3 {
     font-size: 21px;
-
     margin-bottom: 10px;
   }
 
   .price {
     font-size: 30px;
-
     margin-bottom: 8px;
   }
 
@@ -283,56 +351,56 @@
 
   .meta {
     margin-bottom: 20px;
-
     font-size: 13px;
   }
 
   .pricing-card ul {
     gap: 10px;
-
     margin-bottom: 22px;
   }
 
   .pricing-card li {
     font-size: 14px;
-
     line-height: 1.5;
   }
 
   .buy-btn {
     min-height: 50px;
-
     border-radius: 14px;
-
     font-size: 15px;
   }
 
   .badge {
     top: 14px;
     right: 14px;
-
     font-size: 10px;
+    padding: 5px 9px;
+  }
 
-    padding:
-      5px
-      9px;
+  /* Suostumuslaatikon mobiiliasettelu ilman ahtautta */
+  .premium-consent-box {
+    margin-top: 36px;
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .consent-text {
+    font-size: 13.5px;
+    line-height: 1.4;
   }
 
   .premium-footer {
     margin-top: 44px;
-
     font-size: 13px;
-
     line-height: 1.7;
   }
 }
 
 /* ========================================
-   TOUCH DEVICES
+   KOSKETUSLAITTEET (POISTETAAN HOVER-VAIKUTUKSET)
 ======================================== */
 
 @media (hover: none) {
-
   .pricing-card:hover,
   .buy-btn:hover {
     transform: none;

@@ -3,10 +3,8 @@ import useTranslation from "./hooks/useTranslation";
 import { isActive, read, openCheckout } from "./lib/premium";
 import Header from "./components/Header";
 import { Link } from "react-router-dom";
-
 import SEO from "./components/SEO";
 
-// Nosta versiota jos muutat suostumustekstien sanamuotoa
 const CONSENT_TEXT_VERSION = "v1";
 
 export default function PremiumPage() {
@@ -15,7 +13,6 @@ export default function PremiumPage() {
   const [activeDays, setActiveDays] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // --- PAKOLLISET SUOSTUMUKSET (digitaalisen sisällön peruuttamisoikeus) ---
   const [immediate, setImmediate] = useState(false);
   const [waiver, setWaiver] = useState(false);
   const consentGiven = immediate && waiver;
@@ -27,13 +24,8 @@ export default function PremiumPage() {
   useEffect(() => {
     if (isActive()) {
       const p = read();
-
       if (p?.expiresAt) {
-        const days = Math.max(
-          1,
-          Math.ceil((p.expiresAt - Date.now()) / 86400000)
-        );
-
+        const days = Math.max(1, Math.ceil((p.expiresAt - Date.now()) / 86400000));
         setActiveDays(days);
       }
     } else {
@@ -43,10 +35,8 @@ export default function PremiumPage() {
 
   const handleBuy = async (e, tier) => {
     e.preventDefault();
-
     setErrorMsg("");
 
-    // Estä maksu jos suostumukset puuttuvat
     if (!consentGiven) {
       setErrorMsg(t("premium.consent.required"));
       return;
@@ -59,7 +49,6 @@ export default function PremiumPage() {
     btn.textContent = t("common.loading");
 
     try {
-      // Välitä suostumus checkoutille → tallentuu Stripe-metadataan + tokeniin
       await openCheckout(tier, {
         immediateDelivery: immediate,
         waiveWithdrawal: waiver,
@@ -79,11 +68,7 @@ export default function PremiumPage() {
       title: t("premium.tier.1d.title"),
       price: "2,99",
       meta: t("premium.tier.1d.meta"),
-      features: [
-        t("premium.tier.1d.f1"),
-        t("premium.tier.1d.f2"),
-        t("premium.tier.1d.f3"),
-      ],
+      features: [t("premium.tier.1d.f1"), t("premium.tier.1d.f2"), t("premium.tier.1d.f3")],
       featured: false,
     },
     {
@@ -91,11 +76,7 @@ export default function PremiumPage() {
       title: t("premium.tier.3d.title"),
       price: "4,99",
       meta: t("premium.tier.3d.meta"),
-      features: [
-        t("premium.tier.3d.f1"),
-        t("premium.tier.3d.f2"),
-        t("premium.tier.3d.f3"),
-      ],
+      features: [t("premium.tier.3d.f1"), t("premium.tier.3d.f2"), t("premium.tier.3d.f3")],
       featured: true,
     },
     {
@@ -103,11 +84,7 @@ export default function PremiumPage() {
       title: t("premium.tier.7d.title"),
       price: "9,99",
       meta: t("premium.tier.7d.meta"),
-      features: [
-        t("premium.tier.7d.f1"),
-        t("premium.tier.7d.f2"),
-        t("premium.tier.7d.f3"),
-      ],
+      features: [t("premium.tier.7d.f1"), t("premium.tier.7d.f2"), t("premium.tier.7d.f3")],
       featured: false,
     },
   ];
@@ -115,120 +92,102 @@ export default function PremiumPage() {
   return (
     <div>
       <SEO
-  title="Premium Northern Light Forecast | RepoTracker"
-  description="Unlock 72-hour aurora forecasts and advanced northern lights tracking."
-  keywords="aurora premium, northern lights forecast"
-  canonical="https://repotracker.fi/premium"
-/>
-          <Header />
-    <main className="premium-page container">
-      <section className="premium-hero">
-        <h1>Northern Lights Premium</h1>
+        title="Premium Northern Light Forecast | RepoTracker"
+        description="Unlock 72-hour aurora forecasts and advanced northern lights tracking."
+        keywords="aurora premium, northern lights forecast"
+        canonical="https://repotracker.fi/premium"
+      />
+      <Header />
+      <main className="premium-page container">
+        
+        <section className="premium-hero">
+          <h1>Northern Lights Premium</h1>
+          <p className="premium-sub">{t("premium.sub")}</p>
 
-        <p className="premium-sub">{t("premium.sub")}</p>
-
-        {activeDays != null && (
-          <div className="premium-active">
-            ✓ {t("premium.activeBadge")} —{" "}
-            {activeDays} {t("premium.daysLeft")}
-          </div>
-        )}
-
-        {errorMsg && (
-          <div className="premium-error">
-            {errorMsg}
-          </div>
-        )}
-      </section>
-
-      {/* PAKOLLISET SUOSTUMUKSET — napit lukossa kunnes molemmat rastitettu */}
-      <section className="premium-consent">
-        <label className="premium-consent-row">
-          <input
-            type="checkbox"
-            checked={immediate}
-            onChange={(e) => setImmediate(e.target.checked)}
-          />
-          <span>{t("premium.consent.immediate")}</span>
-        </label>
-
-        <label className="premium-consent-row">
-          <input
-            type="checkbox"
-            checked={waiver}
-            onChange={(e) => setWaiver(e.target.checked)}
-          />
-          <span>{t("premium.consent.waiver")}</span>
-        </label>
-
-        <p className="premium-consent-note">{t("premium.consent.note")}</p>
-      </section>
-
-      <section className="pricing-grid">
-        {tiers.map((tier) => (
-          <article
-            key={tier.id}
-            className={`pricing-card${
-              tier.featured ? " featured" : ""
-            }`}
-          >
-            {tier.featured && (
-              <div className="badge">{t("premium.popular")}</div>
-            )}
-
-            <h3>{tier.title}</h3>
-
-            <div className="price">
-              <span>{tier.price}</span> €
+          {activeDays != null && (
+            <div className="premium-active">
+              ✓ {t("premium.activeBadge")} — {activeDays} {t("premium.daysLeft")}
             </div>
+          )}
 
-            <p className="meta">{tier.meta}</p>
+          {errorMsg && (
+            <div className="premium-error-banner">
+              ⚠️ {errorMsg}
+            </div>
+          )}
+        </section>
 
-            <ul>
-              {tier.features.map((f, i) => (
-                <li key={i}>✓ {f}</li>
-              ))}
-            </ul>
+        {/* 1. LAATIKOT ENSIN */}
+        <section className="pricing-grid">
+          {tiers.map((tier) => (
+            <article key={tier.id} className={`pricing-card${tier.featured ? " featured" : ""}`}>
+              {tier.featured && <div className="badge">{t("premium.popular")}</div>}
+              <h3>{tier.title}</h3>
+              <div className="price"><span>{tier.price}</span> €</div>
+              <p className="meta">{tier.meta}</p>
+              <ul>
+                {tier.features.map((f, i) => <li key={i}>✓ {f}</li>)}
+              </ul>
+              <button
+                type="button"
+                className={`buy-btn ${tier.featured ? "primary" : ""} ${!consentGiven ? "is-locked" : ""}`}
+                disabled={!consentGiven}
+                title={!consentGiven ? t("premium.consent.required") : undefined}
+                onClick={(e) => handleBuy(e, tier.id)}
+              >
+                {!consentGiven ? "🔒 " : ""}{t("premium.cta")}
+              </button>
+            </article>
+          ))}
+        </section>
 
-            <button
-              type="button"
-              className={`buy-btn${
-                tier.featured ? " primary" : ""
-              }`}
-              disabled={!consentGiven}
-              title={!consentGiven ? t("premium.consent.required") : undefined}
-              onClick={(e) => handleBuy(e, tier.id)}
-            >
-              {t("premium.cta")}
-            </button>
-          </article>
-        ))}
-      </section>
+        {/* 2. SUOSTUMUKSET NYT LAATIKOIDEN ALLA KESKITETTYNÄ */}
+        <section className={`premium-consent-box ${consentGiven ? "is-approved" : ""}`}>
+          <div className="consent-inner">
+            <label className="premium-consent-row">
+              <div className="checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  checked={immediate}
+                  onChange={(e) => setImmediate(e.target.checked)}
+                />
+                <span className="custom-checkbox" />
+              </div>
+              <span className="consent-text">{t("premium.consent.immediate")}</span>
+            </label>
 
-      <section className="premium-footer">
-        <p>{t("premium.footer.oneTime")}</p>
-        <p>{t("premium.footer.devices")}</p>
-      </section>
-    </main>
-    <footer className="footer">
-  <p>© RepoTracker</p>
+            <label className="premium-consent-row">
+              <div className="checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  checked={waiver}
+                  onChange={(e) => setWaiver(e.target.checked)}
+                />
+                <span className="custom-checkbox" />
+              </div>
+              <span className="consent-text">{t("premium.consent.waiver")}</span>
+            </label>
 
-  <Link to="/privacy">
-    {t("footer.privacy")}
-  </Link>
+            <p className="premium-consent-note">
+              ℹ️ {t("premium.consent.note")}
+            </p>
+          </div>
+        </section>
 
-  {" - "}
+        <section className="premium-footer">
+          <p>{t("premium.footer.oneTime")}</p>
+          <p>{t("premium.footer.devices")}</p>
+        </section>
+      </main>
 
-  <Link to="/terms">
-    {t("privacy.q.terms")}
-  </Link>
-
-  {" - "}
-
-  <Link to="/contact">
-    {t("footer.contact") || "Contact"}
-  </Link>
-</footer>
+      <footer className="footer">
+        <p>© RepoTracker</p>
+        <Link to="/privacy">{t("footer.privacy")}</Link>
+        {" - "}
+        <Link to="/terms">{t("privacy.q.terms")}</Link>
+        {" - "}
+        <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
+      </footer>
     </div>
   );
 }
