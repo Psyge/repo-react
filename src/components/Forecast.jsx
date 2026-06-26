@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 import {
@@ -11,7 +10,6 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-
 
 const HOURS = ["18:00", "21:00", "00:00", "03:00"];
 
@@ -39,171 +37,147 @@ export default function Forecast({ data, tier: tierProp = "free", genAt, current
     const d = new Date(slot.tsUtc);
     const dayKey = d.toISOString().slice(0, 10);
     if (!grouped[dayKey]) grouped[dayKey] = {};
-    const hour = `${d.getUTCHours()}`.padStart(2, "0") + ":00";
-
-    // Premium käyttää workerin todellista probabilityä (sis. OVATION+pilvet),
-    // free fallbackaa yksinkertaiseen Kp-skooriin.
-    const prob =
-  tier === "premium" && slot.probability != null
-    ? slot.probability
-    : Math.round(((slot.kp ?? 0) / 9) * 100);
+    const hour = `${d.getUTCHours()}`.padStart(2, "0") + \":00\";
 
     grouped[dayKey][hour] = {
-      prob,
-      kp: slot.kp ?? null,
-      clouds: slot.clouds ?? null,
+      kp: slot.kp,
+      probability: slot.probability,
+      clouds: slot.clouds,
     };
   });
 
-  const days = Object.values(grouped);
-
-  const chartData = HOURS.map((hour) => ({
-    time: hour,
-    day1: days[0]?.[hour]?.prob ?? null,
-    day2: days[1]?.[hour]?.prob ?? null,
-    day3: days[2]?.[hour]?.prob ?? null,
-    kp1: days[0]?.[hour]?.kp ?? null,
-    cloud1: days[0]?.[hour]?.clouds ?? null,
-  }));
+  const sortedDays = Object.keys(grouped).sort();
+  const days = sortedDays.map((k) => grouped[k]);
 
   const isPremium = tier === "premium";
 
+  // Rakennetaan data kuvaajalle
+  const chartData = HOURS.map((h) => {
+    const item = { time: h };
+    if (days[0]?.[h]) item.day1 = days[0][h].probability;
+    if (days[1]?.[h]) item.day2 = days[1][h].probability;
+    if (days[2]?.[h]) item.day3 = days[2][h].probability;
+    return item;
+  });
+
+  // Kustomoitu, kaunis RepoTracker-tooltip kuvaajan sisälle
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="fc-custom-tooltip">
+          <p className="fc-tooltip-time">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="fc-tooltip-row" style={{ color: entry.color }}>
+              {entry.name}: <span>{entry.value}%</span>
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <section className="forecast-modern">
-      <div className="forecast-head" >
+      <div className="forecast-head">
         <h2>{t("forecast.title")}</h2>
         {isPremium ? (
-  <span className="fc-badge fc-badge--premium">
-    ★ Premium
-  </span>
-) : (
-  <Link to="/premium" className="fc-badge">
-    🔒 {t("forecast.unlock")}
-  </Link>
-)}
+          <span className="fc-badge fc-badge--premium">
+            ★ Premium
+          </span>
+        ) : (
+          <Link to="/premium" className="fc-badge fc-badge--unlock">
+            🔒 {t("forecast.unlock")}
+          </Link>
+        )}
       </div>
-  {isPremium && current && (
-  <div className="fc-current">
-    <span>↑ {t("wind.speed")}: <strong>{current.speed != null ? `${Math.round(current.speed)} km/s` : "–"}</strong></span>
-    <span>Bz: <strong>{current.bz != null ? current.bz.toFixed(1) : "–"}</strong></span>
-    <span>{t("wind.density")}: <strong>{current.density != null ? current.density.toFixed(1) : "–"}</strong></span>
-  </div>
-)}
-      <div className="forecast-chart" style={{ position: "relative" }}>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>
-            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-            <XAxis dataKey="time" stroke="#9ca3af" tickLine={false} axisLine={false} interval={1} />
-            <YAxis domain={[0, 100]} stroke="#9ca3af" tickLine={false} axisLine={false} />
 
-            <Tooltip
-              contentStyle={{
-                background: "#0f172a",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: "12px",
-                color: "#fff",
-              }}
-              formatter={(value, name) => {
-                if (value == null) return ["–", name];
-                return [`${value}%`, name];
-              }}
-            />
+      {isPremium && current && (
+        <div className="fc-current-stats">
+          <span>↑ {t("wind.speed")}: <strong>{current.speed != null ? `${Math.round(current.speed)} km/s` : "–"}</strong></span>
+          <span className={current.bz < 0 ? "is-negative" : "is-positive"}>Bz: <strong>{current.bz != null ? current.bz.toFixed(1) : "–"}</strong></span>
+          <span>{t("wind.density")}: <strong>{current.density != null ? current.density.toFixed(1) : "–"}</strong></span>
+        </div>
+      )}
+
+      <div className="forecast-chart-container">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.04)" vertical={false} />
+            
+            {/* Piilotetaan X-akselin tickit, koska alla oleva Kp-palkki toimii dynaamisena akselina */}
+            <XAxis dataKey="time" tick={false} tickLine={false} axisLine={false} />
+            <YAxis domain={[0, 100]} stroke="#4b5563" tickLine={false} axisLine={false} className="fc-yaxis-labels" />
+
+            <Tooltip content={<CustomTooltip />} />
+            
             <Legend
-  verticalAlign="bottom"
-  align="center"
-  wrapperStyle={{
-    paddingTop: 16,
-    bottom: -6,
-  }}
-/>
+              verticalAlign="bottom"
+              align="center"
+              iconType="circle"
+              iconSize={8}
+            />
 
-            {/* Tonight — aina näkyvissä */}
+            {/* Tänä iltana */}
             <Line
               type="monotone"
               dataKey="day1"
               stroke="#2EF2D0"
               strokeWidth={3}
               connectNulls
-              name={t("forecast.tonight")}
-              dot={{ r: 4 }}
+              name={t("forecast.tonight") || "Tänä iltana"}
+              dot={{ r: 4, stroke: "#0b131a", strokeWidth: 2 }}
+              activeDot={{ r: 6 }}
             />
 
-            {/* Tomorrow & Day 3 — premium vain (free saa katkoviivan teaseriksi) */}
+            {/* Huomenna */}
             <Line
               type="monotone"
               dataKey="day2"
               stroke="#60a5fa"
               strokeWidth={isPremium ? 3 : 1.5}
-              strokeDasharray={isPremium ? "0" : "6 6"}
-              strokeOpacity={isPremium ? 1 : 0.35}
+              strokeDasharray={isPremium ? "0" : "4 4"}
+              strokeOpacity={isPremium ? 1 : 0.4}
               connectNulls
-              name={t("forecast.tomorrow")}
-              dot={isPremium}
+              name={t("forecast.tomorrow") || "Huomenna"}
+              dot={isPremium ? { r: 4, stroke: "#0b131a", strokeWidth: 2 } : false}
             />
+
+            {/* Ylihuomenna */}
             <Line
               type="monotone"
               dataKey="day3"
               stroke="#f59e0b"
               strokeWidth={isPremium ? 3 : 1.5}
-              strokeDasharray={isPremium ? "0" : "6 6"}
-              strokeOpacity={isPremium ? 1 : 0.35}
+              strokeDasharray={isPremium ? "0" : "4 4"}
+              strokeOpacity={isPremium ? 1 : 0.4}
               connectNulls
-              name={t("forecast.dayafter")}
-              dot={isPremium}
+              name={t("forecast.dayafter") || "Ylihuomenna"}
+              dot={isPremium ? { r: 4, stroke: "#0b131a", strokeWidth: 2 } : false}
             />
           </LineChart>
         </ResponsiveContainer>
 
-        {/* Free-overlay: päivien 2–3 päälle blur + CTA */}
-       {!isPremium && (
-  <Link
-    to="/premium"
-    className="fc-lock-overlay"
-    style={{
-      position: "absolute",
-      right: 0,
-      top: 0,
-      width: "66%",
-      height: "100%",
-      background:
-        "linear-gradient(90deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0.65) 35%, rgba(15,23,42,0.85) 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      textDecoration: "none",
-      color: "#fff",
-    }}
-  >
-    <span className="fc-overlay-cta">
-      🔒 {t("forecast.unlock") || "Unlock 3-day premium forecast"}
-    </span>
-  </Link>
-)}
+        {/* Free-lukituslasikerros modernilla sumennuksella */}
+        {!isPremium && (
+          <Link to="/premium" className="fc-lock-overlay">
+            <span className="fc-overlay-btn">
+              🔒 {t("forecast.unlock") || "Avaa 3 päivän ennuste"}
+            </span>
+          </Link>
+        )}
       </div>
 
-      {/* Kp-rivi pohjalle (free + premium) */}
-      <div
-        className="fc-kp-row"
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${HOURS.length}, 1fr)`,
-          marginTop: 12,
-          gap: 8,
-          color: "#9ca3af",
-          fontSize: 13,
-          textAlign: "center",
-        }}
-      >
-        {HOURS.map((h) => {
+      {/* Siisti, jaettu Kp- ja säärivi pohjalle */}
+      <div className="fc-kp-grid-row">
+        {HOURS.map((h, idx) => {
           const slot = days[0]?.[h];
           return (
-            <div key={h}>
-              <div style={{ opacity: 0.6 }}>{h}</div>
-              <div style={{ color: "#fff", fontWeight: 600 }}>
-                Kp {slot?.kp ?? "–"}
-              </div>
+            <div key={h} className="fc-kp-grid-col">
+              <div className="fc-col-time">{h}</div>
+              <div className="fc-col-kp">Kp {slot?.kp ?? "–"}</div>
               {isPremium && (
-                <div style={{ fontSize: 12, opacity: 0.7 }}>
+                <div className="fc-col-clouds">
                   ☁ {slot?.clouds != null ? `${slot.clouds}%` : "–"}
                 </div>
               )}
@@ -213,9 +187,8 @@ export default function Forecast({ data, tier: tierProp = "free", genAt, current
       </div>
 
       {!isPremium && (
-        <p style={{ marginTop: 16, fontSize: 13, color: "#9ca3af", textAlign: "center" }}>
-          {t("forecast.free_hint") ||
-            "Free view shows tonight's Kp-based estimate. Premium adds OVATION + cloud cover for 3 days."}
+        <p className="fc-free-hint-text">
+          {t("forecast.free_hint")}
         </p>
       )}
     </section>
