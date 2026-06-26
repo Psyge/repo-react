@@ -316,10 +316,10 @@ export default function HomePage() {
   {/* 1. Yhteistyöosio siististi ylhäällä */}
   <div className="footer-coop" style={{ marginBottom: "1.5rem", textAlign: "center" }}>
     <p className="footer-coop-title" style={{ fontWeight: "600", marginBottom: "0.25rem" }}>
-      🤝 {t("footer.coop_title")}
+      🤝 {t("coop_title")}
     </p>
     <p className="footer-coop-text">
-      {t("footer.coop_text")}{" "}
+      {t("coop_text")}{" "}
       <Link to="/contact" className="footer-coop-link" style={{ color: "#00ffc6", textDecoration: "underline" }}>
         {t("footer.contact") || "Contact"}
       </Link>
