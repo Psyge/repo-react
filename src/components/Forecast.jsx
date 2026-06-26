@@ -37,7 +37,9 @@ export default function Forecast({ data, tier: tierProp = "free", genAt, current
     const d = new Date(slot.tsUtc);
     const dayKey = d.toISOString().slice(0, 10);
     if (!grouped[dayKey]) grouped[dayKey] = {};
-    const hour = `${d.getUTCHours()}`.padStart(2, "0") + \":00\";
+    
+    // TÄMÄ RIVI KORJATTU (ei enää ylimääräisiä kenoviivoja sotkemassa):
+    const hour = `${d.getUTCHours()}`.padStart(2, "0") + ":00";
 
     grouped[dayKey][hour] = {
       kp: slot.kp,
