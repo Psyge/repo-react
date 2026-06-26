@@ -28,8 +28,6 @@ float snoise(vec3 v){
   vec3 l = 1.0 - g;
   vec3 i1 = min(g.xyz, l.zxy);
   vec3 i2 = max(g.xyz, l.zxy);
-  vec3 x1 = x0 - i1 + 1.0 * C.xxx;
-  vec3 x2 = x0 - i2 + 2.0 * C.xxx;
   vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
   i = mod(i, 289.0);
   vec4 p = permute(permute(permute(
@@ -68,7 +66,7 @@ export function createAuroraSky(canvas, opts = {}) {
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    alpha: true,            // Läpinäkyvä pohja, jotta sulautuu täydellisesti mustaan taustaan
+    alpha: true,            // Läpinäkyvä pohja, jotta sulautuu täydellisesti mustaan taustaan[cite: 9]
     antialias: true,
     powerPreference: "high-performance",
   });
@@ -77,10 +75,10 @@ export function createAuroraSky(canvas, opts = {}) {
 
   const scene = new THREE.Scene();
   
-  // Kamera asetetaan matalalle katsomaan yläviistoon kohti horisonttia
+  // Kamera asetetaan matalalle katsomaan yläviistoon kohti horisonttia[cite: 9]
   const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
   camera.position.set(0, -0.8, 2.0);
-  camera.rotation.set(0.3, 0, 0); // Kevyt kallistus ylöspäin
+  camera.rotation.set(0.3, 0, 0); // Kevyt kallistus ylöspäin[cite: 9]
 
   const uTime = { value: 0 };
   const uIntensity = { value: initialIntensity };
@@ -88,7 +86,7 @@ export function createAuroraSky(canvas, opts = {}) {
   /* ---- Päätaivas: Verhomaiset, poimuilevat revontulinauhat ---- */
   const skyMat = new THREE.ShaderMaterial({
     transparent: true,
-    blending: THREE.AdditiveBlending, // Valomainen sekoitus luo neonhohdon
+    blending: THREE.AdditiveBlending, // Valomainen sekoitus luo neonhohdon[cite: 9]
     depthWrite: false,
     side: THREE.DoubleSide,
     uniforms: { uTime, uIntensity },
@@ -102,15 +100,15 @@ export function createAuroraSky(canvas, opts = {}) {
       void main() {
         vUv = uv;
         
-        // Lasketaan poimuileva liike. Tehdään pystysuoria "verhoja" vääristämällä Z-akselia (syvyys).
-        // x-akselin kerroin määrää kuinka monta "aaltoa" taivaalla näkyy rinnakkain.
+        // Lasketaan poimuileva liike. Tehdään pystysuoria "verhoja" vääristämällä Z-akselia (syvyys).[cite: 9]
+        // x-akselin kerroin määrää kuinka monta "aaltoa" taivaalla näkyy rinnakkain.[cite: 9]
         vec3 noisePos = vec3(position.x * 0.7, position.y * 0.3, uTime * 0.12);
         float n1 = snoise(noisePos);
         float n2 = snoise(noisePos * 2.3 - vec3(uTime * 0.05, 0.0, 0.0));
         float combinedNoise = n1 * 0.7 + n2 * 0.3;
         vNoise = combinedNoise;
 
-        // Vääristetään pintaa syvyyssuunnassa aktiivisuuden mukaan
+        // Vääristetään pintaa syvyyssuunnassa aktiivisuuden mukaan[cite: 9]
         float disp = (0.15 + 0.35 * uIntensity) * combinedNoise;
         vec3 pos = position + vec3(0.0, 0.0, disp);
 
@@ -123,30 +121,30 @@ export function createAuroraSky(canvas, opts = {}) {
       varying float vNoise;
 
       void main() {
-        // Neonvärit säädetty skandinaavisen revontuliyön mukaisiksi
-        vec3 cBottom = vec3(0.02, 0.45, 0.85); // Sähkönsininen/cyan alareunassa
-        vec3 cMid    = vec3(0.05, 0.95, 0.45); // Klassinen revontulivihreä keskellä
-        vec3 cTop    = vec3(0.40, 0.10, 0.70); // Harvinainen violetti/purppura yläreunassa
+        // Neonvärit säädetty skandinaavisen revontuliyön mukaisiksi[cite: 9]
+        vec3 cBottom = vec3(0.02, 0.45, 0.85); // Sähkönsininen/cyan alareunassa[cite: 9]
+        vec3 cMid    = vec3(0.05, 0.95, 0.45); // Klassinen revontulivihreä keskellä[cite: 9]
+        vec3 cTop    = vec3(0.40, 0.10, 0.70); // Harvinainen violetti/purppura yläreunassa[cite: 9]
 
         float t = clamp(vNoise * 0.5 + 0.5, 0.0, 1.0);
 
-        // Sekoitetaan värit orgaanisesti kohinan perusteella
+        // Sekoitetaan värit orgaanisesti kohinan perusteella[cite: 9]
         vec3 auroraColor = mix(cBottom, cMid, smoothstep(0.1, 0.5, t));
         auroraColor = mix(auroraColor, cTop, smoothstep(0.5, 0.9, t) * (0.2 + 0.8 * uIntensity));
         
-        // Jos aktiivisuus on korkea, voimistetaan vihreää loistetta
+        // Jos aktiivisuus on korkea, voimistetaan vihreää loistetta[cite: 9]
         auroraColor = mix(auroraColor, cMid, uIntensity * 0.4);
 
-        // Häivytetään revontuliverhon ylä- ja alareunat pehmeästi (Fade)
-        // Tämä estää sen, että taivas katkeaisi rumasti suoraan viivaan.
+        // Häivytetään revontuliverhon ylä- ja alareunat pehmeästi (Fade)[cite: 9]
+        // This prevents the sky cutting off strictly on an edge.
         float verticalFade = smoothstep(0.0, 0.3, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
         
-        // Sivuhäivytys, jotta nauha sulautuu reunoilta pimeyteen
+        // Sivuhäivytys, jotta nauha sulautuu reunoilta pimeyteen[cite: 9]
         float horizontalFade = smoothstep(0.0, 0.2, vUv.x) * smoothstep(1.0, 0.8, vUv.x);
         
         float finalAlpha = verticalFade * horizontalFade * (0.15 + 0.85 * smoothstep(0.2, 0.8, t));
 
-        // Lisätään hienon hieno pystysuuntainen "säiekasvusto" (Ray effect) matkimaan aitoja verhoja
+        // Lisätään hienon hieno pystysuuntainen "säiekasvusto" (Ray effect) matkimaan aitoja verhoja[cite: 9]
         float rays = sin(vUv.x * 120.0 + vNoise * 5.0) * 0.08 * verticalFade;
         auroraColor += rays * cMid;
 
@@ -155,9 +153,9 @@ export function createAuroraSky(canvas, opts = {}) {
     `,
   });
 
-  // Luodaan laaja taso, joka toimii valkokankaana taivaalla (leveys 5, korkeus 2.5)
+  // Luodaan laaja taso, joka toimii valkokankaana taivaalla (leveys 5, korkeus 2.5)[cite: 9]
   const sky = new THREE.Mesh(new THREE.PlaneGeometry(5, 2.5, 40, 20), skyMat);
-  sky.position.set(0, 0.4, 0); // Nostetaan hieman ylöspäin, jotta alareuna jää tunturien taakse
+  sky.position.set(0, 0.4, 0); // Nostetaan hieman ylöspäin, jotta alareuna jää tunturien taakse[cite: 9]
   scene.add(sky);
 
   /* ---- Koko ja Responsiivisuus ---- */
@@ -179,17 +177,20 @@ export function createAuroraSky(canvas, opts = {}) {
     window.addEventListener("resize", resize);
   }
 
-  /* ---- Animaatiosilmukka (Pysähtyy kun taustalla akun säästämiseksi) ---- */
-  const clock = new THREE.Clock();
+  /* ---- UUSI MODERNISOITU TIMING (Päivitetty THREE.Timeriin) ---- */
+  const timer = new THREE.Timer();
   let rafId = null;
   let running = true;
 
   function loop() {
     if (!running) return;
     rafId = requestAnimationFrame(loop);
-    uTime.value = clock.getElapsedTime();
     
-    // Hienovaraista taivaankannen keinuntaa sivusuunnassa
+    // Päivitetään uusi ajastinrakenne
+    timer.update();
+    uTime.value = timer.getElapsed();
+    
+    // Hienovaraista taivaankannen keinuntaa sivusuunnassa[cite: 9]
     sky.position.x = Math.sin(uTime.value * 0.05) * 0.1;
     
     renderer.render(scene, camera);
@@ -201,7 +202,7 @@ export function createAuroraSky(canvas, opts = {}) {
       if (rafId) cancelAnimationFrame(rafId);
     } else if (!running) {
       running = true;
-      clock.getDelta(); // Estetään laskennan hyppäys tauon jälkeen
+      // THREE.Timer ei vaadi kikkailua hyppäysten estoon taustalle menon jälkeen
       loop();
     }
   }

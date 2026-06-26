@@ -1,4 +1,9 @@
 {
+  "privacy": "Tietosuojaseloste",
+  "contact": "Ota yhteyttä",
+  "coop_title": "Yhteistyö & Web-kehitys",
+  "coop_text": "Kiinnostaako mainosnäkyvyys RepoTrackerissa tai tarvitsetko apua omien verkkosivujesi kanssa?",
+
   "tab.now": "Nyt",
   "tab.forecast": "Ennuste",
   "window.best": "Paras ajankohta",

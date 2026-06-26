@@ -313,12 +313,27 @@ export default function HomePage() {
       </main>
 
       <footer className="footer">
-        <p>© RepoTracker</p>
-        <Link to="/privacy">{t("footer.privacy")}</Link>
-        {" - "}
-        <Link to="/terms">{t("privacy.q.terms")}</Link>
-        {" - "}
-        <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
+        {/* Yhteistyö- ja web-kehitysosio */}
+  
+
+  {/* Alkuperäiset lakilinkit */}
+  <div className="footer-bottom">
+    <p>© RepoTracker</p>
+    <Link to="/privacy">{t("footer.privacy")}</Link>
+    {" - "}
+    <Link to="/terms">{t("privacy.q.terms")}</Link>
+    {" - "}
+    <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
+  </div>
+  <div className="footer-coop">
+    <p className="footer-coop-title">🤝 {t("footer.coop_title")}</p>
+    <p className="footer-coop-text">
+      {t("footer.coop_text")}{' '}
+      <Link to="/contact" className="footer-coop-link">
+        {t("footer.contact") || "Contact"}
+      
+    </p>
+  </div>
       </footer>
     </div>
   );
