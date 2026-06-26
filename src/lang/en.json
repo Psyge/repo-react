@@ -1,4 +1,11 @@
 {
+  "tab.now": "Now",
+  "tab.forecast": "Forecast",
+  "window.best": "Best time",
+  "forecast.nodata": "No forecast data available",
+  "popup.error": "Search failed",
+  "popup.clouds": "Cloud cover",
+  "forecast.popup_price": "View the full forecast — starting at €2.99",
   "premium.pagetitle": "Nothern Lights Premium — Unlock the full forecast",
 "premium.sub": "Unlock the complete Nothern Lights forecast worldwide.",
 "premium.activeBadge": "Premium active",

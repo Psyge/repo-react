@@ -1,4 +1,11 @@
 {
+  "tab.now": "Nyt",
+  "tab.forecast": "Ennuste",
+  "window.best": "Paras ajankohta",
+  "forecast.nodata": "Ennustetietoja ei saatavilla",
+  "popup.error": "Haku epäonnistui",
+  "popup.clouds": "Pilvisyys",
+  "forecast.popup_price": "Avaa koko ennuste — alk. 2,99 €",
   "premium.pagetitle": "Northern Lights Premium — Avaa täysi ennuste",
 "premium.sub": "Avaa täydellinen revontuliennuste kaikkialle maailmassa.",
 "premium.activeBadge": "Premium aktiivinen",
