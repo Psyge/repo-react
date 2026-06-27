@@ -19,9 +19,7 @@ import {
 
 import { loadSightingsLayer } from "./utils/mapSightings";
 
-const BASE =
-  import.meta.env.VITE_API_BASE ||
-  "https://report.masto84.workers.dev";
+const BASE = import.meta.env.VITE_API_BASE || "";
 
 const PREMIUM_POINT_TTL_MS = 60 * 60 * 1000;
 const MAP_CLICK_DEBOUNCE_MS = 300;

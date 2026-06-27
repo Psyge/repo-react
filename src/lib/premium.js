@@ -7,9 +7,7 @@
  *   import { isActive, openCheckout, activate, bySession, read } from "@/lib/premium";
  */
 
-const BASE =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE) ||
-  "https://report.masto84.workers.dev";
+const BASE = import.meta.env.VITE_API_BASE || "";
 
 const LS_KEY = "aurora_premium";
 const INSTALL_KEY = "aurora_install_id";

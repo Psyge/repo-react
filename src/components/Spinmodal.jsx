@@ -2,9 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import useTranslation from "../hooks/useTranslation";
 
-const BASE =
-  import.meta.env.VITE_API_BASE ||
-  "https://report.masto84.workers.dev";
+const BASE = import.meta.env.VITE_API_BASE || "";
 
 // Pyörän sektorit (8 kpl). 'no_win' toistuu, jotta "Try again" tuntuu yleiseltä.
 const SECTORS = [

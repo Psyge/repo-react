@@ -5,7 +5,7 @@ import SEO from "./components/SEO";
 
 import { Link } from "react-router-dom";
 
-const BASE = "https://report.masto84.workers.dev";
+const BASE = import.meta.env.VITE_API_BASE || "";
 
 export default function Contact() {
   const { t } = useTranslation();
