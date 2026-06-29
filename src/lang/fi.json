@@ -1,4 +1,5 @@
 {
+  "premium.teaser.short": "Avaa moniparametrisen tarkan ennusteen",
   "privacy": "Tietosuojaseloste",
   "contact": "Ota yhteyttä",
   "coop_title": "Yhteistyö & Web-kehitys",
@@ -86,7 +87,7 @@
 "aurora.active": "Taivas on hereillä.",
 "aurora.next": "Seuraava herääminen noin {h} h kuluttua.",
 "aurora.quiet": "Ei voimakasta aktiivisuutta lähiaikoina.",
-"forecast.unlock48": "Avaa 72h — Premium",
+"forecast.unlock48": "Avaa Premium vain 2.99€",
   "places.readMore": "Lue lisää",
   "places.viewAuroraMap": "Katso revontulien tilanne kartalta",
    "contact.privacy": "Lomakkeen kautta lähetettyjä tietoja käytetään ainoastaan yhteydenottoosi vastaamiseen eikä niitä luovuteta kolmansille osapuolille.",
@@ -382,7 +383,7 @@
   "forecast.today": "Tänään",
   "forecast.tomorrow": "Huomenna",
   "forecast.dayafter": "Ylihuomenna",
-  "forecast.unlock": "Avaa täysi 3 päivän ennuste",
+  "forecast.unlock": "Avaa 3 vrk ennuste Premiumilla (2,99€)",
   "forecast.full": "Koko 3 päivän ennuste",
   "forecast.empty": "Ennustetta ei saatavilla."
 }

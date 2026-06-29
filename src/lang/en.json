@@ -1,4 +1,5 @@
 {
+  "premium.teaser.short": "Open the multi-parameter detailed forecast",
   "privacy": "Privacy Policy",
   "contact": "Contact us",
   "coop_title": "Partnerships & Web Development",
@@ -85,7 +86,7 @@
 "aurora.active": "The skies are awake.",
 "aurora.next": "Next awakening expected in {h} hours.",
 "aurora.quiet": "No strong activity expected soon.",
-"forecast.unlock48": "Unlock 72h — Premium",
+"forecast.unlock48": "Unlock Premium for only €2.99",
   "places.readMore": "Read more",
   "places.viewAuroraMap": "View Nothern Lights conditions on map",
    "contact.privacy": "Information submitted through this form is used solely for responding to your inquiry and is not shared with third parties.",
@@ -384,7 +385,7 @@
   "forecast.today": "Today",
   "forecast.tomorrow": "Tomorrow",
   "forecast.dayafter": "Day after",
-  "forecast.unlock": "Unlock full 3-day forecast",
+  "forecast.unlock": "Get 3-day forecast with Premium (€2.99)",
   "forecast.full": "Full 3-day forecast",
   "forecast.empty": "Forecast unavailable."
 }

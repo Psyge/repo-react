@@ -432,15 +432,22 @@ export default function AuroraHero({ forecast, children }) {
           </h1>
 
           <div className="ah-probability-box">
-            <span className="ah-prob-label">{t("probability.label")}:</span>
-            {isPremium ? (
-              <strong className="ah-premium-prob-value">{probability != null ? `${probability}%` : "--"}</strong>
-            ) : (
-              <button className="ah-premium-link-btn" onClick={() => navigate('/premium')}>
-                🔒 {t("forecast.unlock48")}
-              </button>
-            )}
-          </div>
+  <span className="ah-prob-label">{t("probability.label")}:</span>
+  {isPremium ? (
+    <strong className="ah-premium-prob-value">
+      {probability != null ? `${probability}%` : "--"}
+    </strong>
+  ) : (
+    <div className="ah-premium-cta-container" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <button className="ah-premium-link-btn" onClick={() => navigate('/premium')}>
+        🔒 {t("forecast.unlock48")}
+      </button>
+      <span className="ah-premium-subtext" style={{ fontSize: '0.75rem', opacity: 0.7, fontStyle: 'italic' }}>
+        {t("premium.teaser.short")}
+      </span>
+    </div>
+  )}
+</div>
         </div>
 
         {/* Oikea puoli */}
