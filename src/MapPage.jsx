@@ -1,7 +1,10 @@
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, Suspense, useState, lazy } from "react";
+import { useNavigate } from "react-router-dom";
+import { isActive } from "./lib/premium";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { createRoot } from "react-dom/client";
+import useTranslation from "./hooks/useTranslation";
 
 import AuroraPopup from "./components/AuroraPopup";
 import Header from "./components/Header";
@@ -24,6 +27,8 @@ const BASE = import.meta.env.VITE_API_BASE || "";
 const PREMIUM_POINT_TTL_MS = 60 * 60 * 1000;
 const MAP_CLICK_DEBOUNCE_MS = 300;
 const SIGHTINGS_REFRESH_MS = 10 * 60 * 1000;
+
+const GlobeView = lazy(() => import("./components/GlobeView"));
 
 function readPremium() {
   try {
@@ -125,6 +130,10 @@ export default function MapPage() {
   const initialLat = parseFloat(searchParams.get("lat")) || 67.5;
   const initialLon = parseFloat(searchParams.get("lon")) || 26;
   const isSighting  = searchParams.get("sighting");
+
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+const [globeMsg, setGlobeMsg] = useState("");
 
   useEffect(() => {
     if (searchParams.get("view") === "sun") {
@@ -341,11 +350,11 @@ export default function MapPage() {
         </div>
       )}
 
-      <div
-        id="map"
-        ref={mapRef}
-        className={view === "sun" ? "map--hidden" : ""}
-      />
+     <div
+  id="map"
+  ref={mapRef}
+  className={view !== "map" ? "map--hidden" : ""}   
+/>
 
       {view === "sun" && (
         <div className={`map-sun-panel ${sunVisible ? "map-sun-panel--visible" : ""}`}>
@@ -355,7 +364,24 @@ export default function MapPage() {
           />
         </div>
       )}
-
+      {view === "globe" && (
+  <Suspense fallback={<div className="globe-loading">{t("globe.loading") || "Loading globe…"}</div>}>
+    <GlobeView
+      premium={isActive()}
+      onUpgrade={() => navigate("/premium")}
+      onFallback={(reason) => {
+        switchToMap();
+        setGlobeMsg(
+          reason === "timeout"
+            ? (t("globe.tooSlow") || "3D globe is taking too long — showing the 2D map.")
+            : (t("globe.unsupported") || "3D globe isn't available on this device — showing the 2D map.")
+        );
+        setTimeout(() => setGlobeMsg(""), 6000);
+      }}
+    />
+  </Suspense>
+)}
+{globeMsg && <div className="globe-fallback-toast">{globeMsg}</div>}
       <div className="map-view-toggle">
         <button
           className={`map-toggle-btn ${view === "map" ? "map-toggle-btn--active" : ""}`}
@@ -369,6 +395,12 @@ export default function MapPage() {
         >
           ☀️ Sun &amp; night
         </button>
+        <button
+  className={`map-toggle-btn ${view === "globe" ? "map-toggle-btn--active" : ""}`}
+  onClick={() => { setSunVisible(false); setView("globe"); }}
+>
+  🌍 {t("globe.toggle") || "Globe"}
+</button>
       </div>
     </div>
   );
