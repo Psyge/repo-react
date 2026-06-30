@@ -110,14 +110,16 @@ export default function AuroraPopup({
       </div>
 
       {tab === "now" && (
-        <>
-          {/* Iso tila-teksti, pieni prosentti */}
-          <div className="ap-status">
-            <div className="ap-status-level" style={{ color }}>{levelLabel}</div>
-            <div className="ap-status-prob" style={{ color }}>
-              {probability != null ? `${probability}%` : "–"}
-            </div>
-          </div>
+  <>
+    {/* Iso tila-teksti, dynaaminen prosentti */}
+    <div className="ap-status">
+      <div className="ap-status-level" style={{ color }}>
+        {levelLabel}
+      </div>
+      <div className="ap-status-prob" style={{ color }}>
+        {probability != null ? `${probability}%` : "–"}
+      </div>
+    </div>
 
           {/* Paras ikkuna */}
           {bestWindow && (

@@ -399,29 +399,40 @@
 }
 
 /* STATUS — iso teksti, pieni prosentti */
+/* STATUS — iso teksti, dynaamisesti mukautuva prosentti */
 .ap-status {
   display: flex;
-  align-items: baseline;
+  align-items: flex-end; /* Vaihdettu baseline -> flex-end, jotta lyhyt teksti ja prosentti linjautuvat kauniisti alareunasta */
   justify-content: space-between;
+  flex-wrap: wrap; /* Salli elementtien rivittyä päällekkäin pikkunäytöillä tai pitkillä teksteillä */
+  gap: 8px; /* Varmistaa, ettei teksti ja prosentti koskaan kosketa toisiaan */
   margin-bottom: 14px;
 }
 
 .ap-status-level {
-  font-size: 36px;
+  font-size: 32px; /* Pienennetty aavistus (36px -> 32px), jotta pitkät sanat mahtuvat paremmin */
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: -0.02em;
-  line-height: 1;
+  line-height: 1.1; /* Hieman ilmaa, jos teksti rivittyy kahdelle riville */
+  flex: 1; /* Antaa tekstille luvan viedä tarvittava tila */
+  min-width: 160px; /* Estää tekstilaatikkoa menemästä liian kapeaksi */
 }
 
 .ap-status-prob {
-  font-size: 18px;
+  font-size: 20px; /* Tehdään prosentista hieman isompi ja yläindeksimäinen */
   font-weight: 700;
   opacity: 0.8;
+  white-space: nowrap; /* Estää prosenttimerkin ja numeron halkeamisen eri riveille */
+  align-self: flex-start; /* Nosta prosentti tekstin yläreunan tasolle, jos teksti on pitkä */
 }
 
 @media (max-width: 768px) {
-  .ap-status-level { font-size: 28px; }
-  .ap-status-prob { font-size: 15px; }
+  .ap-status-level { 
+    font-size: 24px; /* Pienennetty mobiilissa (28px -> 24px), jotta "ERITTÄIN KORKEA" ei hajoa */
+  }
+  .ap-status-prob { 
+    font-size: 16px; 
+  }
   .ap-tab { font-size: 11px; padding: 6px 0; }
 }
