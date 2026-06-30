@@ -28,7 +28,7 @@ const PREMIUM_POINT_TTL_MS = 60 * 60 * 1000;
 const MAP_CLICK_DEBOUNCE_MS = 300;
 const SIGHTINGS_REFRESH_MS = 10 * 60 * 1000;
 
-const GlobeView = lazy(() => import("./components/GlobeView"));
+const GlobeView = lazy(() => import("./components/Globeview"));
 
 function readPremium() {
   try {
