@@ -1,7 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { isActive, read, refresh } from "../lib/premium";
 
 const PremiumContext = createContext();
+
+// Älä kutsu backendiä (/api/premium/status) useammin kuin tämän verran.
+const REFRESH_THROTTLE_MS = 30 * 1000;
 
 export function PremiumProvider({ children }) {
   const [premium, setPremium] = useState({
@@ -10,58 +13,55 @@ export function PremiumProvider({ children }) {
     loading: true,
   });
 
-  async function loadPremium() {
+  const lastRefreshRef = useRef(0);
+
+  async function loadPremium({ force = false } = {}) {
     const active = isActive();
     const data = read();
 
-    setPremium({
-      active,
-      data,
-      loading: false,
-    });
+    // Paikallinen tila päivittyy aina (halpa, ei verkkoa)
+    setPremium({ active, data, loading: false });
 
-    // sync backendiin
-    if (active) {
-      try {
-        const result = await refresh();
+    if (!active) return;
 
-        setPremium({
-          active: result.active,
-          data: result.active
-            ? {
-                ...data,
-                expiresAt: result.expiresAt,
-                tier: result.tier,
-              }
-            : null,
-          loading: false,
-        });
-      } catch (e) {
-        console.warn(e);
-      }
+    // Backend-synkka vain harvakseltaan → estää KV-rate-limitin (429) ryppäissä
+    const now = Date.now();
+    if (!force && now - lastRefreshRef.current < REFRESH_THROTTLE_MS) return;
+    lastRefreshRef.current = now;
+
+    try {
+      const result = await refresh();
+      setPremium({
+        active: result.active,
+        data: result.active
+          ? { ...data, expiresAt: result.expiresAt, tier: result.tier }
+          : null,
+        loading: false,
+      });
+    } catch (e) {
+      console.warn(e);
     }
   }
 
   useEffect(() => {
-    loadPremium();
+    loadPremium({ force: true });
 
-    // kuuntelee localStorage muutoksia
-    function onStorage() {
+    // Storage-tapahtuma laukeaa muista välilehdistä; reagoi vain premium-avaimeen
+    function onStorage(e) {
+      if (e && e.key && e.key !== "aurora_premium") return;
       loadPremium();
     }
 
     window.addEventListener("storage", onStorage);
-
-    return () => {
-      window.removeEventListener("storage", onStorage);
-    };
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   return (
     <PremiumContext.Provider
       value={{
         premium,
-        refreshPremium: loadPremium,
+        // Pakotettu päivitys (esim. aktivoinnin jälkeen) ohittaa throttlen
+        refreshPremium: () => loadPremium({ force: true }),
       }}
     >
       {children}
