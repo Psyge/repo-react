@@ -398,41 +398,47 @@
   color: var(--fg);
 }
 
-/* STATUS — iso teksti, pieni prosentti */
+
 /* STATUS — iso teksti, dynaamisesti mukautuva prosentti */
+./* STATUS — Tehdään tästä kiintopiste */
 .ap-status {
-  display: flex;
-  align-items: flex-end; /* Vaihdettu baseline -> flex-end, jotta lyhyt teksti ja prosentti linjautuvat kauniisti alareunasta */
-  justify-content: space-between;
-  flex-wrap: wrap; /* Salli elementtien rivittyä päällekkäin pikkunäytöillä tai pitkillä teksteillä */
-  gap: 8px; /* Varmistaa, ettei teksti ja prosentti koskaan kosketa toisiaan */
+  position: relative; /* Tämä on tärkeä, jotta prosentti osaa asemoitua tämän sisälle */
+  display: block; /* Muutetaan blockiksi, niin flex ei sekoita elementtejä */
   margin-bottom: 14px;
+  padding-right: 50px; /* Jätetään oikeaan reunaan reilusti tyhjää tilaa prosentille, jottei teksti ikinä mene sen päälle */
 }
 
 .ap-status-level {
-  font-size: 32px; /* Pienennetty aavistus (36px -> 32px), jotta pitkät sanat mahtuvat paremmin */
+  font-size: 36px; /* Alkuperäinen iso koko */
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: -0.02em;
-  line-height: 1.1; /* Hieman ilmaa, jos teksti rivittyy kahdelle riville */
-  flex: 1; /* Antaa tekstille luvan viedä tarvittava tila */
-  min-width: 160px; /* Estää tekstilaatikkoa menemästä liian kapeaksi */
+  line-height: 1;
+  word-break: break-word; /* Jos teksti on liian pitkä (Erittäin korkea), se rivittyy nätisti kahteen riviin */
 }
 
+/* Pakotetaan prosentti absoluuttisesti oikeaan yläreunaan */
 .ap-status-prob {
-  font-size: 20px; /* Tehdään prosentista hieman isompi ja yläindeksimäinen */
+  position: absolute;
+  right: 0;
+  top: 4px; /* Säädä tätä korkeutta, jos haluat prosentin ylemmäs tai alemmas otsikon yläreunaan nähden */
+  font-size: 18px;
   font-weight: 700;
   opacity: 0.8;
-  white-space: nowrap; /* Estää prosenttimerkin ja numeron halkeamisen eri riveille */
-  align-self: flex-start; /* Nosta prosentti tekstin yläreunan tasolle, jos teksti on pitkä */
+  white-space: nowrap;
 }
 
+/* Mobiilikorjaus, jotta teksti ei näytä liian jättimäiseltä pienessä popupissa */
 @media (max-width: 768px) {
+  .ap-status {
+    padding-right: 45px;
+  }
   .ap-status-level { 
-    font-size: 24px; /* Pienennetty mobiilissa (28px -> 24px), jotta "ERITTÄIN KORKEA" ei hajoa */
+    font-size: 26px; /* Pienennetään tätä vähän, niin "ERITTÄIN KORKEA" mahtuu nätisti kahteen riviin, jos tila loppuu */
+    line-height: 1.1;
   }
   .ap-status-prob { 
-    font-size: 16px; 
+    font-size: 15px;
+    top: 2px;
   }
-  .ap-tab { font-size: 11px; padding: 6px 0; }
 }
