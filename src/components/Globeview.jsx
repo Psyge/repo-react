@@ -41,10 +41,29 @@ function deviceCanRenderGlobe() {
   return true;
 }
 
-function auroraColor(val) {
-  if (val >= 45) return "#ff3b7f";  // voimakas → pinkki
-  if (val >= 22) return "#7b5fff";  // kohtalainen → violetti
-  return "#16ff8a";                  // heikko → vihreä
+/* Pehmeä aurora-gradientti heatmapille: läpinäkyvä reuna → vihreä → cyan → violetti → pinkki.
+   t = normalisoitu voimakkuus 0..1. Alfa kasvaa voimakkuuden mukaan → reunat sulautuvat. */
+function auroraHeatColor(t) {
+  const stops = [
+    [0.00, [0, 255, 160, 0]],
+    [0.15, [0, 255, 160, 110]],
+    [0.45, [20, 224, 255, 170]],
+    [0.75, [123, 95, 255, 205]],
+    [1.00, [255, 59, 127, 235]],
+  ];
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 1; i < stops.length; i++) {
+    if (t <= stops[i][0]) {
+      const t0 = stops[i - 1][0], c0 = stops[i - 1][1];
+      const t1 = stops[i][0], c1 = stops[i][1];
+      const f = (t - t0) / ((t1 - t0) || 1);
+      const ch = (k) => Math.round(c0[k] + (c1[k] - c0[k]) * f);
+      const a = (c0[3] + (c1[3] - c0[3]) * f) / 255;
+      return `rgba(${ch(0)},${ch(1)},${ch(2)},${a.toFixed(3)})`;
+    }
+  }
+  const last = stops[stops.length - 1][1];
+  return `rgba(${last[0]},${last[1]},${last[2]},${(last[3] / 255).toFixed(3)})`;
 }
 
 export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
@@ -135,13 +154,15 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             showAtmosphere
             atmosphereColor="#00ffc6"
             atmosphereAltitude={0.08}
-            pointsData={points}
-            pointLat="lat"
-            pointLng="lng"
-            pointColor={(d) => auroraColor(d.val)}
-            pointAltitude={(d) => 0.01 + (Math.min(d.val, 100) / 100) * 0.09}
-            pointRadius={0.22}
-            pointsMerge={true}
+            heatmapsData={[points]}
+            heatmapPointLat="lat"
+            heatmapPointLng="lng"
+            heatmapPointWeight={(d) => Math.min(d.val, 100) / 100}
+            heatmapBandwidth={1.6}
+            heatmapColorFn={auroraHeatColor}
+            heatmapBaseAltitude={0.012}
+            heatmapTopAltitude={0.05}
+            heatmapsTransitionDuration={600}
           />
         )}
       </Suspense>
