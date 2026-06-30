@@ -29,7 +29,7 @@
 .globe-upsell {
   position: absolute;
   left: 50%;
-  bottom: 22px;
+  bottom: 104px;            /* nostettu näkymänvaihtopalkin yläpuolelle, maapallon alareunan päälle */
   transform: translateX(-50%);
   z-index: 10;
 

@@ -134,7 +134,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
             showAtmosphere
             atmosphereColor="#00ffc6"
-            atmosphereAltitude={0.18}
+            atmosphereAltitude={0.08}
             pointsData={points}
             pointLat="lat"
             pointLng="lng"
