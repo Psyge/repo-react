@@ -130,8 +130,8 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     const g = globeEl.current;
     if (!g) return;
     const controls = g.controls();
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = premium ? 0.35 : 0.6;
+    controls.autoRotate = !premium;    // PREMIUM: ei automaattista pyöritystä — käyttäjä ohjaa itse
+    controls.autoRotateSpeed = 0.6;    // (vaikuttaa vain free-tilassa)
     controls.enablePan = false;
     controls.enableZoom = premium;     // FREE: ei zoomia
     controls.enableRotate = premium;   // FREE: ei manuaalista pyöritystä
@@ -154,15 +154,16 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             showAtmosphere
             atmosphereColor="#00ffc6"
             atmosphereAltitude={0.08}
-            heatmapsData={[points]}
-            heatmapPointLat="lat"
-            heatmapPointLng="lng"
-            heatmapPointWeight={(d) => Math.min(d.val, 100) / 100}
-            heatmapBandwidth={1.6}
-            heatmapColorFn={auroraHeatColor}
-            heatmapBaseAltitude={0.012}
-            heatmapTopAltitude={0.05}
-            heatmapsTransitionDuration={600}
+            hexBinPointsData={points}
+            hexBinPointLat="lat"
+            hexBinPointLng="lng"
+            hexBinPointWeight={(d) => d.val}
+            hexBinResolution={4}
+            hexBinMerge={true}
+            hexAltitude={(d) => 0.004 + (Math.min(d.sumWeight / d.points.length, 100) / 100) * 0.05}
+            hexTopColor={(d) => auroraHeatColor((d.sumWeight / d.points.length) / 100)}
+            hexSideColor={(d) => auroraHeatColor((d.sumWeight / d.points.length) / 100)}
+            hexBinPointsTransitionDuration={600}
           />
         )}
       </Suspense>
