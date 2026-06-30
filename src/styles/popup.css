@@ -408,7 +408,7 @@
 }
 
 .ap-status-level {
-  font-size: 36px; /* Alkuperäinen näyttävä koko */
+  font-size: 26px; /* Alkuperäinen näyttävä koko */
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: -0.02em;
@@ -417,7 +417,7 @@
 }
 
 .ap-status-prob {
-  font-size: 22px; /* Koska prosentti on nyt alla omalla rivillään, se saa olla vähän isompi ja erottuvampi */
+  font-size: 20px; /* Koska prosentti on nyt alla omalla rivillään, se saa olla vähän isompi ja erottuvampi */
   font-weight: 700;
   opacity: 0.85;
   line-height: 1;
