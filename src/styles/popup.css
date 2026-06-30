@@ -398,47 +398,37 @@
   color: var(--fg);
 }
 
-
-/* STATUS — iso teksti, dynaamisesti mukautuva prosentti */
-./* STATUS — Tehdään tästä kiintopiste */
+/* STATUS — Teksti ylhäällä, prosentti alla */
 .ap-status {
-  position: relative; /* Tämä on tärkeä, jotta prosentti osaa asemoitua tämän sisälle */
-  display: block; /* Muutetaan blockiksi, niin flex ei sekoita elementtejä */
+  display: flex;
+  flex-direction: column; /* Pakottaa elementit päällekkäin: taso ensin, prosentti alle */
+  align-items: flex-start; /* Tasaa molemmat siististi vasempaan reunaan */
+  gap: 2px; /* Pieni väli tekstin ja numeron väliin */
   margin-bottom: 14px;
-  padding-right: 50px; /* Jätetään oikeaan reunaan reilusti tyhjää tilaa prosentille, jottei teksti ikinä mene sen päälle */
 }
 
 .ap-status-level {
-  font-size: 36px; /* Alkuperäinen iso koko */
+  font-size: 36px; /* Alkuperäinen näyttävä koko */
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: -0.02em;
   line-height: 1;
-  word-break: break-word; /* Jos teksti on liian pitkä (Erittäin korkea), se rivittyy nätisti kahteen riviin */
+  white-space: nowrap; /* TÄRKEÄ: Estää sanaa katkeamasta ikinä kahdelle riville */
 }
 
-/* Pakotetaan prosentti absoluuttisesti oikeaan yläreunaan */
 .ap-status-prob {
-  position: absolute;
-  right: 0;
-  top: 4px; /* Säädä tätä korkeutta, jos haluat prosentin ylemmäs tai alemmas otsikon yläreunaan nähden */
-  font-size: 18px;
+  font-size: 22px; /* Koska prosentti on nyt alla omalla rivillään, se saa olla vähän isompi ja erottuvampi */
   font-weight: 700;
-  opacity: 0.8;
-  white-space: nowrap;
+  opacity: 0.85;
+  line-height: 1;
 }
 
-/* Mobiilikorjaus, jotta teksti ei näytä liian jättimäiseltä pienessä popupissa */
+/* Mobiilikoko, jos popup meinaa mennä liian täyteen kapeilla näytöillä */
 @media (max-width: 768px) {
-  .ap-status {
-    padding-right: 45px;
-  }
   .ap-status-level { 
-    font-size: 26px; /* Pienennetään tätä vähän, niin "ERITTÄIN KORKEA" mahtuu nätisti kahteen riviin, jos tila loppuu */
-    line-height: 1.1;
+    font-size: 28px; 
   }
   .ap-status-prob { 
-    font-size: 15px;
-    top: 2px;
+    font-size: 18px; 
   }
 }
