@@ -7,7 +7,7 @@
  *   import { isActive, openCheckout, activate, bySession, read } from "@/lib/premium";
  */
 
-const BASE = import.meta.env.VITE_API_BASE || "";
+const BASE = process.env.REACT_APP_API_BASE || "";
 
 const LS_KEY = "aurora_premium";
 const INSTALL_KEY = "aurora_install_id";

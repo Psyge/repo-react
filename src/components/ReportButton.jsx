@@ -2,7 +2,7 @@ import { useState } from "react";
 import useTranslation from "../hooks/useTranslation";
 import SpinModal from "../components/Spinmodal";
 
-const BASE = import.meta.env.VITE_API_BASE || "";
+const BASE = process.env.REACT_APP_API_BASE || "";
 
 const TURNSTILE_SITE_KEY = "0x4AAAAAADF29-_iSqwRQWf2";
 

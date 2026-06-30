@@ -14,7 +14,7 @@ import ReportButton from "./ReportButton";
    on premium-ominaisuus, kuten ennenkin.
 ======================================================================== */
 
-const BASE = import.meta.env.VITE_API_BASE || "";
+const BASE = process.env.REACT_APP_API_BASE || "";
 
 const SIGHTINGS_CACHE_KEY = "aurora_session_cache:sightings:clusters:v1";
 const SIGHTINGS_TTL_MS = 10 * 60 * 1000; // 10 min

@@ -11,7 +11,7 @@ import SEO from "./components/SEO";
 import { client } from "./lib/contentfulClient";
 
 
-const BASE = import.meta.env.VITE_API_BASE || "";
+const BASE = process.env.REACT_APP_API_BASE || "";
 
 const NOAA_3_DAY_FORECAST_URL =
   "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
