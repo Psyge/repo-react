@@ -171,6 +171,9 @@ export default function PremiumPage() {
             <p className="premium-consent-note">
               ℹ️ {t("premium.consent.note")}
             </p>
+            <p className="premium-consent-disclaimer">
+      ⚠️ {t("premium.consent.disclaimer")}
+    </p>
           </div>
         </section>
 

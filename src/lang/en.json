@@ -1,4 +1,5 @@
 {
+  "premium.consent.disclaimer": "Service is provided 'as-is'. RepoTracker relies on third-party APIs and rate limits. Refunds will not be issued due to data downtime or unpredictable natural conditions like cloud coverage.",
    "faq.q.res": "Service Availability, Data Accuracy, and Limitation of Liability",
   "faq.a.res1'": "RepoTracker provides forecasts based on real-time data sources from third parties (such as space weather and weather services). The service is provided 'as is' and 'as available'.",
   "faq. a.res2": "Since this is a one-person hobby project and we rely on external data and API usage quotas, the administrator reserves the right to modify, suspend, or terminate the service or the provision of its features at any time without prior notice. RepoTracker is not liable for any service interruptions, data delays, or inaccuracies in forecasts.",
