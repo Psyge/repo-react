@@ -103,11 +103,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     Promise.allSettled([
       fetch(OVATION_URL, { cache: "no-store" }).then(r => r.json()),
       fetch(BORDERS_URL).then(r => {
-        if (!r.ok) throw new Error(tr("globe.error.borders", "Country borders data not found."));
+        if (!r.ok) throw new Error("Country borders data not found.");
         return r.json();
       }),
       fetch(CITIES_URL).then(r => {
-        if (!r.ok) throw new Error(tr("globe.error.cities", "Major cities data not found."));
+        if (!r.ok) throw new Error("Major cities data not found.");
         return r.json();
       })
     ])
