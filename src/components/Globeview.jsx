@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, Suspense, lazy, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, Suspense, lazy, useCallback } from "react";
 import useTranslation from "../hooks/useTranslation";
 import * as THREE from 'three'; 
 
@@ -44,18 +44,18 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
 
   const getAuroraColor = useCallback((t) => { 
     const stops = [ 
-      [0.00, [0, 255, 120, 0]],     
-      [0.20, [0, 255, 140, 0.3]],  
+      [0.00, [0, 255, 120, 0]], 
+      [0.20, [0, 255, 140, 0.3]], 
       [0.50, [20, 255, 230, 0.6]], 
       [0.80, [150, 100, 255, 0.8]],
       [1.00, [255, 100, 200, 0.9]] 
     ]; 
-    t = Math.max(0, Math.min(1, t)); 
+    const safeT = Math.max(0, Math.min(1, Number(t) || 0)); 
     for (let i = 1; i < stops.length; i++) { 
-      if (t <= stops[i][0]) { 
+      if (safeT <= stops[i][0]) { 
         const t0 = stops[i - 1][0], c0 = stops[i - 1][1]; 
         const t1 = stops[i][0], c1 = stops[i][1]; 
-        const f = (t - t0) / ((t1 - t0) || 1); 
+        const f = (safeT - t0) / ((t1 - t0) || 1); 
         const ch = (k) => Math.round(c0[k] + (c1[k] - c0[k]) * f); 
         const a = (c0[3] + (c1[3] - c0[3]) * f); 
         return `rgba(${ch(0)},${ch(1)},${ch(2)},${a.toFixed(3)})`; 
@@ -141,10 +141,6 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
 
   }, [premium]); 
 
-  const auroraColors = useMemo(() => { 
-    return auroraPoints.map(p => getAuroraColor(p.val)); 
-  }, [auroraPoints, getAuroraColor]); 
-
   return ( 
     <div className="globe-view parannettu-globe" ref={wrapRef}> 
       <Suspense fallback={<div className="globe-loading">{tr("globe.loading", "Loading globe…")}</div>}> 
@@ -163,7 +159,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             pointsData={auroraPoints} 
             pointLat="lat" 
             pointLng="lng" 
-            pointColor={(d, i) => auroraColors[i]} 
+            pointColor={(d) => getAuroraColor(d.val)} 
             pointAltitude={(d) => 0.05 + d.val * 0.1} 
             pointRadius="size" 
             pointsMerge={true}  
@@ -178,7 +174,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
       {!premium && ( 
         <div className="globe-upsell"> 
           <div className="globe-upsell-text"> 
-            🔒 {tr("globe.upsell", "Rotate & zoom the globe with Premium — explore the aurora from any angle.")} 
+            {tr("globe.upsell", "Rotate & zoom the globe with Premium — explore the aurora from any angle.")} 
           </div> 
           <button className="globe-upsell-btn" onClick={() => onUpgrade?.()}> 
             {tr("globe.upsellBtn", "Unlock with Premium")} 
