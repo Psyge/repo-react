@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, Suspense, lazy, useCallback } from "react";
 import useTranslation from "../hooks/useTranslation";
-import * as THREE from 'three';
 
 const Globe = lazy(() => import("react-globe.gl"));
 
@@ -36,15 +35,15 @@ function deviceCanRenderGlobe() {
   return true;
 }
 
-// KORJAUS: tämä oli useCallback-hook moduulitasolla (komponentin ulkopuolella),
-// mikä kaataa Reactin ("Invalid hook call"). Tavallinen funktio riittää.
+// NOAA Aurora Forecast -tyylinen väriskaala:
+// läpinäkyvä → vihreä (matala) → keltainen (~50 %) → punainen (~90 %).
 function getAuroraColor(t) {
   const stops = [
-    [0.00, [0, 255, 120, 0]],
-    [0.20, [0, 255, 140, 0.3]],
-    [0.50, [20, 255, 230, 0.6]],
-    [0.80, [150, 100, 255, 0.8]],
-    [1.00, [255, 100, 200, 0.9]]
+    [0.00, [0, 200, 60, 0]],
+    [0.15, [0, 220, 70, 0.40]],
+    [0.45, [110, 255, 40, 0.65]],
+    [0.70, [255, 220, 0, 0.80]],
+    [1.00, [255, 50, 0, 0.92]]
   ];
   t = Math.max(0, Math.min(1, t));
   for (let i = 1; i < stops.length; i++) {
@@ -126,12 +125,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
               pts.push({
                 lat: lat,
                 lng: c[0] > 180 ? c[0] - 360 : c[0],
-                val: val / 100,
-                size: 0.1 + (val / 100) * 1.5 + (Math.random() * 0.2),
-                // KORJAUS: väri valmiiksi pisteeseen — react-globe.gl:n
-                // väri-accessor ei saa indeksiä, joten auroraColors[i] oli
-                // aina undefined ja kaatoi koko pistekerroksen (.trim-error).
-                color: getAuroraColor(val / 100)
+                val: val / 100
               });
             }
           }
@@ -184,18 +178,6 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     controls.enableRotate = premium;
 
     g.pointOfView({ lat: 40, lng: -20, altitude: 2.3 }, 0);
-
-    setTimeout(() => {
-      const scene = g.scene();
-      scene.traverse((obj) => {
-        if (obj.type === 'Points' && obj.material) {
-          obj.material.blending = THREE.AdditiveBlending;
-          obj.material.transparent = true;
-          obj.material.depthWrite = false;
-        }
-      });
-    }, 1000);
-
   }, [premium]);
 
   return (
@@ -229,14 +211,16 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             labelSize={0.5}
             labelDotRadius={0.15}
             labelResolution={2}
-            pointsData={auroraPoints}
-            pointLat="lat"
-            pointLng="lng"
-            pointColor="color"
-            pointAltitude={0.05}
-            pointRadius="size"
-            pointsMerge={true}
-            pointsTransitionDuration={1000}
+            heatmapsData={auroraPoints.length ? [auroraPoints] : []}
+            heatmapPoints={d => d}
+            heatmapPointLat="lat"
+            heatmapPointLng="lng"
+            heatmapPointWeight="val"
+            heatmapBandwidth={1.8}
+            heatmapColorFn={() => getAuroraColor}
+            heatmapColorSaturation={1.0}
+            heatmapBaseAltitude={0.012}
+            heatmapsTransitionDuration={1500}
           />
         )}
       </Suspense>
