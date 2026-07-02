@@ -171,9 +171,10 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
   }, [premium]);
 
   // Käytetään useMemo:a orgaanisen värien generointiin tehostamaan suorituskykyä
+  // Riippuvuutena pisteiden määrä, jotta lasketaan uudelleen vain tarvittaessa.
   const auroraColors = useMemo(() => {
     return auroraPoints.map(p => auroraOraganicColor(p.val));
-  }, [auroraPoints]);
+  }, [auroraPoints.length]); // TÄSSÄ KORJAUS
 
   return (
     <div className="globe-view parannettu-globe" ref={wrapRef}>
