@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, Suspense, lazy, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, Suspense, lazy, useCallback } from "react";
 import useTranslation from "../hooks/useTranslation";
 import * as THREE from 'three';
 
@@ -127,7 +127,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
                 lat: lat,
                 lng: c[0] > 180 ? c[0] - 360 : c[0],
                 val: val / 100,
-                size: 0.1 + (val / 100) * 1.5 + (Math.random() * 0.2)
+                size: 0.1 + (val / 100) * 1.5 + (Math.random() * 0.2),
+                // KORJAUS: väri valmiiksi pisteeseen — react-globe.gl:n
+                // väri-accessor ei saa indeksiä, joten auroraColors[i] oli
+                // aina undefined ja kaatoi koko pistekerroksen (.trim-error).
+                color: getAuroraColor(val / 100)
               });
             }
           }
@@ -152,6 +156,9 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             lat: f.properties.latitude ?? f.geometry.coordinates[1],
             lng: f.properties.longitude ?? f.geometry.coordinates[0],
             name: f.properties.name,
+            // KORJAUS: three-globen label-fontti ei sisällä ø/å/ü yms.
+            // merkkejä → näkyvä teksti ASCII-muodossa, oikea nimi tooltipissa.
+            nameAscii: f.properties.nameascii || f.properties.name,
             country: f.properties.adm0name,
             population: f.properties.pop_max
           }));
@@ -191,10 +198,6 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
 
   }, [premium]);
 
-  const auroraColors = useMemo(() => {
-    return auroraPoints.map(p => getAuroraColor(p.val));
-  }, [auroraPoints]);
-
   return (
     <div className="globe-view parannettu-globe" ref={wrapRef}>
       <Suspense fallback={<div className="globe-loading">{tr("globe.loading", "Loading globe…")}</div>}>
@@ -219,7 +222,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             labelsData={citiesData}
             labelLat="lat"
             labelLng="lng"
-            labelText="name"
+            labelText="nameAscii"
             labelLabel={d => `${d.name}, ${d.country}`}
             labelColor={() => "rgba(212, 175, 55, 0.85)"}
             labelAltitude={0.006}
@@ -229,7 +232,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             pointsData={auroraPoints}
             pointLat="lat"
             pointLng="lng"
-            pointColor={(d, i) => auroraColors[i]}
+            pointColor="color"
             pointAltitude={0.05}
             pointRadius="size"
             pointsMerge={true}
