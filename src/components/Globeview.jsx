@@ -12,7 +12,9 @@ const CITIES_URL = "https://raw.githubusercontent.com/vasturiano/globe.gl/master
 
 const LOAD_TIMEOUT_MS = 15000;
 
-const MIN_AURORA = 10;
+// Matala raja, jotta koko ovaali (myös himmeät reunat) pääsee heatmappiin.
+// Näkyvyys säädetään väriskaalan alphalla, ei datan suodatuksella.
+const MIN_AURORA = 3;
 const MIN_ABS_LAT = 45;
 
 const MIN_CITY_POP = 1000000; // näytettävien kaupunkien minimiväkiluku
@@ -40,9 +42,10 @@ function deviceCanRenderGlobe() {
 function getAuroraColor(t) {
   const stops = [
     [0.00, [0, 200, 60, 0]],
-    [0.15, [0, 220, 70, 0.40]],
-    [0.45, [110, 255, 40, 0.65]],
-    [0.70, [255, 220, 0, 0.80]],
+    [0.06, [0, 220, 70, 0.30]],
+    [0.30, [60, 240, 60, 0.55]],
+    [0.55, [160, 255, 40, 0.70]],
+    [0.75, [255, 220, 0, 0.82]],
     [1.00, [255, 50, 0, 0.92]]
   ];
   t = Math.max(0, Math.min(1, t));
@@ -216,9 +219,9 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             heatmapPointLat="lat"
             heatmapPointLng="lng"
             heatmapPointWeight="val"
-            heatmapBandwidth={1.8}
+            heatmapBandwidth={2.2}
             heatmapColorFn={() => getAuroraColor}
-            heatmapColorSaturation={1.0}
+            heatmapColorSaturation={2.8}
             heatmapBaseAltitude={0.012}
             heatmapsTransitionDuration={1500}
           />
