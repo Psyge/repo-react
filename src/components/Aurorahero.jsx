@@ -540,19 +540,45 @@ export default function AuroraHero({ forecast, children }) {
         </svg>
       </div>
 
-      {/* Kp-ennustegraafi */}
+      {/* Kp-ennustegraafi — värit ja asettelu inline, jotta graafi toimii
+          vaikka CSS-tiedosto olisi vanha versio */}
       <div className="ah-wave">
-        <div className="ah-wave-panel">
-          <div className="ah-wave-head">
-            <span className="ah-wave-title">
+        <div
+          className="ah-wave-panel"
+          style={{
+            background: "rgba(8, 14, 26, 0.55)",
+            border: "1px solid rgba(0, 255, 198, 0.12)",
+            borderRadius: 16,
+            padding: "0.9rem 1rem 0.5rem 1rem",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+          }}
+        >
+          <div
+            className="ah-wave-head"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              gap: 8,
+              marginBottom: "0.35rem",
+            }}
+          >
+            <span className="ah-wave-title" style={{ fontSize: "0.85rem", fontWeight: 700, color: "#e6e9ef" }}>
               {trh("forecast.waveTitle", "Kp-ennuste · seuraavat 3 vrk", "Kp forecast · next 3 days")}
             </span>
-            <span className="ah-wave-source">NOAA</span>
+            <span
+              className="ah-wave-source"
+              style={{ fontSize: "0.68rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}
+            >
+              NOAA
+            </span>
           </div>
 
           {wave ? (
             <svg
               viewBox={`0 0 ${WAVE_W} ${WAVE_H}`}
+              style={{ display: "block", width: "100%", height: "auto" }}
               role="img"
               aria-label={trh("forecast.waveAria", "Revontuliaktiivisuuden Kp-ennuste seuraaville kolmelle vuorokaudelle", "Aurora activity Kp forecast for the next three days")}
             >
@@ -563,8 +589,8 @@ export default function AuroraHero({ forecast, children }) {
                   <stop offset="100%" stopColor="#7d5fff" />
                 </linearGradient>
                 <linearGradient id="ah-wave-area-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="rgba(0, 255, 198, 0.28)" />
-                  <stop offset="100%" stopColor="rgba(0, 255, 198, 0)" />
+                  <stop offset="0%"   stopColor="#00ffc6" stopOpacity="0.26" />
+                  <stop offset="100%" stopColor="#00ffc6" stopOpacity="0" />
                 </linearGradient>
               </defs>
 
@@ -572,40 +598,59 @@ export default function AuroraHero({ forecast, children }) {
               {wave.yTicks.map((tick) => (
                 <g key={tick.kp}>
                   <line
-                    className="ah-wave-grid"
                     x1={WAVE_PAD.l} y1={tick.y}
                     x2={WAVE_W - WAVE_PAD.r} y2={tick.y}
+                    stroke="rgba(148, 163, 184, 0.14)"
+                    strokeWidth="1"
                   />
-                  <text className="ah-wave-ylabel" x={WAVE_PAD.l - 6} y={tick.y + 3} textAnchor="end">
+                  <text
+                    x={WAVE_PAD.l - 7} y={tick.y + 3}
+                    textAnchor="end"
+                    fill="#7d8aa0" fontSize="9.5" fontWeight="600"
+                  >
                     {tick.kp}
                   </text>
                 </g>
               ))}
-              <text
-                className="ah-wave-ylabel ah-wave-yunit"
-                x={WAVE_PAD.l - 6} y={WAVE_PAD.t - 4}
-                textAnchor="end"
-              >
-                Kp
-              </text>
 
               {/* Päivärajat + viikonpäivät */}
               {wave.dayTicks.map((tick, i) => (
                 <g key={i}>
-                  <line className="ah-wave-day-line" x1={tick.x} y1={WAVE_PAD.t} x2={tick.x} y2={wave.baseY} />
-                  <text className="ah-wave-xlabel" x={tick.x + 4} y={WAVE_H - 6}>
+                  <line
+                    x1={tick.x} y1={WAVE_PAD.t} x2={tick.x} y2={wave.baseY}
+                    stroke="rgba(148, 163, 184, 0.10)"
+                    strokeWidth="1" strokeDasharray="3 4"
+                  />
+                  <text
+                    x={tick.x + 4} y={WAVE_H - 6}
+                    fill="#7d8aa0" fontSize="10" fontWeight="600"
+                  >
                     {tick.label}
                   </text>
                 </g>
               ))}
 
               {/* Hehkuva täyttöalue + käyrä */}
-              {wave.areaPath && <path className="ah-wave-area" d={wave.areaPath} />}
-              <path className="ah-wave-line" d={wave.openPath} />
+              {wave.areaPath && (
+                <path d={wave.areaPath} fill="url(#ah-wave-area-grad)" stroke="none" />
+              )}
+              <path
+                d={wave.openPath}
+                fill="none" stroke="url(#ah-wave-grad)"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              />
               {wave.lockPath && !isPremium && (
                 <>
-                  <path className="ah-wave-line is-locked" d={wave.lockPath} />
-                  <text className="ah-wave-lock" x={(wave.lockX ?? WAVE_W) + 6} y={WAVE_PAD.t + 10}>
+                  <path
+                    d={wave.lockPath}
+                    fill="none" stroke="#334155"
+                    strokeWidth="2" strokeDasharray="4 4"
+                  />
+                  <text
+                    x={Math.min((wave.lockX ?? WAVE_W) + 6, WAVE_W - 10)} y={wave.baseY - 8}
+                    textAnchor={(wave.lockX ?? 0) > WAVE_W - 150 ? "end" : "start"}
+                    fill="#67e8f9" fontSize="11" fontWeight="700"
+                  >
                     🔒 {t("forecast.unlock48")}
                   </text>
                 </>
@@ -614,11 +659,16 @@ export default function AuroraHero({ forecast, children }) {
               {/* Nyt-viiva */}
               {wave.nowX != null && (
                 <>
-                  <line className="ah-wave-now" x1={wave.nowX} y1={WAVE_PAD.t} x2={wave.nowX} y2={wave.baseY} />
+                  <line
+                    x1={wave.nowX} y1={WAVE_PAD.t} x2={wave.nowX} y2={wave.baseY}
+                    stroke="rgba(255, 255, 255, 0.35)"
+                    strokeWidth="1" strokeDasharray="2 2"
+                  />
                   <text
-                    className="ah-wave-now-label"
-                    x={wave.nowX + 4} y={WAVE_PAD.t + 10}
+                    x={wave.nowX + 4} y={WAVE_PAD.t + 9}
                     textAnchor="start"
+                    fill="rgba(255, 255, 255, 0.6)" fontSize="9" fontWeight="700"
+                    style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}
                   >
                     {trh("forecast.now", "nyt", "now")}
                   </text>
@@ -628,12 +678,15 @@ export default function AuroraHero({ forecast, children }) {
               {/* Ennustehuippu */}
               {wave.peak && (
                 <>
-                  <circle className="ah-wave-peak-dot" cx={wave.peak.x} cy={wave.peak.y} r="4" />
+                  <circle
+                    cx={wave.peak.x} cy={wave.peak.y} r="4"
+                    fill="#00ffc6" stroke="rgba(0, 255, 198, 0.35)" strokeWidth="4"
+                  />
                   <text
-                    className="ah-wave-peak-label"
-                    x={wave.peak.x > WAVE_W - 90 ? wave.peak.x - 8 : wave.peak.x + 8}
+                    x={wave.peak.x > WAVE_W - 130 ? wave.peak.x - 8 : wave.peak.x + 8}
                     y={Math.max(wave.peak.y - 8, WAVE_PAD.t + 10)}
-                    textAnchor={wave.peak.x > WAVE_W - 90 ? "end" : "start"}
+                    textAnchor={wave.peak.x > WAVE_W - 130 ? "end" : "start"}
+                    fill="#00ffc6" fontSize="10" fontWeight="700"
                   >
                     {trh("forecast.peak", "huippu", "peak")} Kp {wave.peak.kp.toFixed(1)}
                   </text>
@@ -641,7 +694,10 @@ export default function AuroraHero({ forecast, children }) {
               )}
             </svg>
           ) : (
-            <div className="ah-wave-empty">
+            <div
+              className="ah-wave-empty"
+              style={{ padding: "2rem 0", textAlign: "center", fontSize: "0.85rem", color: "#64748b" }}
+            >
               {trh("forecast.loading", "Ladataan ennustetta…", "Loading forecast…")}
             </div>
           )}
