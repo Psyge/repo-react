@@ -64,6 +64,16 @@
     </div>
 
     <div class="card">
+      <h2>Kytkimet</h2>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <div style="flex:1; font-size:0.9rem;">🎰 Onnenpyörä: <strong id="flagSpinState">–</strong></div>
+        <button class="small secondary" id="flagSpinBtn" disabled>…</button>
+      </div>
+      <p class="note">Muutos leviää kaikille käyttäjille max 30 sekunnissa. Sulkeminen estää uudet pyöräytykset — jo voitetut palkinnot voi silti lunastaa. (Koko sivun huoltotila hoidetaan Cloudflaren WAF-säännöllä.)</p>
+      <div class="out" id="flagsOut"></div>
+    </div>
+
+    <div class="card">
       <h2>Hae asiakkaan tilanne</h2>
       <label>Sähköposti</label>
       <input id="lookupEmail" type="email" placeholder="asiakas@example.com">
@@ -179,6 +189,7 @@
         $("adminKey").value = "";
         out.className = "out";
         setView(true);
+        refreshFlags();
       }
     } catch (e) {
       show(out, "err", "Yhteysvirhe: " + e.message + "\nTarkista API-osoite ja että sivu on sallitussa originissa (CORS).");
@@ -200,6 +211,39 @@
     $("lookupActions").style.display = visible ? "flex" : "none";
     if (!visible) { $("actionOut").className = "out"; }
   }
+
+  /* --- Kytkimet --- */
+  let flags = { spinDisabled: false };
+
+  function renderFlags() {
+    const s = $("flagSpinState"), sb = $("flagSpinBtn");
+    s.textContent = flags.spinDisabled ? "SULJETTU ⚠" : "käytössä";
+    s.style.color = flags.spinDisabled ? "var(--err)" : "var(--accent)";
+    sb.textContent = flags.spinDisabled ? "Avaa pyörä" : "Sulje pyörä";
+    sb.disabled = false;
+  }
+
+  async function refreshFlags() {
+    try {
+      flags = await api("/api/admin/flags");
+      renderFlags();
+      $("flagsOut").className = "out";
+    } catch (e) { if (e.message !== "Unauthorized") show($("flagsOut"), "err", "Kytkinten haku epäonnistui: " + e.message); }
+  }
+
+  $("flagSpinBtn").addEventListener("click", async () => {
+    if (!flags.spinDisabled &&
+        !confirm("Suljetaanko onnenpyörä? Uusia pyöräytyksiä ei sallita (jo voitetut palkinnot voi silti lunastaa).")) return;
+    $("flagSpinBtn").disabled = true;
+    try {
+      flags = await api("/api/admin/flags", { method: "POST", body: JSON.stringify({ spinDisabled: !flags.spinDisabled }) });
+      renderFlags();
+      show($("flagsOut"), "ok", "✅ Tallennettu. Voimassa kaikille max 30 s kuluttua.");
+    } catch (e) {
+      if (e.message !== "Unauthorized") show($("flagsOut"), "err", "Virhe: " + e.message);
+      renderFlags();
+    }
+  });
 
   $("statsBtn").addEventListener("click", async () => {
     $("statsBtn").disabled = true;
@@ -292,7 +336,9 @@
   });
 
   /* Jos istunto on jo voimassa (sivun päivitys), suoraan työkaluihin */
-  setView(!!(session.key && session.base));
+  const hasSession = !!(session.key && session.base);
+  setView(hasSession);
+  if (hasSession) refreshFlags();
 </script>
 </body>
 </html>
