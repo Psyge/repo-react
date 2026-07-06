@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>RepoTracker — Admin</title>
+<style>
+  :root { --bg:#02040a; --panel:#0b111e; --border:#1e293b; --fg:#e6e9ef; --muted:#94a3b8; --accent:#00ffc6; --err:#f87171; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:2rem 1rem; background:var(--bg); color:var(--fg); font-family:Arial,Helvetica,sans-serif; min-height:100vh; }
+  .wrap { max-width:520px; margin:0 auto; }
+  h1 { font-size:1.3rem; margin:0; }
+  h1 span { color:var(--accent); }
+  .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:1.25rem; margin-bottom:1rem; }
+  .card h2 { font-size:0.95rem; margin:0 0 0.9rem; color:var(--accent); }
+  label { display:block; font-size:0.78rem; color:var(--muted); margin:0.7rem 0 0.25rem; }
+  input { width:100%; padding:0.6rem 0.7rem; background:#060b15; border:1px solid var(--border); border-radius:8px; color:var(--fg); font-size:0.9rem; }
+  input:focus { outline:none; border-color:var(--accent); }
+  button { width:100%; margin-top:1rem; padding:0.7rem; border:none; border-radius:8px; background:var(--accent); color:#02040a; font-weight:700; font-size:0.9rem; cursor:pointer; }
+  button:disabled { opacity:0.5; cursor:wait; }
+  button.secondary { background:transparent; border:1px solid var(--accent); color:var(--accent); }
+  button.small { width:auto; margin:0; padding:0.4rem 0.9rem; font-size:0.78rem; }
+  .out { margin-top:1rem; padding:0.8rem; border-radius:8px; font-size:0.82rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; display:none; }
+  .out.ok  { display:block; background:rgba(0,255,198,0.07); border:1px solid rgba(0,255,198,0.3); }
+  .out.err { display:block; background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.4); color:var(--err); }
+  .note { font-size:0.72rem; color:var(--muted); margin-top:0.6rem; line-height:1.4; }
+  #panelView { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- KIRJAUTUMINEN -->
+  <div id="loginView">
+    <div class="topbar"><h1>Repo<span>Tracker</span> — Admin</h1></div>
+    <div class="card">
+      <h2>Kirjaudu</h2>
+      <label>API-osoite (worker)</label>
+      <input id="apiBase" type="url" placeholder="https://api.repotracker.fi" autocomplete="off">
+      <label>Admin-avain</label>
+      <input id="adminKey" type="password" placeholder="ADMIN_KEY" autocomplete="current-password">
+      <button id="loginBtn">Kirjaudu sisään</button>
+      <div class="out" id="loginOut"></div>
+      <p class="note">Avain tarkistetaan palvelimelta. Se säilyy vain tämän välilehden istunnossa (sessionStorage) ja pyyhkiytyy kun selain suljetaan.</p>
+    </div>
+  </div>
+
+  <!-- TYÖKALUT -->
+  <div id="panelView">
+    <div class="topbar">
+      <h1>Repo<span>Tracker</span> — Admin</h1>
+      <button class="small secondary" id="logoutBtn">Kirjaudu ulos</button>
+    </div>
+
+    <div class="card">
+      <h2>Hae asiakkaan tilanne</h2>
+      <label>Sähköposti</label>
+      <input id="lookupEmail" type="email" placeholder="asiakas@example.com">
+      <button class="secondary" id="lookupBtn">Hae tilanne</button>
+      <div class="out" id="lookupOut"></div>
+    </div>
+
+    <div class="card">
+      <h2>Myönnä premium-aikaa</h2>
+      <p class="note">Jos emaililla on aktiivinen token, aikaa jatketaan sen perään. Muuten luodaan uusi token. Asiakas saa mailin, jossa uusi voimassaoloaika.</p>
+      <label>Sähköposti</label>
+      <input id="grantEmail" type="email" placeholder="asiakas@example.com">
+      <label>Kesto (päivää, esim. 7 tai 0.5)</label>
+      <input id="grantDays" type="number" min="0.1" max="90" step="0.1" value="7">
+      <label>Syy (vain omaan kirjanpitoon, näkyy KV-recordissa)</label>
+      <input id="grantReason" type="text" placeholder="esim. tuplaoston hyvitys, Stripe pi_xxx">
+      <button id="grantBtn">Myönnä aika ja lähetä maili</button>
+      <div class="out" id="grantOut"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const show = (el, cls, text) => { el.className = "out " + cls; el.textContent = text; };
+
+  /* Istunto: avain sessionStorageen (poistuu kun selain suljetaan),
+     API-osoite localStorageen (ei salaisuus). */
+  const session = {
+    get base() { return localStorage.getItem("rt_admin_base") || ""; },
+    set base(v) { localStorage.setItem("rt_admin_base", v); },
+    get key()  { return sessionStorage.getItem("rt_admin_key") || ""; },
+    set key(v) { sessionStorage.setItem("rt_admin_key", v); },
+    clear()    { sessionStorage.removeItem("rt_admin_key"); },
+  };
+
+  function setView(loggedIn) {
+    $("loginView").style.display = loggedIn ? "none" : "block";
+    $("panelView").style.display = loggedIn ? "block" : "none";
+  }
+
+  async function api(path, opts = {}) {
+    const res = await fetch(session.base.replace(/\/+$/, "") + path, {
+      ...opts,
+      headers: {
+        "Authorization": "Bearer " + session.key,
+        "Content-Type": "application/json",
+        ...(opts.headers || {}),
+      },
+    });
+    if (res.status === 401) {
+      // Avain ei kelpaa (esim. vaihdettu) → takaisin kirjautumiseen
+      session.clear();
+      setView(false);
+      show($("loginOut"), "err", "Istunto ei ole enää voimassa — kirjaudu uudelleen.");
+      throw new Error("Unauthorized");
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+    return data;
+  }
+
+  /* Avaimen validointi palvelimelta: lookup ilman email-parametria
+     palauttaa 400 jos avain kelpaa, 401 jos ei. */
+  async function verifyKey(base, key) {
+    const res = await fetch(base.replace(/\/+$/, "") + "/api/admin/lookup", {
+      headers: { "Authorization": "Bearer " + key },
+    });
+    if (res.status === 401) return false;
+    return true; // 400 Invalid email = auth meni läpi
+  }
+
+  /* --- Kirjautuminen --- */
+  $("apiBase").value = session.base;
+
+  $("loginBtn").addEventListener("click", async () => {
+    const out = $("loginOut");
+    const base = $("apiBase").value.trim();
+    const key  = $("adminKey").value;
+    if (!base) return show(out, "err", "Anna API-osoite.");
+    if (!key)  return show(out, "err", "Anna admin-avain.");
+    $("loginBtn").disabled = true;
+    try {
+      const ok = await verifyKey(base, key);
+      if (!ok) {
+        show(out, "err", "Väärä admin-avain.");
+      } else {
+        session.base = base;
+        session.key = key;
+        $("adminKey").value = "";
+        out.className = "out";
+        setView(true);
+      }
+    } catch (e) {
+      show(out, "err", "Yhteysvirhe: " + e.message + "\nTarkista API-osoite ja että sivu on sallitussa originissa (CORS).");
+    }
+    $("loginBtn").disabled = false;
+  });
+
+  $("adminKey").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
+
+  $("logoutBtn").addEventListener("click", () => {
+    session.clear();
+    setView(false);
+  });
+
+  /* --- Työkalut --- */
+  $("lookupBtn").addEventListener("click", async () => {
+    const out = $("lookupOut");
+    const email = $("lookupEmail").value.trim();
+    if (!email) return show(out, "err", "Anna sähköposti.");
+    $("lookupBtn").disabled = true;
+    try {
+      const d = await api("/api/admin/lookup?email=" + encodeURIComponent(email));
+      if (!d.found) {
+        show(out, "ok", "Ei premium-tokenia tällä emaililla.");
+      } else {
+        show(out, "ok",
+          (d.active ? "✅ AKTIIVINEN" : "⛔ VANHENTUNUT") +
+          "\nTier: " + d.tier +
+          "\nLähde: " + d.source +
+          "\nVoimassa: " + d.expiresAtText +
+          "\nLaitteita: " + d.deviceCount + "/3" +
+          "\nOstoja/jatkoja: " + d.purchases +
+          "\nToken: " + d.token);
+      }
+    } catch (e) { if (e.message !== "Unauthorized") show(out, "err", "Virhe: " + e.message); }
+    $("lookupBtn").disabled = false;
+  });
+
+  $("grantBtn").addEventListener("click", async () => {
+    const out = $("grantOut");
+    const email = $("grantEmail").value.trim();
+    const days = parseFloat($("grantDays").value);
+    if (!email) return show(out, "err", "Anna sähköposti.");
+    if (!(days > 0)) return show(out, "err", "Anna kelvollinen kesto.");
+    if (!confirm("Myönnetään " + days + " pv premiumia osoitteelle " + email + "?")) return;
+    $("grantBtn").disabled = true;
+    try {
+      const d = await api("/api/admin/grant", {
+        method: "POST",
+        body: JSON.stringify({ email, days, reason: $("grantReason").value.trim() }),
+      });
+      show(out, "ok",
+        (d.mode === "extended" ? "✅ Aikaa jatkettu olemassa olevaan tokeniin." : "✅ Uusi token luotu.") +
+        "\nVoimassa: " + d.expiresAtText +
+        "\nMaili lähetetty: " + (d.emailSent ? "kyllä" : "EI — tarkista Resend!") +
+        (d.token ? "\nToken: " + d.token : ""));
+    } catch (e) { if (e.message !== "Unauthorized") show(out, "err", "Virhe: " + e.message); }
+    $("grantBtn").disabled = false;
+  });
+
+  /* Jos istunto on jo voimassa (sivun päivitys), suoraan työkaluihin */
+  setView(!!(session.key && session.base));
+</script>
+</body>
+</html>
