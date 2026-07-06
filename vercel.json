@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "SINUN-PROJEKTISI.vercel.app" }],
+      "has": [{ "type": "host", "value": "repo-react-sepia.vercel.app/" }],
       "destination": "https://repotracker.fi/$1",
       "permanent": true
     }
