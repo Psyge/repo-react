@@ -119,13 +119,18 @@
   }
 
   /* Avaimen validointi palvelimelta: lookup ilman email-parametria
-     palauttaa 400 jos avain kelpaa, 401 jos ei. */
+     palauttaa 400 jos avain kelpaa, 401 jos ei.
+     Muut statukset (404/405/500) = admin-API puuttuu workerista → ei sisään. */
   async function verifyKey(base, key) {
     const res = await fetch(base.replace(/\/+$/, "") + "/api/admin/lookup", {
       headers: { "Authorization": "Bearer " + key },
     });
-    if (res.status === 401) return false;
-    return true; // 400 Invalid email = auth meni läpi
+    if (res.status === 401) return { ok: false, reason: "Väärä admin-avain." };
+    if (res.status === 400 || res.ok) return { ok: true };
+    return {
+      ok: false,
+      reason: "Admin-API ei vastaa odotetusti (HTTP " + res.status + ").\nOnko päivitetty worker deployattu (wrangler deploy)?",
+    };
   }
 
   /* --- Kirjautuminen --- */
@@ -139,9 +144,9 @@
     if (!key)  return show(out, "err", "Anna admin-avain.");
     $("loginBtn").disabled = true;
     try {
-      const ok = await verifyKey(base, key);
-      if (!ok) {
-        show(out, "err", "Väärä admin-avain.");
+      const v = await verifyKey(base, key);
+      if (!v.ok) {
+        show(out, "err", v.reason);
       } else {
         session.base = base;
         session.key = key;
