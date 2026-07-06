@@ -55,11 +55,26 @@
     </div>
 
     <div class="card">
+      <h2>Yleiskuva</h2>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <div style="flex:1; font-size:0.9rem;">Aktiivisia premiumeja: <strong id="statsCount" style="color:var(--accent)">–</strong></div>
+        <button class="small secondary" id="statsBtn">Päivitä</button>
+      </div>
+      <div class="out" id="statsOut"></div>
+    </div>
+
+    <div class="card">
       <h2>Hae asiakkaan tilanne</h2>
       <label>Sähköposti</label>
       <input id="lookupEmail" type="email" placeholder="asiakas@example.com">
       <button class="secondary" id="lookupBtn">Hae tilanne</button>
       <div class="out" id="lookupOut"></div>
+      <div id="lookupActions" style="display:none; margin-top:0.75rem; gap:0.5rem; flex-wrap:wrap;">
+        <button class="small secondary" id="resendBtn">📧 Lähetä aktivointilinkki uudelleen</button>
+        <button class="small secondary" id="resetDevBtn">📱 Nollaa laitteet</button>
+        <button class="small secondary" id="revokeBtn" style="border-color:var(--err); color:var(--err)">🗑 Poista token</button>
+      </div>
+      <div class="out" id="actionOut"></div>
     </div>
 
     <div class="card">
@@ -179,11 +194,30 @@
   });
 
   /* --- Työkalut --- */
+  let lookupHit = null; // { email } kun haku löysi tokenin
+
+  function setActions(visible) {
+    $("lookupActions").style.display = visible ? "flex" : "none";
+    if (!visible) { $("actionOut").className = "out"; }
+  }
+
+  $("statsBtn").addEventListener("click", async () => {
+    $("statsBtn").disabled = true;
+    try {
+      const d = await api("/api/admin/stats");
+      $("statsCount").textContent = d.active + (d.capped ? "+" : "") + " (seurannassa " + d.tracked + ")";
+      $("statsOut").className = "out";
+    } catch (e) { if (e.message !== "Unauthorized") show($("statsOut"), "err", "Virhe: " + e.message); }
+    $("statsBtn").disabled = false;
+  });
+
   $("lookupBtn").addEventListener("click", async () => {
     const out = $("lookupOut");
     const email = $("lookupEmail").value.trim();
     if (!email) return show(out, "err", "Anna sähköposti.");
     $("lookupBtn").disabled = true;
+    lookupHit = null;
+    setActions(false);
     try {
       const d = await api("/api/admin/lookup?email=" + encodeURIComponent(email));
       if (!d.found) {
@@ -197,9 +231,42 @@
           "\nLaitteita: " + d.deviceCount + "/3" +
           "\nOstoja/jatkoja: " + d.purchases +
           "\nToken: " + d.token);
+        lookupHit = { email };
+        setActions(true);
       }
     } catch (e) { if (e.message !== "Unauthorized") show(out, "err", "Virhe: " + e.message); }
     $("lookupBtn").disabled = false;
+  });
+
+  async function tokenAction(btnId, path, confirmText, successText) {
+    const btn = $(btnId);
+    const out = $("actionOut");
+    if (!lookupHit) return;
+    if (!confirm(confirmText)) return;
+    btn.disabled = true;
+    try {
+      const d = await api(path, { method: "POST", body: JSON.stringify({ email: lookupHit.email }) });
+      show(out, "ok", successText(d));
+    } catch (e) { if (e.message !== "Unauthorized") show(out, "err", "Virhe: " + e.message); }
+    btn.disabled = false;
+  }
+
+  $("resendBtn").addEventListener("click", () =>
+    tokenAction("resendBtn", "/api/admin/resend",
+      "Lähetetäänkö aktivointilinkki uudelleen osoitteeseen " + (lookupHit && lookupHit.email) + "?",
+      (d) => "✅ Linkki lähetetty. Voimassa: " + d.expiresAtText));
+
+  $("resetDevBtn").addEventListener("click", () =>
+    tokenAction("resetDevBtn", "/api/admin/reset-devices",
+      "Nollataanko laitelista? Asiakkaan nykyiset laitteet menettävät premiumin, kunnes ne aktivoidaan linkillä uudelleen.",
+      (d) => "✅ Laitteet nollattu (" + d.removedDevices + " kpl poistettu). Sama aktivointilinkki toimii taas."));
+
+  $("revokeBtn").addEventListener("click", () => {
+    if (!lookupHit) return;
+    if (!confirm("POISTETAANKO koko token osoitteelta " + lookupHit.email + "? Tätä ei voi perua.")) return;
+    if (!confirm("Oletko varma? Premium loppuu heti kaikilta laitteilta.")) return;
+    tokenAction("revokeBtn", "/api/admin/revoke", "Vahvista vielä kerran: poista token?",
+      () => "✅ Token poistettu. Voit myöntää uuden ajan grant-työkalulla tarvittaessa.");
   });
 
   $("grantBtn").addEventListener("click", async () => {
