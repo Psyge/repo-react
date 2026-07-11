@@ -474,7 +474,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
           kerrosvalikko, jolla ominaisuuksia saa pois päältä. */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0,
-        zIndex: 5,
+        zIndex: 999, // myös mittaripalkki markerikerroksen yläpuolelle
         display: "flex", alignItems: "center", gap: 6,
         padding: "8px 10px",
         overflowX: "auto",
@@ -517,7 +517,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
       {/* Kerrosvalikko */}
       {layersOpen && (
         <div style={{
-          position: "absolute", top: 44, right: 10, zIndex: 7,
+          position: "absolute", top: 44, right: 10, zIndex: 1001,
           background: "rgba(7, 12, 28, 0.95)",
           border: "1px solid rgba(255, 255, 255, 0.1)",
           borderRadius: 12,
@@ -554,7 +554,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
           left: popupXY.x,
           top: popupXY.y - 10,
           transform: "translate(-50%, -100%)",
-          zIndex: 6,
+          zIndex: 1000, // three-globen HTML-markerikerroksen yläpuolelle
           pointerEvents: "auto",
         }}>
           <div style={{
