@@ -114,7 +114,17 @@ export default function MapPage() {
   const hintPopupRef  = useRef(null);
   const popupRootRef  = useRef(null);
 
-  const [view, setView]           = useState("map");
+  const [searchParams] = useSearchParams();
+  const initialLat = parseFloat(searchParams.get("lat")) || 67.5;
+  const initialLon = parseFloat(searchParams.get("lon")) || 26;
+  const isSighting  = searchParams.get("sighting");
+
+  /* Oletusnäkymä: globe. Poikkeukset:
+     - ?view=sun → aurinko (hoidetaan alla efektissä)
+     - suora sijaintilinkki (?lat&lon, esim. havainnosta) → 2D-kartta,
+       koska markkeri + popup avataan siellä */
+  const hasDirectCoords = !!(searchParams.get("lat") && searchParams.get("lon"));
+  const [view, setView] = useState(() => (hasDirectCoords ? "map" : "globe"));
   const [sunCoords, setSunCoords] = useState(null);
   const [sunVisible, setSunVisible] = useState(false);
 
@@ -126,14 +136,9 @@ export default function MapPage() {
     })
   );
 
-  const [searchParams] = useSearchParams();
-  const initialLat = parseFloat(searchParams.get("lat")) || 67.5;
-  const initialLon = parseFloat(searchParams.get("lon")) || 26;
-  const isSighting  = searchParams.get("sighting");
-
   const navigate = useNavigate();
   const { t } = useTranslation();
-const [globeMsg, setGlobeMsg] = useState("");
+  const [globeMsg, setGlobeMsg] = useState("");
 
   useEffect(() => {
     if (searchParams.get("view") === "sun") {
@@ -155,6 +160,12 @@ const [globeMsg, setGlobeMsg] = useState("");
   const switchToMap = () => {
     setSunVisible(false);
     setTimeout(() => setView("map"), 300);
+  };
+
+  const switchToGlobe = () => {
+    setSunVisible(false);
+    setView("globe");
+    if (mapInstance.current) mapInstance.current.closePopup();
   };
 
   useEffect(() => {
@@ -249,10 +260,10 @@ const [globeMsg, setGlobeMsg] = useState("");
     }).setView([initialLat, initialLon], 9);
 
     // Tarkistetaan, tullaanko sivulle suoraan jostain tietystä paikasta (URL-parametrit lat & lon löytyvät)
-    const hasDirectCoords = searchParams.get("lat") && searchParams.get("lon");
+    const directCoords = searchParams.get("lat") && searchParams.get("lon");
 
-    // KORJATTU: Luodaan ohje-popup VAIN jos sivulle saavutaan yleisesti (ilman valittua paikkaa)
-    if (!hasDirectCoords) {
+    // Ohje-popup VAIN jos sivulle saavutaan yleisesti (ilman valittua paikkaa)
+    if (!directCoords) {
       const hintPopup = L.popup({ closeButton: true, autoClose: true, closeOnClick: true })
         .setLatLng([66.5, 25.7])
         .setContent(`
@@ -293,7 +304,7 @@ const [globeMsg, setGlobeMsg] = useState("");
     });
     mapInstance.current = map;
 
-    if (hasDirectCoords) {
+    if (directCoords) {
       map.setView([initialLat, initialLon], isSighting ? 11 : 7);
       schedulePopup(map, initialLat, initialLon);
       const marker = L.marker([initialLat, initialLon], {
@@ -350,11 +361,11 @@ const [globeMsg, setGlobeMsg] = useState("");
         </div>
       )}
 
-     <div
-  id="map"
-  ref={mapRef}
-  className={view !== "map" ? "map--hidden" : ""}   
-/>
+      <div
+        id="map"
+        ref={mapRef}
+        className={view !== "map" ? "map--hidden" : ""}
+      />
 
       {view === "sun" && (
         <div className={`map-sun-panel ${sunVisible ? "map-sun-panel--visible" : ""}`}>
@@ -364,30 +375,40 @@ const [globeMsg, setGlobeMsg] = useState("");
           />
         </div>
       )}
+
       {view === "globe" && (
-  <Suspense fallback={<div className="globe-loading">{t("globe.loading") || "Loading globe…"}</div>}>
-    <GlobeView
-      premium={isActive()}
-      onUpgrade={() => navigate("/premium")}
-      onFallback={(reason) => {
-        switchToMap();
-        setGlobeMsg(
-          reason === "timeout"
-            ? (t("globe.tooSlow") || "3D globe is taking too long — showing the 2D map.")
-            : (t("globe.unsupported") || "3D globe isn't available on this device — showing the 2D map.")
-        );
-        setTimeout(() => setGlobeMsg(""), 6000);
-      }}
-    />
-  </Suspense>
-)}
-{globeMsg && <div className="globe-fallback-toast">{globeMsg}</div>}
+        <Suspense fallback={<div className="globe-loading">{t("globe.loading") || "Loading globe…"}</div>}>
+          <GlobeView
+            premium={isActive()}
+            onUpgrade={() => navigate("/premium")}
+            onFallback={(reason) => {
+              switchToMap();
+              setGlobeMsg(
+                reason === "timeout"
+                  ? (t("globe.tooSlow") || "3D globe is taking too long — showing the 2D map.")
+                  : (t("globe.unsupported") || "3D globe isn't available on this device — showing the 2D map.")
+              );
+              setTimeout(() => setGlobeMsg(""), 6000);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {globeMsg && <div className="globe-fallback-toast">{globeMsg}</div>}
+
+      {/* Näkymäpalkki: Globe ensin (oletus), sitten 2D-kartta, aurinko viimeisenä */}
       <div className="map-view-toggle">
+        <button
+          className={`map-toggle-btn ${view === "globe" ? "map-toggle-btn--active" : ""}`}
+          onClick={switchToGlobe}
+        >
+          🌍 {t("globe.toggle") || "Globe"}
+        </button>
         <button
           className={`map-toggle-btn ${view === "map" ? "map-toggle-btn--active" : ""}`}
           onClick={switchToMap}
         >
-          🌌 Aurora
+          🌌 Aurora 2D
         </button>
         <button
           className={`map-toggle-btn ${view === "sun" ? "map-toggle-btn--active" : ""}`}
@@ -395,12 +416,6 @@ const [globeMsg, setGlobeMsg] = useState("");
         >
           ☀️ Sun &amp; night
         </button>
-        <button
-  className={`map-toggle-btn ${view === "globe" ? "map-toggle-btn--active" : ""}`}
-  onClick={() => { setSunVisible(false); setView("globe"); }}
->
-  🌍 {t("globe.toggle") || "Globe"}
-</button>
       </div>
     </div>
   );
