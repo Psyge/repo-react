@@ -474,7 +474,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     controls.zoomSpeed = 2.0;
     controls.enableDamping = true;
     controls.dampingFactor = 0.10;
-    controls.minDistance = 125;
+    controls.minDistance = 100;
     controls.maxDistance = 500;
     g.pointOfView({ lat: 40, lng: -20, altitude: 2.3 }, 0);
     // Ei automaattipyöritystä oletuksena: jatkuva kameraliike pitää WebGL:n,
