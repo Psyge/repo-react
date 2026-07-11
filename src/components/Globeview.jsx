@@ -30,6 +30,14 @@ const labelColor = () => "rgba(212, 175, 55, 0.85)";
 const heatmapPointsAccessor = d => d;
 const ringColor = () => "rgba(0, 255, 198, 0.6)";
 const pointColor = () => "#00ffc6";
+const globeWrapperStyle = {
+  position: "relative",
+  overflow: "hidden",
+  background:
+    "radial-gradient(circle at 50% 44%, rgba(0, 230, 255, 0.14), rgba(0, 0, 0, 0) 34%), " +
+    "radial-gradient(circle at 50% 55%, rgba(0, 255, 198, 0.08), rgba(0, 0, 0, 0) 46%), " +
+    "linear-gradient(180deg, #02040a 0%, #050816 48%, #010208 100%)",
+};
 
 let memoryAurora = null;
 let memoryBorders = null;
@@ -440,7 +448,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   }, [premium]);
 
   return (
-    <div className="globe-view parannettu-globe" ref={wrapRef} style={{ position: "relative" }}>
+    <div className="globe-view parannettu-globe" ref={wrapRef} style={globeWrapperStyle}>
       <Suspense fallback={<div className="globe-loading">{tr("globe.loading", "Loading globe…")}</div>}>
         {size.w > 0 && (
           <Globe
