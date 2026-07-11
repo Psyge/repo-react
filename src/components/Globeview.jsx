@@ -28,6 +28,18 @@ function readDeviceKey() {
   }
 }
 
+/* Kerrosvalinnat — talteen localStorageen */
+const LAYERS_KEY = "globe_layers_v1";
+const DEFAULT_LAYERS = { aurora: true, borders: true, cities: true, places: true };
+
+function readLayers() {
+  try {
+    return { ...DEFAULT_LAYERS, ...JSON.parse(localStorage.getItem(LAYERS_KEY) || "{}") };
+  } catch {
+    return { ...DEFAULT_LAYERS };
+  }
+}
+
 /* Pieni mittaribadge (inline-tyylit → ei CSS-riippuvuutta) */
 function HudBadge({ label, value }) {
   return (
@@ -115,7 +127,18 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
   const [popupData, setPopupData] = useState(null);
   const [popupError, setPopupError] = useState(null);
   const [popupLoading, setPopupLoading] = useState(false);
-  const [hud, setHud] = useState(null);            // yläkulman mittarit
+  const [hud, setHud] = useState(null);            // yläpalkin mittarit
+
+  /* Kerrosten päälle/pois-kytkennät (nopeuttaa myös renderöintiä) */
+  const [layers, setLayers] = useState(readLayers);
+  const [layersOpen, setLayersOpen] = useState(false);
+  const toggleLayer = useCallback((key) => {
+    setLayers((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try { localStorage.setItem(LAYERS_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
   const [clickPos, setClickPos] = useState(null);  // { lat, lng }
   const [clickLabel, setClickLabel] = useState(null); // paikan nimi jos klikattiin markeria
   const [popupXY, setPopupXY] = useState(null);    // popupin ruutukoordinaatit
@@ -332,6 +355,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     controls.zoomSpeed = 2.2;
     controls.enableDamping = true;
     controls.dampingFactor = 0.12;
+    // Rajaa zoomausalue: revontulikartta ei tarvitse katutason tiiliä.
+    // Tämä leikkaa tile-lataukset murto-osaan → zoomi reagoi heti.
+    // (globen säde = 100 yksikköä; 115 ≈ altitude 0.15, 500 ≈ altitude 4)
+    controls.minDistance = 115;
+    controls.maxDistance = 500;
 
     g.pointOfView({ lat: 40, lng: -20, altitude: 2.3 }, 0);
   }, [premium]);
@@ -344,6 +372,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             ref={globeEl}
             width={size.w}
             height={size.h}
+            rendererConfig={{ powerPreference: "high-performance" }}
             onGlobeReady={onGlobeReady}
             /* Satelliittikarttatiilet (Esri World Imagery) — lataa tarkkuutta
                progressiivisesti zoomin mukaan kuten Google Earth.
@@ -358,13 +387,13 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             showAtmosphere={true}
             atmosphereColor="#00e6ff"
             atmosphereAltitude={0.12}
-            polygonsData={countriesBorders}
+            polygonsData={layers.borders ? countriesBorders : []}
             polygonAltitude={0.005}
             polygonSideColor={() => "rgba(255, 255, 255, 0.1)"}
             polygonCapColor={() => "rgba(0, 0, 0, 0)"}
             polygonStrokeColor={() => "#d4af37"}
             polygonsTransitionDuration={0}
-            labelsData={citiesData}
+            labelsData={layers.cities ? citiesData : []}
             labelLat="lat"
             labelLng="lng"
             labelText="nameAscii"
@@ -374,7 +403,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             labelSize={0.5}
             labelDotRadius={0.15}
             labelResolution={2}
-            heatmapsData={auroraPoints.length ? [auroraPoints] : []}
+            heatmapsData={layers.aurora && auroraPoints.length ? [auroraPoints] : []}
             heatmapPoints={d => d}
             heatmapPointLat="lat"
             heatmapPointLng="lng"
@@ -387,7 +416,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             onGlobeClick={(coords, e) => handleGlobeClick(coords, e)}
             onPolygonClick={(p, e, coords) => handleGlobeClick(coords, e)}
             onHeatmapClick={(h, e, coords) => handleGlobeClick(coords, e)}
-            htmlElementsData={placeMarkers}
+            htmlElementsData={layers.places ? placeMarkers : []}
             htmlLat="lat"
             htmlLng="lon"
             htmlAltitude={0.003}
@@ -403,23 +432,80 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
         )}
       </Suspense>
 
-      {/* Mittari-HUD: globaalit avaruussääarvot pelkkinä numeroina.
-          Free näkee Kp:n, premium myös Bz/tuuli/tiheys (tulee serveriltä). */}
-      {hud && (
+      {/* Mittaripalkki heti headerin alla: globaalit avaruussääarvot
+          pelkkinä numeroina. Free näkee Kp:n, premium myös Bz/tuuli/tiheys
+          (arvot tulevat serveriltä, gating siellä). Oikeassa reunassa
+          kerrosvalikko, jolla ominaisuuksia saa pois päältä. */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0,
+        zIndex: 5,
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "8px 10px",
+        overflowX: "auto",
+        scrollbarWidth: "none",
+        background: "linear-gradient(180deg, rgba(2, 4, 10, 0.75), rgba(2, 4, 10, 0))",
+        pointerEvents: "none",
+      }}>
+        {hud && (
+          <>
+            <HudBadge label="Kp" value={hud.kp ?? "–"} />
+            {hud.tier === "premium" && (
+              <>
+                <HudBadge label="Bz" value={hud.bz != null ? `${hud.bz} nT` : "–"} />
+                <HudBadge label={tr("globe.wind", "Tuuli")} value={hud.speed != null ? `${hud.speed} km/s` : "–"} />
+                <HudBadge label={tr("globe.density", "Tiheys")} value={hud.density != null ? `${hud.density} p/cm³` : "–"} />
+              </>
+            )}
+          </>
+        )}
+        <div style={{ flex: 1 }} />
+        <button
+          onClick={() => setLayersOpen((o) => !o)}
+          style={{
+            pointerEvents: "auto",
+            display: "inline-flex", alignItems: "center", gap: 5,
+            background: layersOpen ? "rgba(0, 255, 198, 0.15)" : "rgba(8, 14, 26, 0.72)",
+            border: "1px solid rgba(0, 255, 198, 0.35)",
+            borderRadius: 999,
+            padding: "4px 12px",
+            fontSize: 12, fontWeight: 600,
+            color: "#00ffc6",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          ☰ {tr("globe.layers", "Kerrokset")}
+        </button>
+      </div>
+
+      {/* Kerrosvalikko */}
+      {layersOpen && (
         <div style={{
-          position: "absolute", top: 12, left: 12,
-          display: "flex", gap: 6, flexWrap: "wrap",
-          zIndex: 5, pointerEvents: "none",
-          maxWidth: "calc(100% - 24px)",
+          position: "absolute", top: 44, right: 10, zIndex: 7,
+          background: "rgba(7, 12, 28, 0.95)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          borderRadius: 12,
+          padding: "10px 12px",
+          display: "flex", flexDirection: "column", gap: 8,
+          minWidth: 160,
+          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
         }}>
-          <HudBadge label="Kp" value={hud.kp ?? "–"} />
-          {hud.tier === "premium" && (
-            <>
-              <HudBadge label="Bz" value={hud.bz != null ? `${hud.bz} nT` : "–"} />
-              <HudBadge label={tr("globe.wind", "Tuuli")} value={hud.speed != null ? `${hud.speed} km/s` : "–"} />
-              <HudBadge label={tr("globe.density", "Tiheys")} value={hud.density != null ? `${hud.density} p/cm³` : "–"} />
-            </>
-          )}
+          {[
+            ["aurora",  tr("globe.layer.aurora",  "Revontulet")],
+            ["borders", tr("globe.layer.borders", "Valtioiden rajat")],
+            ["cities",  tr("globe.layer.cities",  "Kaupungit")],
+            ["places",  tr("globe.layer.places",  "Paikat")],
+          ].map(([key, label]) => (
+            <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#e6e9ef", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={!!layers[key]}
+                onChange={() => toggleLayer(key)}
+                style={{ accentColor: "#00ffc6", width: 15, height: 15 }}
+              />
+              {label}
+            </label>
+          ))}
         </div>
       )}
 
