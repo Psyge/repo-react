@@ -13,8 +13,11 @@ const LOAD_TIMEOUT_MS = 15000;
 const BASE = process.env.REACT_APP_API_BASE || "";
 const DEFAULT_CALC_POINT = { lat: 66.5, lng: 26.0 };
 
-const LAYERS_KEY = "globe_layers_v2";
-const DEFAULT_LAYERS = { aurora: true, borders: false, cities: false, places: false };
+const LAYERS_KEY = "globe_layers_v3";
+// Rajat ja paikkapisteet pidetään oletuksena päällä, koska ne auttavat
+// hahmottamaan maantiedettä. Kaupunkilabelit ovat raskaampia, joten ne jäävät
+// edelleen valinnaiseksi kerrokseksi.
+const DEFAULT_LAYERS = { aurora: true, borders: true, cities: false, places: true };
 // Satelliittitiilet ovat suurin yksittäinen tahmaisuuden lähde. Pidetään ne
 // oletuksena pois päältä ja sallitaan vain eksplisiittisellä propilla.
 const ENABLE_DETAILED_TILES_BY_DEFAULT = false;
