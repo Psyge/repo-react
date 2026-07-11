@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, Suspense, lazy, useCallback } from "react";
+import { useEffect, useRef, useState, Suspense, lazy, useCallback, useMemo } from "react";
 import useTranslation from "../hooks/useTranslation";
+import staticPlaces from "../data/places";
 
 const Globe = lazy(() => import("react-globe.gl"));
 
@@ -117,6 +118,8 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
   const [calc, setCalc] = useState(null);          // viimeisin calc-vastaus
   const [calcLoading, setCalcLoading] = useState(false);
   const [clickPos, setClickPos] = useState(null);  // { lat, lng }
+  const [clickLabel, setClickLabel] = useState(null); // paikan nimi jos klikattiin markeria
+  const [popupXY, setPopupXY] = useState(null);    // popupin ruutukoordinaatit
 
   const fetchCalc = useCallback(async (lat, lng) => {
     setCalcLoading(true);
@@ -139,10 +142,60 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     fetchCalc(DEFAULT_CALC_POINT.lat, DEFAULT_CALC_POINT.lng);
   }, [fetchCalc]);
 
-  const handleGlobeClick = useCallback(({ lat, lng }) => {
-    setClickPos({ lat, lng });
-    fetchCalc(lat, lng);
+  const handleGlobeClick = useCallback((coords, event, label = null) => {
+    if (!coords) return;
+    setClickLabel(label);
+    setClickPos({ lat: coords.lat, lng: coords.lng });
+    // Alkuasento suoraan klikkauksesta — seuranta-efekti tarkentaa heti perään
+    if (event && event.clientX != null && wrapRef.current) {
+      const r = wrapRef.current.getBoundingClientRect();
+      setPopupXY({ x: event.clientX - r.left, y: event.clientY - r.top });
+    }
+    fetchCalc(coords.lat, coords.lng);
   }, [fetchCalc]);
+
+  const closePopup = useCallback(() => {
+    setClickPos(null);
+    setClickLabel(null);
+    setPopupXY(null);
+  }, []);
+
+  /* Popup seuraa klikattua pistettä pallon pyöriessä (getScreenCoords) */
+  useEffect(() => {
+    if (!clickPos) return;
+    const timer = setInterval(() => {
+      const g = globeEl.current;
+      if (!g || typeof g.getScreenCoords !== "function") return;
+      const p = g.getScreenCoords(clickPos.lat, clickPos.lng, 0.02);
+      if (!p) return;
+      setPopupXY({
+        x: Math.min(Math.max(p.x, 110), Math.max(size.w - 110, 110)),
+        y: Math.min(Math.max(p.y, 90), Math.max(size.h - 16, 90)),
+      });
+    }, 100);
+    return () => clearInterval(timer);
+  }, [clickPos, size.w, size.h]);
+
+  /* Paikkamarkerit places.js:stä — klikkaus avaa saman laskentapopupin */
+  const placeMarkers = useMemo(() => staticPlaces.map((p) => ({ ...p })), []);
+
+  const makePlaceMarker = useCallback((d) => {
+    const el = document.createElement("div");
+    el.style.pointerEvents = "auto";
+    el.style.cursor = "pointer";
+    const inner = document.createElement("div");
+    inner.style.cssText = "display:flex;flex-direction:column;align-items:center;transform:translateY(-55%);";
+    inner.innerHTML =
+      `<div style="background:rgba(8,14,26,0.78);border:1px solid rgba(0,255,198,0.35);border-radius:999px;` +
+      `padding:2px 8px;font-size:11px;font-weight:600;color:#e6e9ef;white-space:nowrap;">${d.name}</div>` +
+      `<div style="width:8px;height:8px;border-radius:50%;background:#00ffc6;box-shadow:0 0 8px #00ffc6;margin-top:2px;"></div>`;
+    el.appendChild(inner);
+    el.onclick = (ev) => {
+      ev.stopPropagation();
+      handleGlobeClick({ lat: d.lat, lng: d.lon }, ev, d.name);
+    };
+    return el;
+  }, [handleGlobeClick]);
 
   const tr = useCallback((k, d) => {
     const s = t(k);
@@ -262,8 +315,15 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             width={size.w}
             height={size.h}
             onGlobeReady={onGlobeReady}
-            globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-            bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+            /* Satelliittikarttatiilet (Esri World Imagery) — lataa tarkkuutta
+               progressiivisesti zoomin mukaan kuten Google Earth.
+               Vaatii react-globe.gl >= 2.31 — jos pallo jää tyhjäksi,
+               aja: npm install react-globe.gl@latest
+               Kevyt fallback: poista globeTileEngineUrl ja palauta
+               globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg" */
+            globeTileEngineUrl={(x, y, l) =>
+              `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`
+            }
             backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
             showAtmosphere={true}
             atmosphereColor="#00e6ff"
@@ -294,9 +354,14 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             heatmapColorSaturation={2.8}
             heatmapBaseAltitude={0.012}
             heatmapsTransitionDuration={1500}
-            onGlobeClick={handleGlobeClick}
-            onPolygonClick={(p, e, coords) => coords && handleGlobeClick(coords)}
-            onHeatmapClick={(h, e, coords) => coords && handleGlobeClick(coords)}
+            onGlobeClick={(coords, e) => handleGlobeClick(coords, e)}
+            onPolygonClick={(p, e, coords) => handleGlobeClick(coords, e)}
+            onHeatmapClick={(h, e, coords) => handleGlobeClick(coords, e)}
+            htmlElementsData={placeMarkers}
+            htmlLat="lat"
+            htmlLng="lon"
+            htmlAltitude={0.015}
+            htmlElement={makePlaceMarker}
             ringsData={clickPos ? [clickPos] : []}
             ringLat="lat"
             ringLng="lng"
@@ -328,24 +393,31 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
         </div>
       )}
 
-      {/* Klikatun pisteen kortti */}
-      {clickPos && (
+      {/* Klikatun pisteen kortti — aukeaa pisteen yläpuolelle ja seuraa sitä */}
+      {clickPos && popupXY && (
         <div style={{
-          position: "absolute", left: "50%", bottom: 14,
-          transform: "translateX(-50%)",
+          position: "absolute",
+          left: popupXY.x,
+          top: popupXY.y - 14,
+          transform: "translate(-50%, -100%)",
           zIndex: 6,
-          background: "rgba(8, 14, 26, 0.85)",
+          background: "rgba(8, 14, 26, 0.88)",
           border: "1px solid rgba(0, 255, 198, 0.25)",
           borderRadius: 12,
           padding: "10px 14px",
-          minWidth: 200, maxWidth: "90%",
+          minWidth: 190, maxWidth: 260,
           color: "#e6e9ef", fontSize: 13,
           backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+          pointerEvents: "auto",
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <strong>{clickPos.lat.toFixed(1)}°, {clickPos.lng.toFixed(1)}°</strong>
+            <strong>
+              {clickLabel
+                ? `📍 ${clickLabel}`
+                : `${clickPos.lat.toFixed(1)}°, ${clickPos.lng.toFixed(1)}°`}
+            </strong>
             <button
-              onClick={() => setClickPos(null)}
+              onClick={closePopup}
               aria-label={tr("globe.close", "Sulje")}
               style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 15, padding: 0, lineHeight: 1 }}
             >
@@ -380,6 +452,16 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
           )}
         </div>
       )}
+
+      {/* Esri-tiilien attribuutio (käyttöehtojen vaatimus) */}
+      <div style={{
+        position: "absolute", right: 6, bottom: 4, zIndex: 4,
+        fontSize: 9, color: "rgba(230, 233, 239, 0.55)",
+        background: "rgba(2, 4, 10, 0.45)", padding: "1px 6px", borderRadius: 4,
+        pointerEvents: "none",
+      }}>
+        Imagery © Esri, Maxar, Earthstar Geographics
+      </div>
 
       {!premium && (
         <div className="globe-upsell">
