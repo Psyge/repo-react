@@ -194,7 +194,7 @@ export default function HomePage() {
 
   useEffect(() => {
   const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 2500));
-  idle(() => import("./components/GlobeView").then((m) => m.preloadGlobeAssets()));
+  idle(() => import("./components/Globeview").then((m) => m.preloadGlobeAssets()));
 }, []);
 
   // EFEKTI 1: Ennusteen lataus
