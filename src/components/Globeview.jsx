@@ -25,6 +25,7 @@ const MIN_AURORA = 3;
 const MIN_ABS_LAT = 45;
 const MIN_CITY_POP = 1000000;
 const MAX_CITY_LABELS = 50;
+const BORDER_COUNTRIES = new Set(["Finland", "Suomi", "FIN"]);
 
 const polygonSideColor = () => "rgba(255, 255, 255, 0.1)";
 const polygonCapColor = () => "rgba(0, 0, 0, 0)";
@@ -32,7 +33,6 @@ const polygonStrokeColor = () => "#d4af37";
 const labelColor = () => "rgba(212, 175, 55, 0.85)";
 const heatmapPointsAccessor = d => d;
 const ringColor = () => "rgba(0, 255, 198, 0.6)";
-const pointColor = () => "#00ffc6";
 const globeWrapperStyle = {
   position: "relative",
   overflow: "hidden",
@@ -142,7 +142,7 @@ async function loadAuroraPoints() {
 
 async function loadBorders() {
   if (memoryBorders) return memoryBorders;
-  const cached = cacheRead("globe:borders:v2", 24 * 60 * 60 * 1000);
+  const cached = cacheRead("globe:borders:v3", 24 * 60 * 60 * 1000);
   if (cached) {
     memoryBorders = cached;
     return cached;
@@ -151,9 +151,16 @@ async function loadBorders() {
   const res = await fetch(BORDERS_URL);
   if (!res.ok) throw new Error("Country borders data not found.");
   const geo = await res.json();
-  const features = geo.features || [];
+  const features = (geo.features || []).filter((feature) => {
+    const props = feature.properties || {};
+    return BORDER_COUNTRIES.has(props.ADMIN) ||
+      BORDER_COUNTRIES.has(props.NAME) ||
+      BORDER_COUNTRIES.has(props.NAME_EN) ||
+      BORDER_COUNTRIES.has(props.SOVEREIGNT) ||
+      BORDER_COUNTRIES.has(props.ISO_A3);
+  });
   memoryBorders = features;
-  cacheWrite("globe:borders:v2", features);
+  cacheWrite("globe:borders:v3", features);
   return features;
 }
 
@@ -345,6 +352,39 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   const onPolygonClick = useCallback((p, e, coords) => handleGlobeClick(coords, e), [handleGlobeClick]);
   const onHeatmapClick = useCallback((h, e, coords) => handleGlobeClick(coords, e), [handleGlobeClick]);
 
+  const makePlaceMarker = useCallback((d) => {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.style.cssText =
+      "pointer-events:auto;cursor:pointer;border:0;background:transparent;padding:0;" +
+      "transform:translate(-50%, -100%);";
+
+    const badge = document.createElement("span");
+    badge.textContent = d.name;
+    badge.style.cssText =
+      "display:inline-flex;align-items:center;gap:4px;" +
+      "background:rgba(8,14,26,0.82);border:1px solid rgba(0,255,198,0.38);" +
+      "border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;" +
+      "line-height:1.35;color:#e6e9ef;white-space:nowrap;" +
+      "box-shadow:0 0 12px rgba(0,255,198,0.16);";
+
+    const dot = document.createElement("span");
+    dot.style.cssText =
+      "display:block;width:7px;height:7px;border-radius:50%;background:#00ffc6;" +
+      "box-shadow:0 0 8px #00ffc6;margin:2px auto 0;";
+
+    const wrap = document.createElement("span");
+    wrap.style.cssText = "display:flex;flex-direction:column;align-items:center;";
+    wrap.appendChild(badge);
+    wrap.appendChild(dot);
+    el.appendChild(wrap);
+    el.onclick = (ev) => {
+      ev.stopPropagation();
+      handleGlobeClick({ lat: d.lat, lng: d.lon }, ev, d.name);
+    };
+    return el;
+  }, [handleGlobeClick]);
+
   const closePopup = useCallback(() => {
     setClickPos(null);
     setClickLabel(null);
@@ -500,14 +540,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
             onGlobeClick={onGlobeClick}
             onPolygonClick={onPolygonClick}
             onHeatmapClick={onHeatmapClick}
-            pointsData={layers.places ? placeMarkers : []}
-            pointLat="lat"
-            pointLng="lon"
-            pointColor={pointColor}
-            pointRadius={0.18}
-            pointAltitude={0.004}
-            pointLabel={(d) => d.name}
-            onPointClick={(d, e) => handleGlobeClick({ lat: d.lat, lng: d.lon }, e, d.name)}
+            htmlElementsData={layers.places ? placeMarkers : []}
+            htmlLat="lat"
+            htmlLng="lon"
+            htmlAltitude={0.004}
+            htmlElement={makePlaceMarker}
             ringsData={clickPos ? [clickPos] : []}
             ringLat="lat"
             ringLng="lng"
