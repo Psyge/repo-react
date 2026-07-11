@@ -27,6 +27,15 @@ const MIN_CITY_POP = 1000000;
 const MAX_CITY_LABELS = 50;
 const BORDER_COUNTRIES = new Set(["Finland", "Suomi", "FIN"]);
 
+/* Lähizoomin karttatiilet: kun kamera menee tarpeeksi lähelle, staattinen
+ * tekstuuri vaihdetaan Carton dark-tiiliin (tiet + kaupunkien nimet, sama
+ * tyyli kuin 2D-kartassa, kevyet PNG:t). Hystereesi estää edestakaisen
+ * vilkkumisen rajakorkeudella. */
+const CLOSEUP_ENTER_ALT = 0.50; // vaihda tiiliin kun altitude alle tämän
+const CLOSEUP_EXIT_ALT  = 0.62; // takaisin tekstuuriin kun yli tämän
+const CARTO_TILE_URL = (x, y, l) => `https://basemaps.cartocdn.com/dark_all/${l}/${x}/${y}.png`;
+const ESRI_TILE_URL  = (x, y, l) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`;
+
 const polygonSideColor = () => "rgba(255, 255, 255, 0.1)";
 const polygonCapColor = () => "rgba(0, 0, 0, 0)";
 const polygonStrokeColor = () => "#d4af37";
@@ -280,6 +289,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   const [clickLabel, setClickLabel] = useState(null);
   const [popupXY, setPopupXY] = useState(null);
 
+  /* Lähizoom: vaihdetaan tekstuurista karttatiiliin kun kamera on lähellä,
+     jotta kaupungit/tiet erottuvat eikä pinta ole pelkkää sumeaa tekstuuria. */
+  const [closeUp, setCloseUp] = useState(false);
+  const closeUpRef = useRef(false);
+
   const tr = useCallback((k, d) => {
     const s = t(k);
     return s == null || s === k ? d : s;
@@ -474,11 +488,25 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     controls.zoomSpeed = 2.0;
     controls.enableDamping = true;
     controls.dampingFactor = 0.10;
-    controls.minDistance = 100;
+    // 100.8 = ei ihan pintaan asti (100 = kiinni pinnassa) — lähizoomin
+    // karttatiilet ovat tällä korkeudella jo riittävän tarkat.
+    controls.minDistance = 100.8;
     controls.maxDistance = 500;
     g.pointOfView({ lat: 40, lng: -20, altitude: 2.3 }, 0);
     // Ei automaattipyöritystä oletuksena: jatkuva kameraliike pitää WebGL:n,
     // heatmapin ja mahdolliset tekstuurilataukset aktiivisina koko ajan.
+
+    // Lähizoomin tunnistus hystereesillä (ei edestakaista vilkkumista
+    // rajakorkeudella). Kuuntelija poistuu kun globe tuhotaan.
+    controls.addEventListener("change", () => {
+      const alt = g.pointOfView()?.altitude;
+      if (alt == null) return;
+      const next = closeUpRef.current ? alt < CLOSEUP_EXIT_ALT : alt < CLOSEUP_ENTER_ALT;
+      if (next !== closeUpRef.current) {
+        closeUpRef.current = next;
+        setCloseUp(next);
+      }
+    });
   }, [premium]);
 
   useEffect(() => {
@@ -490,6 +518,20 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     controls.enableRotate = premium;
   }, [premium]);
 
+  /* Karttapohja kolmessa tilassa:
+     1. Lähizoom: Carto dark -tiilet → tiet ja kaupunkien nimet näkyvät,
+        tumma tyyli istuu teemaan ja tiilet ovat kevyitä PNG:itä.
+     2. Kaukana + detailedGlobe/premium/high: Esri-satelliittitiilet.
+     3. Kaukana, oletus: kevyt blue-marble-tekstuuri (ei tiililatauksia). */
+  const tileProps = closeUp
+    ? { globeTileEngineUrl: CARTO_TILE_URL }
+    : useDetailedTiles
+      ? { globeTileEngineUrl: ESRI_TILE_URL }
+      : {
+          globeImageUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
+          bumpImageUrl: "//unpkg.com/three-globe/example/img/earth-topology.png",
+        };
+
   return (
     <div className="globe-view parannettu-globe" ref={wrapRef} style={globeWrapperStyle}>
       <Suspense fallback={<div className="globe-loading">{tr("globe.loading", "Loading globe…")}</div>}>
@@ -500,12 +542,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
             height={size.h}
             rendererConfig={{ powerPreference: quality === "high" ? "high-performance" : "default" }}
             onGlobeReady={onGlobeReady}
-            {...(useDetailedTiles ? {
-              globeTileEngineUrl: (x, y, l) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`,
-            } : {
-              globeImageUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
-              bumpImageUrl: "//unpkg.com/three-globe/example/img/earth-topology.png",
-            })}
+            {...tileProps}
             backgroundColor="rgba(0,0,0,0)"
             showAtmosphere={quality === "high"}
             atmosphereColor="#00e6ff"
@@ -626,9 +663,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
         </div>
       )}
 
-      {useDetailedTiles && (
+      {(closeUp || useDetailedTiles) && (
         <div style={{ position: "absolute", right: 6, bottom: 4, zIndex: 4, fontSize: 9, color: "rgba(230, 233, 239, 0.55)", background: "rgba(2, 4, 10, 0.45)", padding: "1px 6px", borderRadius: 4, pointerEvents: "none" }}>
-          Imagery © Esri, Maxar, Earthstar Geographics
+          {closeUp
+            ? "© OpenStreetMap contributors © CARTO"
+            : "Imagery © Esri, Maxar, Earthstar Geographics"}
         </div>
       )}
 
