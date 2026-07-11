@@ -15,6 +15,9 @@ const DEFAULT_CALC_POINT = { lat: 66.5, lng: 26.0 };
 
 const LAYERS_KEY = "globe_layers_v2";
 const DEFAULT_LAYERS = { aurora: true, borders: false, cities: false, places: false };
+// Satelliittitiilet ovat suurin yksittäinen tahmaisuuden lähde. Pidetään ne
+// oletuksena pois päältä ja sallitaan vain eksplisiittisellä propilla.
+const ENABLE_DETAILED_TILES_BY_DEFAULT = false;
 const MIN_AURORA = 3;
 const MIN_ABS_LAT = 45;
 const MIN_CITY_POP = 1000000;
@@ -103,7 +106,7 @@ async function loadAuroraPoints() {
   }
 
   const quality = getGlobeQuality();
-  const step = quality === "low" ? 2 : 1;
+  const step = quality === "low" ? 3 : 2;
   const res = await fetch(OVATION_URL, { cache: "no-store" });
   if (!res.ok) throw new Error("Aurora data not found.");
   const ovationData = await res.json();
@@ -237,7 +240,7 @@ function HudBadge({ label, value }) {
   );
 }
 
-export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
+export default function GlobeView({ premium = false, onFallback, onUpgrade, detailedGlobe = ENABLE_DETAILED_TILES_BY_DEFAULT }) {
   const { t } = useTranslation();
   const globeEl = useRef(null);
   const readyRef = useRef(false);
@@ -264,7 +267,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     return s == null || s === k ? d : s;
   }, [t]);
 
-  const useDetailedTiles = premium && quality === "high";
+  const useDetailedTiles = Boolean(detailedGlobe && premium && quality === "high");
   const placeMarkers = useMemo(() => staticPlaces, []);
   const labelLabel = useCallback((d) => `${d.name}, ${d.country}`, []);
 
@@ -413,7 +416,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     if (!g) return;
     const controls = g.controls();
     controls.autoRotate = false;
-    controls.autoRotateSpeed = 0.35;
+    controls.autoRotateSpeed = 0.25;
     controls.enablePan = false;
     controls.enableZoom = premium;
     controls.enableRotate = premium;
@@ -423,17 +426,15 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     controls.minDistance = 125;
     controls.maxDistance = 500;
     g.pointOfView({ lat: 40, lng: -20, altitude: 2.3 }, 0);
-    setTimeout(() => {
-      const current = globeEl.current;
-      if (current) current.controls().autoRotate = !premium;
-    }, 1200);
+    // Ei automaattipyöritystä oletuksena: jatkuva kameraliike pitää WebGL:n,
+    // heatmapin ja mahdolliset tekstuurilataukset aktiivisina koko ajan.
   }, [premium]);
 
   useEffect(() => {
     const g = globeEl.current;
     if (!g) return;
     const controls = g.controls();
-    controls.autoRotate = !premium;
+    controls.autoRotate = false;
     controls.enableZoom = premium;
     controls.enableRotate = premium;
   }, [premium]);
@@ -455,7 +456,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
               bumpImageUrl: "//unpkg.com/three-globe/example/img/earth-topology.png",
             })}
             backgroundColor="rgba(0,0,0,0)"
-            showAtmosphere={true}
+            showAtmosphere={quality === "high"}
             atmosphereColor="#00e6ff"
             atmosphereAltitude={0.12}
             polygonsData={layers.borders ? countriesBorders : []}
@@ -479,7 +480,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             heatmapPointLat="lat"
             heatmapPointLng="lng"
             heatmapPointWeight="val"
-            heatmapBandwidth={quality === "low" ? 1.7 : 2.0}
+            heatmapBandwidth={quality === "low" ? 1.4 : 1.7}
             heatmapColorFn={() => getAuroraColor}
             heatmapColorSaturation={2.6}
             heatmapBaseAltitude={0.012}
