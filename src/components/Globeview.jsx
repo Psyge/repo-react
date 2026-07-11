@@ -12,6 +12,45 @@ const CITIES_URL = "https://raw.githubusercontent.com/vasturiano/globe.gl/master
 
 const LOAD_TIMEOUT_MS = 15000;
 
+const BASE = process.env.REACT_APP_API_BASE || "";
+const DEFAULT_CALC_POINT = { lat: 66.5, lng: 26.0 }; // Lappi — HUD:n oletusarvot
+
+function readDeviceKey() {
+  try {
+    const p = JSON.parse(localStorage.getItem("aurora_premium") || "null");
+    if (!p || !p.deviceKey || !p.expiresAt) return "";
+    if (p.expiresAt < Date.now()) return "";
+    return p.deviceKey;
+  } catch {
+    return "";
+  }
+}
+
+const LEVEL_FI = {
+  low: "Matala",
+  medium: "Kohtalainen",
+  high: "Korkea",
+  veryhigh: "Erittäin korkea",
+};
+
+/* Pieni mittaribadge (inline-tyylit → ei CSS-riippuvuutta) */
+function HudBadge({ label, value }) {
+  return (
+    <span style={{
+      background: "rgba(8, 14, 26, 0.72)",
+      border: "1px solid rgba(0, 255, 198, 0.25)",
+      borderRadius: 999,
+      padding: "4px 10px",
+      fontSize: 12,
+      color: "#e6e9ef",
+      fontWeight: 600,
+      whiteSpace: "nowrap",
+    }}>
+      {label} <span style={{ color: "#00ffc6" }}>{value}</span>
+    </span>
+  );
+}
+
 // Matala raja, jotta koko ovaali (myös himmeät reunat) pääsee heatmappiin.
 // Näkyvyys säädetään väriskaalan alphalla, ei datan suodatuksella.
 const MIN_AURORA = 3;
@@ -73,6 +112,37 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
   const [citiesData, setCitiesData] = useState([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const wrapRef = useRef(null);
+
+  /* Klikkauslaskenta: /api/aurora/calc klikatulle pisteelle (gating serverillä) */
+  const [calc, setCalc] = useState(null);          // viimeisin calc-vastaus
+  const [calcLoading, setCalcLoading] = useState(false);
+  const [clickPos, setClickPos] = useState(null);  // { lat, lng }
+
+  const fetchCalc = useCallback(async (lat, lng) => {
+    setCalcLoading(true);
+    try {
+      const res = await fetch(`${BASE}/api/aurora/calc`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lon: lng, deviceKey: readDeviceKey() }),
+      });
+      const data = await res.json();
+      if (res.ok) setCalc({ ...data, lat, lng });
+    } catch (e) {
+      console.warn("aurora calc failed:", e);
+    }
+    setCalcLoading(false);
+  }, []);
+
+  /* Oletuspisteen arvot HUDiin heti kun komponentti aukeaa */
+  useEffect(() => {
+    fetchCalc(DEFAULT_CALC_POINT.lat, DEFAULT_CALC_POINT.lng);
+  }, [fetchCalc]);
+
+  const handleGlobeClick = useCallback(({ lat, lng }) => {
+    setClickPos({ lat, lng });
+    fetchCalc(lat, lng);
+  }, [fetchCalc]);
 
   const tr = useCallback((k, d) => {
     const s = t(k);
@@ -184,7 +254,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
   }, [premium]);
 
   return (
-    <div className="globe-view parannettu-globe" ref={wrapRef}>
+    <div className="globe-view parannettu-globe" ref={wrapRef} style={{ position: "relative" }}>
       <Suspense fallback={<div className="globe-loading">{tr("globe.loading", "Loading globe…")}</div>}>
         {size.w > 0 && (
           <Globe
@@ -192,7 +262,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             width={size.w}
             height={size.h}
             onGlobeReady={onGlobeReady}
-            globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+            globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
             bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
             backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
             showAtmosphere={true}
@@ -224,9 +294,92 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             heatmapColorSaturation={2.8}
             heatmapBaseAltitude={0.012}
             heatmapsTransitionDuration={1500}
+            onGlobeClick={handleGlobeClick}
+            onPolygonClick={(p, e, coords) => coords && handleGlobeClick(coords)}
+            onHeatmapClick={(h, e, coords) => coords && handleGlobeClick(coords)}
+            ringsData={clickPos ? [clickPos] : []}
+            ringLat="lat"
+            ringLng="lng"
+            ringColor={() => "rgba(0, 255, 198, 0.6)"}
+            ringMaxRadius={3}
+            ringPropagationSpeed={2}
+            ringRepeatPeriod={1000}
           />
         )}
       </Suspense>
+
+      {/* Mittari-HUD: globaalit avaruussääarvot pelkkinä numeroina.
+          Free näkee Kp:n, premium myös Bz/tuuli/tiheys (tulee serveriltä). */}
+      {calc && (
+        <div style={{
+          position: "absolute", top: 12, left: 12,
+          display: "flex", gap: 6, flexWrap: "wrap",
+          zIndex: 5, pointerEvents: "none",
+          maxWidth: "calc(100% - 24px)",
+        }}>
+          <HudBadge label="Kp" value={calc.kp ?? "–"} />
+          {calc.tier === "premium" && (
+            <>
+              <HudBadge label="Bz" value={calc.bz != null ? `${calc.bz} nT` : "–"} />
+              <HudBadge label={tr("globe.wind", "Tuuli")} value={calc.speed != null ? `${calc.speed} km/s` : "–"} />
+              <HudBadge label={tr("globe.density", "Tiheys")} value={calc.density != null ? `${calc.density} p/cm³` : "–"} />
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Klikatun pisteen kortti */}
+      {clickPos && (
+        <div style={{
+          position: "absolute", left: "50%", bottom: 14,
+          transform: "translateX(-50%)",
+          zIndex: 6,
+          background: "rgba(8, 14, 26, 0.85)",
+          border: "1px solid rgba(0, 255, 198, 0.25)",
+          borderRadius: 12,
+          padding: "10px 14px",
+          minWidth: 200, maxWidth: "90%",
+          color: "#e6e9ef", fontSize: 13,
+          backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <strong>{clickPos.lat.toFixed(1)}°, {clickPos.lng.toFixed(1)}°</strong>
+            <button
+              onClick={() => setClickPos(null)}
+              aria-label={tr("globe.close", "Sulje")}
+              style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 15, padding: 0, lineHeight: 1 }}
+            >
+              ✕
+            </button>
+          </div>
+          {calcLoading ? (
+            <div style={{ color: "#94a3b8" }}>{tr("globe.calcLoading", "Lasketaan…")}</div>
+          ) : calc && (
+            calc.tier === "premium" ? (
+              <>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#00ffc6", lineHeight: 1.2 }}>
+                  {calc.probability}%
+                </div>
+                <div style={{ color: "#94a3b8" }}>
+                  ☁ {calc.clouds != null ? `${calc.clouds}%` : "–"}
+                  {calc.temp != null ? ` · ${calc.temp}°C` : ""}
+                  {calc.windMs != null ? ` · ${calc.windMs} m/s` : ""}
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontWeight: 700, color: "#00ffc6" }}>
+                  {LEVEL_FI[calc.level] || calc.level}
+                </div>
+                <div style={{ color: "#94a3b8" }}>☁ {calc.clouds != null ? `${calc.clouds}%` : "–"}</div>
+                <div style={{ color: "#67e8f9", fontSize: 12, marginTop: 4 }}>
+                  🔒 {tr("globe.premiumHint", "Tarkka todennäköisyys Premiumilla")}
+                </div>
+              </>
+            )
+          )}
+        </div>
+      )}
 
       {!premium && (
         <div className="globe-upsell">
