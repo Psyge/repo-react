@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, Suspense, lazy, useCallback, useMemo } from "react";
 import useTranslation from "../hooks/useTranslation";
 import staticPlaces from "../data/places";
+import AuroraPopup from "./AuroraPopup";
 
 const Globe = lazy(() => import("react-globe.gl"));
 
@@ -26,13 +27,6 @@ function readDeviceKey() {
     return "";
   }
 }
-
-const LEVEL_FI = {
-  low: "Matala",
-  medium: "Kohtalainen",
-  high: "Korkea",
-  veryhigh: "Erittäin korkea",
-};
 
 /* Pieni mittaribadge (inline-tyylit → ei CSS-riippuvuutta) */
 function HudBadge({ label, value }) {
@@ -114,45 +108,69 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
   const [size, setSize] = useState({ w: 0, h: 0 });
   const wrapRef = useRef(null);
 
-  /* Klikkauslaskenta: /api/aurora/calc klikatulle pisteelle (gating serverillä) */
-  const [calc, setCalc] = useState(null);          // viimeisin calc-vastaus
-  const [calcLoading, setCalcLoading] = useState(false);
+  /* Klikkauslaskenta — sama data ja popup kuin 2D-kartalla:
+     free → /api/aurora/calc (kevyt), premium → /api/aurora/forecast
+     (popupin Forecast-välilehti + paras ikkuna tarvitsevat sen).
+     Gating pysyy serverillä. */
+  const [popupData, setPopupData] = useState(null);
+  const [popupError, setPopupError] = useState(null);
+  const [popupLoading, setPopupLoading] = useState(false);
+  const [hud, setHud] = useState(null);            // yläkulman mittarit
   const [clickPos, setClickPos] = useState(null);  // { lat, lng }
   const [clickLabel, setClickLabel] = useState(null); // paikan nimi jos klikattiin markeria
   const [popupXY, setPopupXY] = useState(null);    // popupin ruutukoordinaatit
 
-  const fetchCalc = useCallback(async (lat, lng) => {
-    setCalcLoading(true);
+  const fetchPoint = useCallback(async (lat, lng) => {
+    setPopupLoading(true);
+    setPopupError(null);
+    const deviceKey = readDeviceKey();
+    const endpoint = deviceKey ? "/api/aurora/forecast" : "/api/aurora/calc";
     try {
-      const res = await fetch(`${BASE}/api/aurora/calc`, {
+      const res = await fetch(`${BASE}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat, lon: lng, deviceKey: readDeviceKey() }),
+        body: JSON.stringify({ lat, lon: lng, deviceKey }),
       });
       const data = await res.json();
-      if (res.ok) setCalc({ ...data, lat, lng });
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      setPopupData(data);
+      // HUD-arvot vastauksesta
+      if (data.tier === "premium") {
+        setHud({
+          tier: "premium",
+          kp: data.slots?.[0]?.kp ?? data.kp ?? null,
+          bz: data.current?.bz ?? data.bz ?? null,
+          speed: data.current?.speed ?? data.speed ?? null,
+          density: data.current?.density ?? data.density ?? null,
+        });
+      } else {
+        setHud({ tier: "free", kp: data.kp ?? null });
+      }
     } catch (e) {
-      console.warn("aurora calc failed:", e);
+      console.warn("aurora fetch failed:", e);
+      setPopupError(e);
     }
-    setCalcLoading(false);
+    setPopupLoading(false);
   }, []);
 
   /* Oletuspisteen arvot HUDiin heti kun komponentti aukeaa */
   useEffect(() => {
-    fetchCalc(DEFAULT_CALC_POINT.lat, DEFAULT_CALC_POINT.lng);
-  }, [fetchCalc]);
+    fetchPoint(DEFAULT_CALC_POINT.lat, DEFAULT_CALC_POINT.lng);
+  }, [fetchPoint]);
 
   const handleGlobeClick = useCallback((coords, event, label = null) => {
     if (!coords) return;
     setClickLabel(label);
     setClickPos({ lat: coords.lat, lng: coords.lng });
+    setPopupData(null); // popup näyttää lataustilan kunnes uusi data saapuu
+    setPopupError(null);
     // Alkuasento suoraan klikkauksesta — seuranta-efekti tarkentaa heti perään
     if (event && event.clientX != null && wrapRef.current) {
       const r = wrapRef.current.getBoundingClientRect();
       setPopupXY({ x: event.clientX - r.left, y: event.clientY - r.top });
     }
-    fetchCalc(coords.lat, coords.lng);
-  }, [fetchCalc]);
+    fetchPoint(coords.lat, coords.lng);
+  }, [fetchPoint]);
 
   const closePopup = useCallback(() => {
     setClickPos(null);
@@ -160,20 +178,28 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     setPopupXY(null);
   }, []);
 
-  /* Popup seuraa klikattua pistettä pallon pyöriessä (getScreenCoords) */
+  /* Popup seuraa klikattua pistettä joka framella (rAF + suora DOM-päivitys,
+     ei React-renderöintiä 60x/s) — pysyy kohdillaan myös zoomatessa */
+  const popupRef = useRef(null);
   useEffect(() => {
     if (!clickPos) return;
-    const timer = setInterval(() => {
+    let raf;
+    const track = () => {
       const g = globeEl.current;
-      if (!g || typeof g.getScreenCoords !== "function") return;
-      const p = g.getScreenCoords(clickPos.lat, clickPos.lng, 0.02);
-      if (!p) return;
-      setPopupXY({
-        x: Math.min(Math.max(p.x, 110), Math.max(size.w - 110, 110)),
-        y: Math.min(Math.max(p.y, 90), Math.max(size.h - 16, 90)),
-      });
-    }, 100);
-    return () => clearInterval(timer);
+      const el = popupRef.current;
+      if (g && el && typeof g.getScreenCoords === "function") {
+        const p = g.getScreenCoords(clickPos.lat, clickPos.lng, 0.003);
+        if (p) {
+          const x = Math.min(Math.max(p.x, 110), Math.max(size.w - 110, 110));
+          const y = Math.min(Math.max(p.y, 90), Math.max(size.h - 16, 90));
+          el.style.left = `${x}px`;
+          el.style.top = `${y - 10}px`;
+        }
+      }
+      raf = requestAnimationFrame(track);
+    };
+    raf = requestAnimationFrame(track);
+    return () => cancelAnimationFrame(raf);
   }, [clickPos, size.w, size.h]);
 
   /* Paikkamarkerit places.js:stä — klikkaus avaa saman laskentapopupin */
@@ -302,6 +328,10 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
     controls.enablePan = false;
     controls.enableZoom = premium;
     controls.enableRotate = premium;
+    // Ripeämpi zoomi + pehmeä liike (oletus tuntuu tahmealta tiilikartalla)
+    controls.zoomSpeed = 2.2;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.12;
 
     g.pointOfView({ lat: 40, lng: -20, altitude: 2.3 }, 0);
   }, [premium]);
@@ -360,7 +390,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             htmlElementsData={placeMarkers}
             htmlLat="lat"
             htmlLng="lon"
-            htmlAltitude={0.015}
+            htmlAltitude={0.003}
             htmlElement={makePlaceMarker}
             ringsData={clickPos ? [clickPos] : []}
             ringLat="lat"
@@ -375,81 +405,85 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
 
       {/* Mittari-HUD: globaalit avaruussääarvot pelkkinä numeroina.
           Free näkee Kp:n, premium myös Bz/tuuli/tiheys (tulee serveriltä). */}
-      {calc && (
+      {hud && (
         <div style={{
           position: "absolute", top: 12, left: 12,
           display: "flex", gap: 6, flexWrap: "wrap",
           zIndex: 5, pointerEvents: "none",
           maxWidth: "calc(100% - 24px)",
         }}>
-          <HudBadge label="Kp" value={calc.kp ?? "–"} />
-          {calc.tier === "premium" && (
+          <HudBadge label="Kp" value={hud.kp ?? "–"} />
+          {hud.tier === "premium" && (
             <>
-              <HudBadge label="Bz" value={calc.bz != null ? `${calc.bz} nT` : "–"} />
-              <HudBadge label={tr("globe.wind", "Tuuli")} value={calc.speed != null ? `${calc.speed} km/s` : "–"} />
-              <HudBadge label={tr("globe.density", "Tiheys")} value={calc.density != null ? `${calc.density} p/cm³` : "–"} />
+              <HudBadge label="Bz" value={hud.bz != null ? `${hud.bz} nT` : "–"} />
+              <HudBadge label={tr("globe.wind", "Tuuli")} value={hud.speed != null ? `${hud.speed} km/s` : "–"} />
+              <HudBadge label={tr("globe.density", "Tiheys")} value={hud.density != null ? `${hud.density} p/cm³` : "–"} />
             </>
           )}
         </div>
       )}
 
-      {/* Klikatun pisteen kortti — aukeaa pisteen yläpuolelle ja seuraa sitä */}
+      {/* Klikatun pisteen popup — sama AuroraPopup kuin 2D-kartalla,
+          kuori jäljittelee Leaflet-popupin ulkoasua (popup.css:n tyylit
+          .aurora-popup ym. osuvat sisältöön suoraan) */}
       {clickPos && popupXY && (
-        <div style={{
+        <div ref={popupRef} style={{
           position: "absolute",
           left: popupXY.x,
-          top: popupXY.y - 14,
+          top: popupXY.y - 10,
           transform: "translate(-50%, -100%)",
           zIndex: 6,
-          background: "rgba(8, 14, 26, 0.88)",
-          border: "1px solid rgba(0, 255, 198, 0.25)",
-          borderRadius: 12,
-          padding: "10px 14px",
-          minWidth: 190, maxWidth: 260,
-          color: "#e6e9ef", fontSize: 13,
-          backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
           pointerEvents: "auto",
         }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <strong>
-              {clickLabel
-                ? `📍 ${clickLabel}`
-                : `${clickPos.lat.toFixed(1)}°, ${clickPos.lng.toFixed(1)}°`}
-            </strong>
+          <div style={{
+            position: "relative",
+            borderRadius: 22,
+            background: "linear-gradient(180deg, rgba(7,12,28,0.96), rgba(5,8,20,0.98))",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.55), 0 0 40px rgba(0,255,200,0.08)",
+            padding: 15,
+            overflow: "hidden",
+          }}>
             <button
               onClick={closePopup}
               aria-label={tr("globe.close", "Sulje")}
-              style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 15, padding: 0, lineHeight: 1 }}
+              style={{
+                position: "absolute", top: 10, right: 10, zIndex: 2,
+                background: "none", border: "none",
+                color: "rgba(255,255,255,0.5)", cursor: "pointer",
+                fontSize: 18, padding: 0, lineHeight: 1,
+              }}
             >
               ✕
             </button>
+            {clickLabel && (
+              <div style={{
+                position: "relative", zIndex: 1,
+                fontSize: 13, fontWeight: 700, color: "#e6e9ef",
+                margin: "2px 0 6px 5px",
+              }}>
+                📍 {clickLabel}
+              </div>
+            )}
+            <AuroraPopup
+              lat={clickPos.lat}
+              lng={clickPos.lng}
+              data={popupData}
+              error={popupError}
+              loading={popupLoading}
+              premium={premium}
+            />
           </div>
-          {calcLoading ? (
-            <div style={{ color: "#94a3b8" }}>{tr("globe.calcLoading", "Lasketaan…")}</div>
-          ) : calc && (
-            calc.tier === "premium" ? (
-              <>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#00ffc6", lineHeight: 1.2 }}>
-                  {calc.probability}%
-                </div>
-                <div style={{ color: "#94a3b8" }}>
-                  ☁ {calc.clouds != null ? `${calc.clouds}%` : "–"}
-                  {calc.temp != null ? ` · ${calc.temp}°C` : ""}
-                  {calc.windMs != null ? ` · ${calc.windMs} m/s` : ""}
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontWeight: 700, color: "#00ffc6" }}>
-                  {LEVEL_FI[calc.level] || calc.level}
-                </div>
-                <div style={{ color: "#94a3b8" }}>☁ {calc.clouds != null ? `${calc.clouds}%` : "–"}</div>
-                <div style={{ color: "#67e8f9", fontSize: 12, marginTop: 4 }}>
-                  🔒 {tr("globe.premiumHint", "Tarkka todennäköisyys Premiumilla")}
-                </div>
-              </>
-            )
-          )}
+          {/* Nuoli alaspäin kohti pistettä */}
+          <div style={{
+            width: 17, height: 17,
+            background: "rgba(5,8,20,0.98)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            transform: "rotate(45deg)",
+            margin: "-9px auto 0",
+          }} />
         </div>
       )}
 

@@ -64,8 +64,8 @@ export default function AuroraPopup({
         {loading && (
           <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>{t("loading", "Loading…")}</div>
         )}
-        
-         <a href="/premium"
+
+        <a href="/premium"
           style={{
             display: "block",
             marginTop: 12,
@@ -109,23 +109,30 @@ export default function AuroraPopup({
         </button>
       </div>
 
+      {/* Päivityksen merkki myös premium-näkymässä */}
+      {loading && (
+        <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 8 }}>
+          {t("loading", "Loading…")}
+        </div>
+      )}
+
       {tab === "now" && (
-  <>
-    {/* Iso tila-teksti, dynaaminen prosentti */}
-    <div className="ap-status">
-      <div className="ap-status-level" style={{ color }}>
-        {levelLabel}
-      </div>
-      <div className="ap-status-prob" style={{ color }}>
-        {probability != null ? `${probability}%` : "–"}
-      </div>
-    </div>
+        <>
+          {/* Iso tila-teksti, dynaaminen prosentti */}
+          <div className="ap-status">
+            <div className="ap-status-level" style={{ color }}>
+              {levelLabel}
+            </div>
+            <div className="ap-status-prob" style={{ color }}>
+              {probability != null ? `${probability}%` : "–"}
+            </div>
+          </div>
 
           {/* Paras ikkuna */}
           {bestWindow && (
             <div className="ap-window">
               ⏰ {t("window.best", "Best window")}{" "}
-              {formatLocalHour(bestWindow.start)}–{formatLocalHour(bestWindow.end)}
+              {formatWindowRange(bestWindow.start, bestWindow.end)}
               {bestWindow.peakKp != null && (
                 <span style={{ opacity: 0.7 }}> · Kp {bestWindow.peakKp}</span>
               )}
@@ -164,8 +171,12 @@ export default function AuroraPopup({
 
       {tab === "forecast" && (
         <div className="ap-forecast">
-          {slots.length > 0 ? slots.map((s) => (
-            <ForecastRow key={s.tsUtc} slot={s} />
+          {slots.length > 0 ? slots.map((s, i) => (
+            <ForecastRow
+              key={s.tsUtc}
+              slot={s}
+              showDay={dayChanged(slots[i - 1]?.tsUtc, s.tsUtc)}
+            />
           )) : (
             <div style={{ opacity: 0.5, fontSize: 12, marginTop: 8 }}>
               {t("forecast.nodata", "No forecast data")}
@@ -177,14 +188,21 @@ export default function AuroraPopup({
   );
 }
 
-function ForecastRow({ slot }) {
+function ForecastRow({ slot, showDay = false }) {
   const prob = slot.probability ?? 0;
   const color = levelColor(slot.level ?? "low");
   const hour = formatLocalHour(slot.tsUtc);
 
   return (
     <div className="ap-frow">
-      <div className="ap-frow-time">{hour}</div>
+      <div className="ap-frow-time">
+        {showDay && (
+          <span style={{ display: "block", fontSize: 9, opacity: 0.55, textTransform: "capitalize" }}>
+            {formatWeekday(slot.tsUtc)}
+          </span>
+        )}
+        {hour}
+      </div>
       <div className="ap-frow-bar-bg">
         <div className="ap-frow-bar" style={{ width: `${prob}%`, background: color + "66" }} />
       </div>
@@ -210,6 +228,32 @@ function formatLocalHour(isoString) {
   if (!isoString) return "–";
   const d = new Date(isoString);
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatWeekday(isoString) {
+  if (!isoString) return "";
+  return new Date(isoString).toLocaleDateString([], { weekday: "short" });
+}
+
+/* Onko slottien välillä vuorokausiraja? (ensimmäinen rivi saa aina päivän,
+   jos se ei ole tänään) */
+function dayChanged(prevIso, currIso) {
+  if (!currIso) return false;
+  const curr = new Date(currIso);
+  if (!prevIso) {
+    return curr.toDateString() !== new Date().toDateString();
+  }
+  return new Date(prevIso).toDateString() !== curr.toDateString();
+}
+
+/* Paras ikkuna: näyttää viikonpäivän jos ikkuna ei ole tänään,
+   esim. "la 21:00–01:00" */
+function formatWindowRange(startIso, endIso) {
+  if (!startIso) return "–";
+  const start = new Date(startIso);
+  const today = start.toDateString() === new Date().toDateString();
+  const day = today ? "" : start.toLocaleDateString([], { weekday: "short" }) + " ";
+  return `${day}${formatLocalHour(startIso)}–${formatLocalHour(endIso)}`;
 }
 
 function probabilityToLevel(probability) {
