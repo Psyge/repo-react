@@ -192,6 +192,11 @@ export default function HomePage() {
   const [articles, setArticles] = useState([]);
   const { t, currentLanguage } = useTranslation();
 
+  useEffect(() => {
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 2500));
+  idle(() => import("./components/GlobeView").then((m) => m.preloadGlobeAssets()));
+}, []);
+
   // EFEKTI 1: Ennusteen lataus
   useEffect(() => {
     let cancelled = false;

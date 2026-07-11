@@ -40,6 +40,90 @@ function readLayers() {
   }
 }
 
+/* ---- Sessiovälimuisti + datan lataajat ----
+ * Prosessoitu data talteen sessionStorageen → sivun avaus ja
+ * uudelleenkäynnit eivät hae/parsi isoja JSONeja uudelleen. */
+function cacheRead(key, ttlMs) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const c = JSON.parse(raw);
+    if (!c || typeof c.savedAt !== "number") return null;
+    if (Date.now() - c.savedAt > ttlMs) { sessionStorage.removeItem(key); return null; }
+    return c.data ?? null;
+  } catch { return null; }
+}
+function cacheWrite(key, data) {
+  try { sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data })); } catch {}
+}
+
+async function loadAuroraPoints() {
+  const cached = cacheRead("globe:aurora:v1", 10 * 60 * 1000);
+  if (cached) return cached;
+  const res = await fetch(OVATION_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error("Aurora data not found.");
+  const ovationData = await res.json();
+  const coords = ovationData?.coordinates || [];
+  const pts = [];
+  for (let i = 0; i < coords.length; i++) {
+    const c = coords[i];
+    const val = c[2];
+    if (val >= MIN_AURORA) {
+      const lat = c[1];
+      if (Math.abs(lat) >= MIN_ABS_LAT) {
+        pts.push({ lat, lng: c[0] > 180 ? c[0] - 360 : c[0], val: val / 100 });
+      }
+    }
+  }
+  cacheWrite("globe:aurora:v1", pts);
+  return pts;
+}
+
+async function loadBorders() {
+  const cached = cacheRead("globe:borders:v1", 24 * 60 * 60 * 1000);
+  if (cached) return cached;
+  const res = await fetch(BORDERS_URL);
+  if (!res.ok) throw new Error("Country borders data not found.");
+  const geo = await res.json();
+  const features = geo.features || [];
+  cacheWrite("globe:borders:v1", features);
+  return features;
+}
+
+async function loadCities() {
+  const cached = cacheRead("globe:cities:v1", 24 * 60 * 60 * 1000);
+  if (cached) return cached;
+  const res = await fetch(CITIES_URL);
+  if (!res.ok) throw new Error("Major cities data not found.");
+  const geo = await res.json();
+  const majorCities = (geo.features || [])
+    .filter(f => (f.properties.pop_max || 0) > MIN_CITY_POP)
+    .map(f => ({
+      lat: f.properties.latitude ?? f.geometry.coordinates[1],
+      lng: f.properties.longitude ?? f.geometry.coordinates[0],
+      name: f.properties.name,
+      // three-globen label-fontti ei sisällä ø/å/ü yms. → ASCII näkyviin
+      nameAscii: f.properties.nameascii || f.properties.name,
+      country: f.properties.adm0name,
+      population: f.properties.pop_max
+    }));
+  cacheWrite("globe:cities:v1", majorCities);
+  return majorCities;
+}
+
+/* ENNAKKOLATAUS: kutsu tätä esim. etusivulta selaimen idle-aikana,
+ * niin map-sivu aukeaa ilman yhtään verkkohakua:
+ *
+ *   useEffect(() => {
+ *     const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 2500));
+ *     idle(() => import("./components/GlobeView").then((m) => m.preloadGlobeAssets()));
+ *   }, []);
+ */
+export async function preloadGlobeAssets() {
+  try { import("react-globe.gl"); } catch {} // lämmittää koodipaketin
+  await Promise.allSettled([loadAuroraPoints(), loadBorders(), loadCities()]);
+}
+
 /* Pieni mittaribadge (inline-tyylit → ei CSS-riippuvuutta) */
 function HudBadge({ label, value }) {
   return (
@@ -272,70 +356,21 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
       if (!readyRef.current && !cancelled) onFallback?.("timeout");
     }, LOAD_TIMEOUT_MS);
 
-    // KORJAUS: Promise.allSettled -> yhden lähteen epäonnistuminen ei enää
-    // estä muiden (esim. rajojen) näkymistä.
-    Promise.allSettled([
-      fetch(OVATION_URL, { cache: "no-store" }).then(r => r.json()),
-      fetch(BORDERS_URL).then(r => {
-        if (!r.ok) throw new Error("Country borders data not found.");
-        return r.json();
-      }),
-      fetch(CITIES_URL).then(r => {
-        if (!r.ok) throw new Error("Major cities data not found.");
-        return r.json();
-      })
-    ])
-    .then(([ovationRes, bordersRes, citiesRes]) => {
-      if (cancelled) return;
+    // Lataajat lukevat ensin sessiovälimuistista (preloadGlobeAssets on
+    // voinut täyttää sen jo etusivulla) — verkkoon mennään vain tarvittaessa.
+    Promise.allSettled([loadAuroraPoints(), loadBorders(), loadCities()])
+      .then(([auroraRes, bordersRes, citiesRes]) => {
+        if (cancelled) return;
 
-      if (ovationRes.status === "fulfilled") {
-        const coords = ovationRes.value?.coordinates || [];
-        const pts = [];
-        for (let i = 0; i < coords.length; i++) {
-          const c = coords[i];
-          const val = c[2];
-          if (val >= MIN_AURORA) {
-            const lat = c[1];
-            if (Math.abs(lat) >= MIN_ABS_LAT) {
-              pts.push({
-                lat: lat,
-                lng: c[0] > 180 ? c[0] - 360 : c[0],
-                val: val / 100
-              });
-            }
-          }
-        }
-        setAuroraPoints(pts);
-      } else {
-        console.error("Virhe ladattaessa aurora-dataa:", ovationRes.reason);
-      }
+        if (auroraRes.status === "fulfilled") setAuroraPoints(auroraRes.value);
+        else console.error("Virhe ladattaessa aurora-dataa:", auroraRes.reason);
 
-      if (bordersRes.status === "fulfilled") {
-        setCountriesBorders(bordersRes.value.features || []);
-      } else {
-        console.error("Virhe ladattaessa rajadataa:", bordersRes.reason);
-      }
+        if (bordersRes.status === "fulfilled") setCountriesBorders(bordersRes.value);
+        else console.error("Virhe ladattaessa rajadataa:", bordersRes.reason);
 
-      if (citiesRes.status === "fulfilled") {
-        // KORJAUS: Natural Earth -aineistossa kentät ovat name / adm0name /
-        // pop_max ja koordinaatit properties.latitude/longitude.
-        const majorCities = (citiesRes.value.features || [])
-          .filter(f => (f.properties.pop_max || 0) > MIN_CITY_POP)
-          .map(f => ({
-            lat: f.properties.latitude ?? f.geometry.coordinates[1],
-            lng: f.properties.longitude ?? f.geometry.coordinates[0],
-            name: f.properties.name,
-            // KORJAUS: three-globen label-fontti ei sisällä ø/å/ü yms.
-            // merkkejä → näkyvä teksti ASCII-muodossa, oikea nimi tooltipissa.
-            nameAscii: f.properties.nameascii || f.properties.name,
-            country: f.properties.adm0name,
-            population: f.properties.pop_max
-          }));
-        setCitiesData(majorCities);
-      } else {
-        console.error("Virhe ladattaessa kaupunkidataa:", citiesRes.reason);
-      }
-    });
+        if (citiesRes.status === "fulfilled") setCitiesData(citiesRes.value);
+        else console.error("Virhe ladattaessa kaupunkidataa:", citiesRes.reason);
+      });
 
     return () => { cancelled = true; clearTimeout(timer); };
   }, [onFallback]);
@@ -412,7 +447,8 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade }) {
             heatmapColorFn={() => getAuroraColor}
             heatmapColorSaturation={2.8}
             heatmapBaseAltitude={0.012}
-            heatmapsTransitionDuration={1500}
+            heatmapsTransitionDuration={0}
+            labelsTransitionDuration={0}
             onGlobeClick={(coords, e) => handleGlobeClick(coords, e)}
             onPolygonClick={(p, e, coords) => handleGlobeClick(coords, e)}
             onHeatmapClick={(h, e, coords) => handleGlobeClick(coords, e)}
