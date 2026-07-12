@@ -418,7 +418,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
               float d = dot(normalize(vN), sunDir);
               // 1.0 syvällä yössä, 0.0 päivällä — pehmeä liuku rajan yli
               float night = 1.0 - smoothstep(-0.14, 0.08, d);
-              gl_FragColor = vec4(0.0, 0.01, 0.05, night * 0.55);
+              gl_FragColor = vec4(0.0, 0.01, 0.05, night * 0.75);
             }
           `,
         });
