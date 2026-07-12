@@ -1,6 +1,17 @@
 import { useState } from "react";
 import useTranslation from "../hooks/useTranslation";
 
+/* Yhteinen sulkunappi — sama rasti samassa paikassa sekä 2D- että
+ * 3D-kartalla. Näkyy vain jos onClose-callback on annettu. */
+function CloseBtn({ onClose }) {
+  if (!onClose) return null;
+  return (
+    <button className="ap-close" onClick={onClose} aria-label="Close">
+      ✕
+    </button>
+  );
+}
+
 export default function AuroraPopup({
   lat,
   lng,
@@ -8,13 +19,15 @@ export default function AuroraPopup({
   error,
   premium = false,
   loading = false,
+  onClose = null,
 }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState("now");
 
   if (!data && !error) {
     return (
-      <div style={{ minWidth: 220, color: "#fff" }}>
+      <div style={{ minWidth: 220, color: "#fff", position: "relative" }}>
+        <CloseBtn onClose={onClose} />
         <Loc lat={lat} lng={lng} />
         <div style={{ marginTop: 8, opacity: 0.7 }}>{t("loading", "Loading…")}</div>
       </div>
@@ -23,7 +36,8 @@ export default function AuroraPopup({
 
   if (error && !data) {
     return (
-      <div style={{ minWidth: 220, color: "#fff" }}>
+      <div style={{ minWidth: 220, color: "#fff", position: "relative" }}>
+        <CloseBtn onClose={onClose} />
         <Loc lat={lat} lng={lng} />
         <div style={{ marginTop: 8, color: "#ff6b6b" }}>{t("error.fetch", "Failed to load data")}</div>
       </div>
@@ -47,7 +61,8 @@ export default function AuroraPopup({
   // --- FREE ---
   if (!isPremium) {
     return (
-      <div style={{ minWidth: 240, color: "#fff" }}>
+      <div style={{ minWidth: 240, color: "#fff", position: "relative" }}>
+        <CloseBtn onClose={onClose} />
         <Loc lat={lat} lng={lng} />
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
           <div style={{ fontSize: 12, opacity: 0.7 }}>{t("kp.label", "Kp")}</div>
@@ -91,6 +106,7 @@ export default function AuroraPopup({
 
   return (
     <div className="aurora-popup aurora-popup--premium">
+      <CloseBtn onClose={onClose} />
       <Loc lat={lat} lng={lng} />
 
       {/* Välilehdet */}

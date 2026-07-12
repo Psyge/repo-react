@@ -17,15 +17,15 @@ import {
   PLACE_NAMES_ENTER_ALT, PLACE_NAMES_EXIT_ALT,
   readLayers, readDeviceKey, requestIdle, cancelIdle,
   loadAuroraPoints, loadBorders, loadCities,
-} from "../utils/Globedata";
+} from "./globe/globeData";
 import {
   getGlobeQuality, deviceCanRenderGlobe, getAuroraColor,
   subsolarPoint, buildTerminator,
-} from "../utils/Globemath";
-
+} from "./globe/globeMath";
+import "./globe/Globeview.css";
 
 /* HomePagen ennakkolataus-importti pysyy ennallaan tämän re-exportin kautta */
-export { preloadGlobeAssets } from "../utils/Globedata";
+export { preloadGlobeAssets } from "./globe/globeData";
 
 const Globe = lazy(() => import("react-globe.gl"));
 
@@ -568,7 +568,6 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       {clickPos && popupXY && (
         <div ref={popupRef} className="gv-popup-wrap" style={{ left: popupXY.x, top: popupXY.y - 10 }}>
           <div className="gv-popup-card">
-            <button className="gv-popup-close" onClick={closePopup} aria-label={tr("globe.close", "Sulje")}>✕</button>
             {clickLabel && <div className="gv-popup-label">📍 {clickLabel}</div>}
             <AuroraPopup
               lat={clickPos.lat}
@@ -577,6 +576,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
               error={popupError}
               loading={popupLoading}
               premium={premium}
+              onClose={closePopup}
             />
           </div>
           <div className="gv-popup-tip" />

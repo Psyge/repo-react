@@ -193,7 +193,10 @@ export default function MapPage() {
       autoPanPadding: L.point(24, 24),
       className: "aurora-popup-wrap",
       offset: L.point(0, -2),
+      closeButton: false, // rasti tulee AuroraPopupista → identtinen 3D:n kanssa
     }).setLatLng([lat, lng]);
+
+    const handleClose = () => map.closePopup(popup);
 
     const container = document.createElement("div");
     popup.setContent(container);
@@ -213,6 +216,7 @@ export default function MapPage() {
         premium={!!premium}
         loading={!!premium}
         onSunView={switchToSun}
+        onClose={handleClose}
       />
     );
 
@@ -226,6 +230,7 @@ export default function MapPage() {
           data={premiumData || freeData}
           premium
           onSunView={switchToSun}
+          onClose={handleClose}
         />
       );
     } catch (err) {
@@ -236,6 +241,7 @@ export default function MapPage() {
           data={freeData}
           premium error
           onSunView={switchToSun}
+          onClose={handleClose}
         />
       );
     }
