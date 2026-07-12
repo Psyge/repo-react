@@ -2,7 +2,7 @@
  * globeData.js — globen vakiot, välimuistit ja datan lataajat.
  * Sijainti: src/components/globe/globeData.js
  * ============================================================ */
-import { getGlobeQuality } from "./globeMath";
+import { getGlobeQuality } from "./Globemath";
 
 export const BASE = process.env.REACT_APP_API_BASE || "";
 export const LOAD_TIMEOUT_MS = 15000;
