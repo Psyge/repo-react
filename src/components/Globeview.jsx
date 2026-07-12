@@ -17,15 +17,15 @@ import {
   PLACE_NAMES_ENTER_ALT, PLACE_NAMES_EXIT_ALT,
   readLayers, readDeviceKey, requestIdle, cancelIdle,
   loadAuroraPoints, loadBorders, loadCities,
-} from "./globe/globeData";
+} from "../utils/Globedata";
 import {
   getGlobeQuality, deviceCanRenderGlobe, getAuroraColor,
   subsolarPoint, buildTerminator,
-} from "./globe/globeMath";
-import "./globe/Globeview.css";
+} from "../utils/Globemath";
+
 
 /* HomePagen ennakkolataus-importti pysyy ennallaan tämän re-exportin kautta */
-export { preloadGlobeAssets } from "./globe/globeData";
+export { preloadGlobeAssets } from "../utils/Globedata";
 
 const Globe = lazy(() => import("react-globe.gl"));
 
