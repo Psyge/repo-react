@@ -1,0 +1,258 @@
+/* ============================================================
+   Globeview.css — globen UI-tyylit (HUD, valikko, popup, markerit)
+   Sijainti: src/components/globe/Globeview.css
+============================================================ */
+
+.gv-root {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(0, 230, 255, 0.14), rgba(0, 0, 0, 0) 34%),
+    radial-gradient(circle at 50% 55%, rgba(0, 255, 198, 0.08), rgba(0, 0, 0, 0) 46%),
+    linear-gradient(180deg, #02040a 0%, #050816 48%, #010208 100%);
+}
+
+/* ---- Mittaripalkki (headerin alla) ---- */
+.gv-hudbar {
+  position: absolute;
+  top: 70px; /* sivun headerin alle */
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  pointer-events: none;
+}
+.gv-hudbar::-webkit-scrollbar { display: none; }
+
+.gv-badge {
+  background: rgba(8, 14, 26, 0.72);
+  border: 1px solid rgba(0, 255, 198, 0.25);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #e6e9ef;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gv-badge b { color: #00ffc6; font-weight: 600; }
+
+.gv-spacer { flex: 1; }
+
+.gv-quality {
+  color: rgba(230, 233, 239, 0.65);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.gv-layers-btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(8, 14, 26, 0.72);
+  border: 1px solid rgba(0, 255, 198, 0.35);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #00ffc6;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.gv-layers-btn--open { background: rgba(0, 255, 198, 0.15); }
+
+/* ---- Kerrosvalikko ---- */
+.gv-layers-menu {
+  position: absolute;
+  top: 114px;
+  right: 10px;
+  z-index: 1001;
+  background: rgba(7, 12, 28, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 160px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.gv-layers-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #e6e9ef;
+  cursor: pointer;
+}
+.gv-layers-item input {
+  accent-color: #00ffc6;
+  width: 15px;
+  height: 15px;
+}
+
+/* ---- Ohjevihje ---- */
+.gv-hint {
+  position: absolute;
+  left: 50%;
+  top: 130px;
+  transform: translateX(-50%);
+  z-index: 998;
+  max-width: 250px;
+  background: linear-gradient(180deg, rgba(7, 12, 28, 0.96), rgba(5, 8, 20, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px 30px 14px 16px;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(0, 255, 200, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.gv-hint strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #e6e9ef;
+  font-size: 14px;
+}
+.gv-hint p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.gv-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0;
+  line-height: 1;
+}
+
+/* ---- Klikkauspopupin kuori (sisältö = AuroraPopup, tyylit popup.css:stä) ---- */
+.gv-popup-wrap {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.gv-popup-card {
+  position: relative;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(7, 12, 28, 0.96), rgba(5, 8, 20, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(0, 255, 200, 0.08);
+  padding: 15px;
+  overflow: hidden;
+}
+
+.gv-popup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  line-height: 1;
+}
+
+.gv-popup-label {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e6e9ef;
+  margin: 2px 0 6px 5px;
+}
+
+.gv-popup-tip {
+  width: 17px;
+  height: 17px;
+  background: rgba(5, 8, 20, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transform: rotate(45deg);
+  margin: -9px auto 0;
+}
+
+/* ---- Attribuutio ---- */
+.gv-attribution {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  z-index: 4;
+  font-size: 9px;
+  color: rgba(230, 233, 239, 0.55);
+  background: rgba(2, 4, 10, 0.45);
+  padding: 1px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* ---- Paikkamarkerit (DOM-elementit three-globen html-layerissa) ---- */
+.gv-marker {
+  pointer-events: auto;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  transform: translate(-50%, -100%);
+}
+
+.gv-marker-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gv-marker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(8, 14, 26, 0.82);
+  border: 1px solid rgba(0, 255, 198, 0.38);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #e6e9ef;
+  white-space: nowrap;
+  box-shadow: 0 0 12px rgba(0, 255, 198, 0.16);
+}
+
+.gv-marker-dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00ffc6;
+  box-shadow: 0 0 8px #00ffc6;
+  margin: 2px auto 0;
+}
+
+/* Pistetila (ei nimeä): isompi, reunustettu piste */
+.gv-marker-dot--plain {
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(2, 4, 10, 0.8);
+  box-shadow: 0 0 10px rgba(0, 255, 198, 0.8);
+  margin: 0;
+}
