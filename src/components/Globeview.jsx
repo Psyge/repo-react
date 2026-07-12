@@ -18,7 +18,7 @@ const LAYERS_KEY = "globe_layers_v3";
 // Rajat ja paikkapisteet pidetään oletuksena päällä, koska ne auttavat
 // hahmottamaan maantiedettä. Kaupunkilabelit ovat raskaampia, joten ne jäävät
 // edelleen valinnaiseksi kerrokseksi.
-const DEFAULT_LAYERS = { aurora: true, borders: true, cities: false, places: true, clouds: false };
+const DEFAULT_LAYERS = { aurora: true, borders: true, cities: false, places: true, clouds: false, night: true };
 
 /* Live-pilvitekstuuri (päivittyy ~3 h välein, ilmainen, EUMETSAT-dataa).
  * Ladataan vasta kun kerros kytketään päälle valikosta. */
@@ -45,6 +45,57 @@ const PLACE_NAMES_ENTER_ALT = 1.0;
 const PLACE_NAMES_EXIT_ALT  = 1.15;
 const CARTO_TILE_URL = (x, y, l) => `https://basemaps.cartocdn.com/dark_all/${l}/${x}/${y}.png`;
 const ESRI_TILE_URL  = (x, y, l) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`;
+
+/* ---- Yön raja (terminaattori) ----
+ * Auringon aliaurinkopiste lasketaan ajasta, ja terminaattori on
+ * isoympyrä 90° päässä siitä. Päivittyy 10 min välein kun kerros päällä. */
+function subsolarPoint(date = new Date()) {
+  const rad = Math.PI / 180;
+  const dayMs = 86400000, J1970 = 2440588, J2000 = 2451545;
+  const days = date.valueOf() / dayMs - 0.5 + J1970 - J2000;
+  const e = rad * 23.4397;
+  const M = rad * (357.5291 + 0.98560028 * days);
+  const C = rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M));
+  const L = M + C + rad * 102.9372 + Math.PI;
+  const dec = Math.asin(Math.sin(L) * Math.sin(e));
+  const ra = Math.atan2(Math.sin(L) * Math.cos(e), Math.cos(L));
+  const theta = rad * (280.16 + 360.9856235 * days);
+  let lng = ((ra - theta) / rad) % 360;
+  if (lng > 180) lng -= 360;
+  if (lng < -180) lng += 360;
+  return { lat: dec / rad, lng };
+}
+
+function buildTerminator(date = new Date()) {
+  const sub = subsolarPoint(date);
+  const rad = Math.PI / 180;
+  const s = [
+    Math.cos(sub.lat * rad) * Math.cos(sub.lng * rad),
+    Math.cos(sub.lat * rad) * Math.sin(sub.lng * rad),
+    Math.sin(sub.lat * rad),
+  ];
+  // u = s × pohjoisnapa (normalisoituna), v = s × u → terminaattorin taso
+  let ux = s[1], uy = -s[0];
+  const ulen = Math.hypot(ux, uy) || 1;
+  ux /= ulen; uy /= ulen;
+  const uz = 0;
+  const vx = s[1] * uz - s[2] * uy;
+  const vy = s[2] * ux - s[0] * uz;
+  const vz = s[0] * uy - s[1] * ux;
+
+  const pts = [];
+  const N = 120;
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * 2 * Math.PI;
+    const px = ux * Math.cos(t) + vx * Math.sin(t);
+    const py = uy * Math.cos(t) + vy * Math.sin(t);
+    const pz = uz * Math.cos(t) + vz * Math.sin(t);
+    pts.push([Math.asin(pz) / rad, Math.atan2(py, px) / rad]);
+  }
+  return pts; // [[lat, lng], ...] — paths-layerin oletusaccessorit lukevat tämän
+}
+
+const terminatorColor = () => "rgba(110, 150, 255, 0.6)";
 
 const polygonSideColor = () => "rgba(255, 255, 255, 0.1)";
 const polygonCapColor = () => "rgba(0, 0, 0, 0)";
@@ -315,6 +366,28 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   const [showPlaceNames, setShowPlaceNames] = useState(false);
   const showPlaceNamesRef = useRef(false);
 
+  /* Yön raja: lasketaan kun kerros on päällä, päivittyy 10 min välein */
+  const [terminator, setTerminator] = useState([]);
+
+  /* Ohjevihje (sama idea kuin 2D-kartan hint-popup) — kerran per selain */
+  const [showHint, setShowHint] = useState(() => {
+    try { return !localStorage.getItem("globe_hint_seen_v1"); } catch { return true; }
+  });
+  const dismissHint = useCallback(() => {
+    setShowHint(false);
+    try { localStorage.setItem("globe_hint_seen_v1", "1"); } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (!layers.night) {
+      setTerminator([]);
+      return;
+    }
+    setTerminator(buildTerminator());
+    const timer = setInterval(() => setTerminator(buildTerminator()), 10 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, [layers.night]);
+
   const tr = useCallback((k, d) => {
     const s = t(k);
     return s == null || s === k ? d : s;
@@ -370,6 +443,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
 
   const handleGlobeClick = useCallback((coords, event, label = null) => {
     if (!coords) return;
+    dismissHint();
     setClickLabel(label);
     setClickPos({ lat: coords.lat, lng: coords.lng });
     setPopupData(null);
@@ -381,7 +455,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       setPopupXY({ x: size.w / 2, y: size.h / 2 });
     }
     fetchPoint(coords.lat, coords.lng);
-  }, [fetchPoint, size.h, size.w]);
+  }, [fetchPoint, size.h, size.w, dismissHint]);
 
   const onGlobeClick = useCallback((coords, e) => handleGlobeClick(coords, e), [handleGlobeClick]);
   const onPolygonClick = useCallback((p, e, coords) => handleGlobeClick(coords, e), [handleGlobeClick]);
@@ -679,6 +753,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
             ringMaxRadius={3}
             ringPropagationSpeed={2}
             ringRepeatPeriod={1000}
+            pathsData={layers.night && terminator.length ? [terminator] : []}
+            pathPointAlt={0.006}
+            pathColor={terminatorColor}
+            pathStroke={2.5}
+            pathsTransitionDuration={0}
           />
         )}
       </Suspense>
@@ -723,6 +802,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
           {[
             ["aurora", tr("globe.layer.aurora", "Revontulet")],
             ["clouds", tr("globe.layer.clouds", "Pilvet")],
+            ["night", tr("globe.layer.night", "Yön raja")],
             ["borders", tr("globe.layer.borders", "Valtioiden rajat")],
             ["cities", tr("globe.layer.cities", "Kaupungit")],
             ["places", tr("globe.layer.places", "Paikat")],
@@ -732,6 +812,40 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
               {label}
             </label>
           ))}
+        </div>
+      )}
+
+      {/* Ohjevihje — sama viesti kuin 2D-kartan hint-popupissa */}
+      {showHint && !clickPos && (
+        <div style={{
+          position: "absolute", left: "50%", top: 130,
+          transform: "translateX(-50%)",
+          zIndex: 998, maxWidth: 250,
+          background: "linear-gradient(180deg, rgba(7,12,28,0.96), rgba(5,8,20,0.98))",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16, padding: "14px 30px 14px 16px",
+          textAlign: "center",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.55), 0 0 40px rgba(0,255,200,0.08)",
+          backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+        }}>
+          <button
+            onClick={dismissHint}
+            aria-label={tr("globe.close", "Sulje")}
+            style={{
+              position: "absolute", top: 8, right: 8,
+              background: "none", border: "none",
+              color: "rgba(255,255,255,0.5)", cursor: "pointer",
+              fontSize: 15, padding: 0, lineHeight: 1,
+            }}
+          >
+            ✕
+          </button>
+          <strong style={{ display: "block", marginBottom: 6, color: "#e6e9ef", fontSize: 14 }}>
+            {tr("globe.hint.title", "Explore aurora forecast")}
+          </strong>
+          <p style={{ margin: 0, color: "#94a3b8", fontSize: 12, lineHeight: 1.5 }}>
+            {tr("globe.hint.body", "Tap anywhere on the globe to view live aurora probability and conditions.")}
+          </p>
         </div>
       )}
 
