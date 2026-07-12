@@ -658,11 +658,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
         )}
       </Suspense>
 
+      {/* top: 56 = sivun headerin alle, ei sen taakse piiloon */}
       <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, zIndex: 999,
+        position: "absolute", top: 56, left: 0, right: 0, zIndex: 999,
         display: "flex", alignItems: "center", gap: 6, padding: "8px 10px",
         overflowX: "auto", scrollbarWidth: "none",
-        background: "linear-gradient(180deg, rgba(2, 4, 10, 0.75), rgba(2, 4, 10, 0))",
         pointerEvents: "none",
       }}>
         {hud && <>
@@ -690,7 +690,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
 
       {layersOpen && (
         <div style={{
-          position: "absolute", top: 44, right: 10, zIndex: 1001,
+          position: "absolute", top: 100, right: 10, zIndex: 1001,
           background: "rgba(7, 12, 28, 0.95)", border: "1px solid rgba(255, 255, 255, 0.1)",
           borderRadius: 12, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8,
           minWidth: 160, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
