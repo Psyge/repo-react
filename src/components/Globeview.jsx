@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, Suspense, lazy, useCallback, useMemo } from "react";
+import * as THREE from "three";
 import useTranslation from "../hooks/useTranslation";
 import staticPlaces from "../data/places";
 import AuroraPopup from "./AuroraPopup";
@@ -17,7 +18,11 @@ const LAYERS_KEY = "globe_layers_v3";
 // Rajat ja paikkapisteet pidetään oletuksena päällä, koska ne auttavat
 // hahmottamaan maantiedettä. Kaupunkilabelit ovat raskaampia, joten ne jäävät
 // edelleen valinnaiseksi kerrokseksi.
-const DEFAULT_LAYERS = { aurora: true, borders: true, cities: false, places: true };
+const DEFAULT_LAYERS = { aurora: true, borders: true, cities: false, places: true, clouds: false };
+
+/* Live-pilvitekstuuri (päivittyy ~3 h välein, ilmainen, EUMETSAT-dataa).
+ * Ladataan vasta kun kerros kytketään päälle valikosta. */
+const CLOUDS_IMG_URL = "https://clouds.matteason.co.uk/images/4096x2048/clouds-alpha.png";
 // Satelliittitiilet ovat suurin yksittäinen tahmaisuuden lähde. Pidetään ne
 // oletuksena pois päältä ja sallitaan vain eksplisiittisellä propilla.
 const ENABLE_DETAILED_TILES_BY_DEFAULT = false;
@@ -231,14 +236,16 @@ function deviceCanRenderGlobe() {
   return true;
 }
 
+/* Revontulien väriskaala: pelkkiä vihreän sävyjä — himmeästä tummanvihreästä
+ * kirkkaaseen, huipussa lähes valkovihreä hehku. */
 function getAuroraColor(t) {
   const stops = [
-    [0.00, [0, 200, 60, 0]],
-    [0.06, [0, 220, 70, 0.30]],
-    [0.30, [60, 240, 60, 0.55]],
-    [0.55, [160, 255, 40, 0.70]],
-    [0.75, [255, 220, 0, 0.82]],
-    [1.00, [255, 50, 0, 0.92]]
+    [0.00, [0, 170, 80, 0]],
+    [0.06, [0, 190, 95, 0.28]],
+    [0.30, [0, 225, 110, 0.55]],
+    [0.55, [60, 250, 125, 0.72]],
+    [0.80, [140, 255, 150, 0.85]],
+    [1.00, [215, 255, 200, 0.95]]
   ];
   t = Math.max(0, Math.min(1, t));
   for (let i = 1; i < stops.length; i++) {
@@ -293,6 +300,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
      jotta kaupungit/tiet erottuvat eikä pinta ole pelkkää sumeaa tekstuuria. */
   const [closeUp, setCloseUp] = useState(false);
   const closeUpRef = useRef(false);
+
+  /* Pilvikerros: three.js-pallo maapallon päällä. Tekstuuri ladataan vasta
+     ensimmäisellä päällekytkennällä, sen jälkeen vain visible-lippu. */
+  const [globeReady, setGlobeReady] = useState(false);
+  const cloudsRef = useRef(null);
 
   const tr = useCallback((k, d) => {
     const s = t(k);
@@ -507,7 +519,60 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
         setCloseUp(next);
       }
     });
+
+    setGlobeReady(true);
   }, [premium]);
+
+  /* Pilvikerroksen kytkentä */
+  useEffect(() => {
+    const g = globeEl.current;
+    if (!g || !globeReady) return;
+
+    if (!layers.clouds) {
+      if (cloudsRef.current) cloudsRef.current.visible = false;
+      return;
+    }
+
+    // Jo luotu → pelkkä näkyvyys takaisin
+    if (cloudsRef.current) {
+      cloudsRef.current.visible = true;
+      return;
+    }
+
+    let cancelled = false;
+    new THREE.TextureLoader().load(
+      CLOUDS_IMG_URL,
+      (texture) => {
+        if (cancelled || !globeEl.current) { texture.dispose(); return; }
+        const mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(globeEl.current.getGlobeRadius() * 1.008, 64, 64),
+          new THREE.MeshLambertMaterial({
+            map: texture,
+            transparent: true,
+            opacity: 0.85,
+            depthWrite: false, // ei peitä revontulia/markereita syvyyspuskurissa
+          })
+        );
+        mesh.renderOrder = 1;
+        cloudsRef.current = mesh;
+        globeEl.current.scene().add(mesh);
+      },
+      undefined,
+      (e) => console.warn("Pilvitekstuurin lataus epäonnistui:", e)
+    );
+    return () => { cancelled = true; };
+  }, [layers.clouds, globeReady]);
+
+  /* Pilvimeshin siivous kun komponentti puretaan */
+  useEffect(() => () => {
+    const mesh = cloudsRef.current;
+    if (mesh) {
+      mesh.geometry?.dispose();
+      mesh.material?.map?.dispose();
+      mesh.material?.dispose();
+      cloudsRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     const g = globeEl.current;
@@ -632,6 +697,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
         }}>
           {[
             ["aurora", tr("globe.layer.aurora", "Revontulet")],
+            ["clouds", tr("globe.layer.clouds", "Pilvet")],
             ["borders", tr("globe.layer.borders", "Valtioiden rajat")],
             ["cities", tr("globe.layer.cities", "Kaupungit")],
             ["places", tr("globe.layer.places", "Paikat")],
@@ -663,11 +729,12 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
         </div>
       )}
 
-      {(closeUp || useDetailedTiles) && (
+      {(closeUp || useDetailedTiles || layers.clouds) && (
         <div style={{ position: "absolute", right: 6, bottom: 4, zIndex: 4, fontSize: 9, color: "rgba(230, 233, 239, 0.55)", background: "rgba(2, 4, 10, 0.45)", padding: "1px 6px", borderRadius: 4, pointerEvents: "none" }}>
-          {closeUp
-            ? "© OpenStreetMap contributors © CARTO"
-            : "Imagery © Esri, Maxar, Earthstar Geographics"}
+          {[
+            closeUp ? "© OpenStreetMap contributors © CARTO" : (useDetailedTiles ? "Imagery © Esri, Maxar, Earthstar Geographics" : null),
+            layers.clouds ? "Clouds © EUMETSAT" : null,
+          ].filter(Boolean).join(" · ")}
         </div>
       )}
 
