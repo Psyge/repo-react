@@ -25,7 +25,7 @@ import {
 
 
 /* HomePagen ennakkolataus-importti pysyy ennallaan tämän re-exportin kautta */
-export { preloadGlobeAssets } from "./globe/globeData";
+export { preloadGlobeAssets } from "../utils/Globedata";
 
 const Globe = lazy(() => import("react-globe.gl"));
 
