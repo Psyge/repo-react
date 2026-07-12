@@ -17,11 +17,11 @@ import {
   PLACE_NAMES_ENTER_ALT, PLACE_NAMES_EXIT_ALT,
   readLayers, readDeviceKey, requestIdle, cancelIdle,
   loadAuroraPoints, loadBorders, loadCities,
-} from "../utils/globeData";
+} from "../utils/Globedata";
 import {
   getGlobeQuality, deviceCanRenderGlobe, getAuroraColor,
   subsolarPoint, buildTerminator,
-} from "../utils/globeMath";
+} from "../utils/Globemath";
 
 
 /* HomePagen ennakkolataus-importti pysyy ennallaan tämän re-exportin kautta */
