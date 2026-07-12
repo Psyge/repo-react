@@ -362,6 +362,10 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   const [globeReady, setGlobeReady] = useState(false);
   const cloudsRef = useRef(null);
 
+  /* Yöpuolen varjostus: shader-kuori joka tummentaa pallon siltä puolelta
+     jonne aurinko ei paista, pehmeällä gradientilla rajan yli. */
+  const nightShadeRef = useRef(null);
+
   /* Paikkojen nimilaput: kaukaa vain pisteet, nimet vasta lähizoomilla */
   const [showPlaceNames, setShowPlaceNames] = useState(false);
   const showPlaceNamesRef = useRef(false);
@@ -381,12 +385,60 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   useEffect(() => {
     if (!layers.night) {
       setTerminator([]);
+      if (nightShadeRef.current) nightShadeRef.current.visible = false;
       return;
     }
-    setTerminator(buildTerminator());
-    const timer = setInterval(() => setTerminator(buildTerminator()), 10 * 60 * 1000);
+
+    const update = () => {
+      setTerminator(buildTerminator());
+
+      // Yövarjostuksen auringonsuunta (globen omassa koordinaatistossa)
+      const g = globeEl.current;
+      if (!g || !globeReady || typeof g.getCoords !== "function") return;
+      const sub = subsolarPoint();
+      const c = g.getCoords(sub.lat, sub.lng, 0);
+      const len = Math.hypot(c.x, c.y, c.z) || 1;
+
+      if (!nightShadeRef.current) {
+        const mat = new THREE.ShaderMaterial({
+          uniforms: { sunDir: { value: new THREE.Vector3(c.x / len, c.y / len, c.z / len) } },
+          transparent: true,
+          depthWrite: false,
+          vertexShader: `
+            varying vec3 vN;
+            void main() {
+              vN = normalize(normal);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform vec3 sunDir;
+            varying vec3 vN;
+            void main() {
+              float d = dot(normalize(vN), sunDir);
+              // 1.0 syvällä yössä, 0.0 päivällä — pehmeä liuku rajan yli
+              float night = 1.0 - smoothstep(-0.14, 0.08, d);
+              gl_FragColor = vec4(0.0, 0.01, 0.05, night * 0.55);
+            }
+          `,
+        });
+        const mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(g.getGlobeRadius() * 1.01, 64, 64),
+          mat
+        );
+        mesh.renderOrder = 2; // pilvien (1) yläpuolelle → yö tummentaa myös pilvet
+        nightShadeRef.current = mesh;
+        g.scene().add(mesh);
+      } else {
+        nightShadeRef.current.material.uniforms.sunDir.value.set(c.x / len, c.y / len, c.z / len);
+        nightShadeRef.current.visible = true;
+      }
+    };
+
+    update();
+    const timer = setInterval(update, 10 * 60 * 1000);
     return () => clearInterval(timer);
-  }, [layers.night]);
+  }, [layers.night, globeReady]);
 
   const tr = useCallback((k, d) => {
     const s = t(k);
@@ -662,14 +714,20 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     return () => { cancelled = true; };
   }, [layers.clouds, globeReady]);
 
-  /* Pilvimeshin siivous kun komponentti puretaan */
+  /* Pilvi- ja yövarjostusmeshien siivous kun komponentti puretaan */
   useEffect(() => () => {
-    const mesh = cloudsRef.current;
-    if (mesh) {
-      mesh.geometry?.dispose();
-      mesh.material?.map?.dispose();
-      mesh.material?.dispose();
+    const clouds = cloudsRef.current;
+    if (clouds) {
+      clouds.geometry?.dispose();
+      clouds.material?.map?.dispose();
+      clouds.material?.dispose();
       cloudsRef.current = null;
+    }
+    const shade = nightShadeRef.current;
+    if (shade) {
+      shade.geometry?.dispose();
+      shade.material?.dispose();
+      nightShadeRef.current = null;
     }
   }, []);
 
