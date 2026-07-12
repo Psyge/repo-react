@@ -422,6 +422,23 @@
   opacity: 0.85;
   line-height: 1;
 }
+.ap-close {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 2;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px;
+}
+.ap-close:hover { color: #fff; }
+
+/* Leafletin oma nappi pois pelistä kokonaan */
+.leaflet-popup-close-button { display: none !important; }
 
 /* Mobiilikoko, jos popup meinaa mennä liian täyteen kapeilla näytöillä */
 @media (max-width: 768px) {
