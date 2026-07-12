@@ -38,6 +38,11 @@ const BORDER_COUNTRIES = new Set(["Finland", "Suomi", "FIN"]);
  * vilkkumisen rajakorkeudella. */
 const CLOSEUP_ENTER_ALT = 0.50; // vaihda tiiliin kun altitude alle tämän
 const CLOSEUP_EXIT_ALT  = 0.62; // takaisin tekstuuriin kun yli tämän
+
+/* Paikkojen nimilaput näytetään vasta lähempää — kaukaa vain pisteet,
+ * jottei Lapin paikoista tule päällekkäistä nimikasaa. */
+const PLACE_NAMES_ENTER_ALT = 1.0;
+const PLACE_NAMES_EXIT_ALT  = 1.15;
 const CARTO_TILE_URL = (x, y, l) => `https://basemaps.cartocdn.com/dark_all/${l}/${x}/${y}.png`;
 const ESRI_TILE_URL  = (x, y, l) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`;
 
@@ -306,6 +311,10 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   const [globeReady, setGlobeReady] = useState(false);
   const cloudsRef = useRef(null);
 
+  /* Paikkojen nimilaput: kaukaa vain pisteet, nimet vasta lähizoomilla */
+  const [showPlaceNames, setShowPlaceNames] = useState(false);
+  const showPlaceNamesRef = useRef(false);
+
   const tr = useCallback((k, d) => {
     const s = t(k);
     return s == null || s === k ? d : s;
@@ -378,38 +387,46 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   const onPolygonClick = useCallback((p, e, coords) => handleGlobeClick(coords, e), [handleGlobeClick]);
   const onHeatmapClick = useCallback((h, e, coords) => handleGlobeClick(coords, e), [handleGlobeClick]);
 
+  /* Marker: kaukaa pelkkä piste, lähempää piste + nimi. showPlaceNames
+     riippuvuutena → elementit rakennetaan uudelleen kun tila vaihtuu. */
   const makePlaceMarker = useCallback((d) => {
     const el = document.createElement("button");
     el.type = "button";
+    el.title = d.name; // tooltip myös pistetilassa
     el.style.cssText =
       "pointer-events:auto;cursor:pointer;border:0;background:transparent;padding:0;" +
       "transform:translate(-50%, -100%);";
 
-    const badge = document.createElement("span");
-    badge.textContent = d.name;
-    badge.style.cssText =
-      "display:inline-flex;align-items:center;gap:4px;" +
-      "background:rgba(8,14,26,0.82);border:1px solid rgba(0,255,198,0.38);" +
-      "border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;" +
-      "line-height:1.35;color:#e6e9ef;white-space:nowrap;" +
-      "box-shadow:0 0 12px rgba(0,255,198,0.16);";
-
-    const dot = document.createElement("span");
-    dot.style.cssText =
-      "display:block;width:7px;height:7px;border-radius:50%;background:#00ffc6;" +
-      "box-shadow:0 0 8px #00ffc6;margin:2px auto 0;";
-
     const wrap = document.createElement("span");
     wrap.style.cssText = "display:flex;flex-direction:column;align-items:center;";
-    wrap.appendChild(badge);
+
+    if (showPlaceNames) {
+      const badge = document.createElement("span");
+      badge.textContent = d.name;
+      badge.style.cssText =
+        "display:inline-flex;align-items:center;gap:4px;" +
+        "background:rgba(8,14,26,0.82);border:1px solid rgba(0,255,198,0.38);" +
+        "border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;" +
+        "line-height:1.35;color:#e6e9ef;white-space:nowrap;" +
+        "box-shadow:0 0 12px rgba(0,255,198,0.16);";
+      wrap.appendChild(badge);
+    }
+
+    const dot = document.createElement("span");
+    dot.style.cssText = showPlaceNames
+      ? "display:block;width:7px;height:7px;border-radius:50%;background:#00ffc6;" +
+        "box-shadow:0 0 8px #00ffc6;margin:2px auto 0;"
+      : "display:block;width:10px;height:10px;border-radius:50%;background:#00ffc6;" +
+        "border:2px solid rgba(2,4,10,0.8);box-shadow:0 0 10px rgba(0,255,198,0.8);";
     wrap.appendChild(dot);
+
     el.appendChild(wrap);
     el.onclick = (ev) => {
       ev.stopPropagation();
       handleGlobeClick({ lat: d.lat, lng: d.lon }, ev, d.name);
     };
     return el;
-  }, [handleGlobeClick]);
+  }, [handleGlobeClick, showPlaceNames]);
 
   const closePopup = useCallback(() => {
     setClickPos(null);
@@ -517,6 +534,14 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       if (next !== closeUpRef.current) {
         closeUpRef.current = next;
         setCloseUp(next);
+      }
+      // Paikkojen nimilaput näkyviin vasta lähempää (oma hystereesi)
+      const names = showPlaceNamesRef.current
+        ? alt < PLACE_NAMES_EXIT_ALT
+        : alt < PLACE_NAMES_ENTER_ALT;
+      if (names !== showPlaceNamesRef.current) {
+        showPlaceNamesRef.current = names;
+        setShowPlaceNames(names);
       }
     });
 
@@ -658,9 +683,9 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
         )}
       </Suspense>
 
-      {/* top: 56 = sivun headerin alle, ei sen taakse piiloon */}
+      {/* top: 70 = sivun headerin alle, ei sen taakse piiloon */}
       <div style={{
-        position: "absolute", top: 56, left: 0, right: 0, zIndex: 999,
+        position: "absolute", top: 70, left: 0, right: 0, zIndex: 999,
         display: "flex", alignItems: "center", gap: 6, padding: "8px 10px",
         overflowX: "auto", scrollbarWidth: "none",
         pointerEvents: "none",
@@ -690,7 +715,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
 
       {layersOpen && (
         <div style={{
-          position: "absolute", top: 100, right: 10, zIndex: 1001,
+          position: "absolute", top: 114, right: 10, zIndex: 1001,
           background: "rgba(7, 12, 28, 0.95)", border: "1px solid rgba(255, 255, 255, 0.1)",
           borderRadius: 12, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8,
           minWidth: 160, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
