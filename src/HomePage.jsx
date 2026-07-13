@@ -5,7 +5,7 @@ import Aurorahero from "./components/Aurorahero";
 import Sightings from "./components/Sightings";
 
 import useTranslation from "./hooks/useTranslation";
-import Forecast from "./components/Forecast";
+
 
 import SEO from "./components/SEO";
 import { client } from "./lib/contentfulClient";
@@ -274,18 +274,6 @@ export default function HomePage() {
    
   <Sightings />
 </Aurorahero>
-
-        {/* FORECAST */}
-        <section className="block">
-          <div className="container">
-            <Forecast
-              data={forecast.slots}
-              tier={forecast.tier}
-              genAt={forecast.genAt}
-              current={forecast.current}
-            />
-          </div>
-        </section>
 
       
 
