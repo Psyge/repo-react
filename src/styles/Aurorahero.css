@@ -1,5 +1,5 @@
 /* ========================================================================
-   AuroraHero — Korjattu asettelu ja tiivistetyt elementit
+   AuroraHero — hero, paikkakortit, Kp-ennustegraafi valitsimella
 ======================================================================= */
 
 .aurora-hero-container {
@@ -12,6 +12,61 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+/* ---- Tähtitaivas (hienovarainen, aina näkyvissä) ---- */
+.aurora-hero-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 34% 8%,  rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 56% 30%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 71% 12%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 88% 26%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 22% 44%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 63% 48%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 44% 18%, rgba(255, 255, 255, 0.5), transparent);
+  background-repeat: repeat;
+  background-size: 620px 420px;
+  opacity: 0.5;
+}
+
+/* ---- CSS-revontuliverhot (hidas ajelehdinta) ---- */
+.ah-ambient {
+  position: absolute;
+  inset: -15% -10%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(112deg,
+      transparent 28%,
+      rgba(0, 255, 198, 0.07) 40%,
+      rgba(20, 224, 255, 0.09) 50%,
+      rgba(125, 95, 255, 0.07) 60%,
+      transparent 72%),
+    linear-gradient(78deg,
+      transparent 34%,
+      rgba(0, 255, 198, 0.05) 47%,
+      transparent 62%);
+  filter: blur(26px);
+  animation: ah-aurora-drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes ah-aurora-drift {
+  from { transform: translateX(-3.5%) skewX(-2deg); opacity: 0.8; }
+  50%  { opacity: 1; }
+  to   { transform: translateX(3.5%) skewX(2deg); opacity: 0.85; }
+}
+
+.kp-step-2 .ah-ambient { filter: blur(22px); opacity: 1.15; }
+.kp-step-3 .ah-ambient { filter: blur(18px); opacity: 1.3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-ambient { animation: none; }
 }
 
 .ah-sky-wrap {
@@ -81,6 +136,7 @@
   line-height: 1.2;
   margin-bottom: 1.5rem;
   letter-spacing: -0.025em;
+  text-shadow: 0 0 32px rgba(0, 255, 198, 0.18);
 }
 
 .ah-probability-box {
@@ -99,6 +155,18 @@
   font-size: 1.25rem;
   font-weight: 700;
   text-shadow: 0 0 10px rgba(0, 255, 198, 0.3);
+}
+
+.ah-premium-cta-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ah-premium-subtext {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-style: italic;
 }
 
 .ah-premium-link-btn {
@@ -129,7 +197,7 @@
   padding-right: 2rem;
 }
 
-/* UUDET DATARIKKAAT LAATIKOT */
+/* Paikkakortit */
 .ah-carousel-item-box {
   flex: 0 0 auto;
   display: inline-flex;
@@ -149,7 +217,7 @@
 }
 
 .ah-carousel-item-box:hover {
-  border-color: #334155;
+  border-color: rgba(0, 255, 198, 0.35);
   background-color: rgba(15, 23, 42, 0.65);
   transform: translateY(-2px);
 }
@@ -192,13 +260,42 @@
   margin-bottom: 0.15rem;
 }
 
-.ah-place-kp-badge {
-  font-size: 0.7rem;
-  color: #94a3b8;
-  font-weight: 500;
+/* Kortin mittaririvit */
+.ah-place-metrics {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
 }
 
-/* Tunturit ja aalto */
+.ah-place-kp-badge,
+.ah-place-cloud-badge,
+.ah-place-prob-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: var(--fg-muted, #94a3b8);
+}
+
+.ah-place-kp-badge {
+  color: var(--accent, #00ffc6);
+  border-color: rgba(0, 255, 198, 0.25);
+}
+
+.ah-place-prob-badge {
+  color: #a5f3c8;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* Tunturit */
 .ah-mountain-silhouet {
   position: absolute;
   bottom: 120px;
@@ -209,6 +306,9 @@
 }
 .ah-mountain-svg { width: 100%; height: auto; fill: #02040a; }
 
+/* ========================================================================
+   Kp-ENNUSTEGRAAFI + 1 vrk / 3 vrk -VALITSIN
+======================================================================== */
 .ah-wave {
   position: relative;
   z-index: 5;
@@ -217,22 +317,162 @@
   margin: 2rem auto 0 auto;
   padding: 0 1rem;
 }
-.ah-wave-line { fill: none; stroke: url(#ah-wave-grad); stroke-width: 3; stroke-linecap: round; }
-.ah-wave-line.is-locked { stroke: #1e293b; stroke-dasharray: 4 4; }
-.ah-wave-now { stroke: rgba(255, 255, 255, 0.2); stroke-width: 1; stroke-dasharray: 2 2; }
-.ah-wave-lock { font-size: 11px; fill: #67e8f9; font-weight: bold; }
 
-/* KORJATTU "I SEE" JA LAPSIPALKAT: RAJATTU LEVEYS */
+.ah-wave-panel {
+  background: rgba(8, 14, 26, 0.55);
+  border: 1px solid rgba(0, 255, 198, 0.12);
+  border-radius: 16px;
+  padding: 0.9rem 1rem 0.5rem 1rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 0 24px rgba(0, 255, 198, 0.05);
+}
+
+.ah-wave-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.ah-wave-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e6e9ef;
+}
+
+.ah-wave-source {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-left: 4px;
+}
+
+/* Aikaikkunan valitsin */
+.ah-range {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.ah-range-btn {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.ah-range-btn:hover {
+  border-color: rgba(0, 255, 198, 0.35);
+  color: #cbd5e1;
+}
+
+.ah-range-btn--active {
+  background: rgba(0, 255, 198, 0.15);
+  border-color: rgba(0, 255, 198, 0.5);
+  color: #00ffc6;
+}
+
+/* Graafin SVG */
+.ah-wave-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ah-wave-line {
+  fill: none;
+  stroke: url(#ah-wave-grad);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ah-wave-area {
+  fill: url(#ah-wave-area-grad);
+  stroke: none;
+}
+
+.ah-wave-grid {
+  stroke: rgba(148, 163, 184, 0.14);
+  stroke-width: 1;
+}
+
+.ah-wave-day-line {
+  stroke: rgba(148, 163, 184, 0.10);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.ah-wave-ylabel {
+  fill: #7d8aa0;
+  font-size: 9.5px;
+  font-weight: 600;
+  text-anchor: end;
+}
+
+.ah-wave-xlabel {
+  fill: #7d8aa0;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.ah-wave-now {
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.ah-wave-now-label {
+  fill: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ah-wave-peak-dot {
+  fill: #00ffc6;
+  stroke: rgba(0, 255, 198, 0.35);
+  stroke-width: 4;
+}
+
+.ah-wave-peak-label {
+  fill: #00ffc6;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.ah-wave-empty {
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* ========================================================================
+   EXTRA / POPUP
+======================================================================== */
 .ah-extra-wrapper {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 760px; /* Ei enää leviä koko ruudun leveydelle */
+  max-width: 760px;
   margin: 2rem auto 0 auto;
   padding: 0 1rem;
 }
 
-/* POPUP-KORTTI (Rajattu leveyteen, ei koko ruudun peittävä työpöydällä) */
 .ah-popup-backdrop {
   position: fixed;
   top: 0;
@@ -245,12 +485,12 @@
   z-index: 999;
   display: flex;
   align-items: flex-end;
-  justify-content: center; /* Keskittää kortin työpöydällä */
+  justify-content: center;
 }
 
 .ah-popup-card {
   width: 100%;
-  max-width: 760px; /* Sama mukautuva leveys kuin ennustelaatikolla */
+  max-width: 760px;
   background-color: #0b111e;
   border: 1px solid #1e293b;
   border-bottom: none;
@@ -291,48 +531,6 @@
   to { transform: translateY(0); }
 }
 
-@media (max-width: 768px) {
-  .ah-content-layout { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-  .ah-text-side { max-width: 100%; }
-  .ah-main-title { font-size: 2rem; }
-  .ah-mountain-silhouet { bottom: 150px; }
-  .ah-popup-card { max-width: 100%; } /* Mobiilissa pohja täyttää alareunan täysin */
-}
-/* ========================================================================
-   LISÄÄ tämä hero-/places-tyyleihisi (esim. Aurorahero.css tai places.css)
-
-   Uudet mittarit korteissa (Kp + pilvisyys) ja popupissa.
-======================================================================== */
-
-/* Kortin Kp + pilvi -rivi */
-.ah-place-metrics {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  flex-wrap: wrap;
-}
-
-.ah-place-kp-badge,
-.ah-place-cloud-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  white-space: nowrap;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  color: var(--fg-muted);
-}
-
-.ah-place-kp-badge {
-  color: var(--accent, #00ffc6);
-  border-color: rgba(0, 255, 198, 0.25);
-}
-
 /* Popupin lukuarvot otsikon alla */
 .ah-popup-metrics {
   display: flex;
@@ -340,7 +538,7 @@
   margin: 6px 0 14px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--fg-muted);
+  color: var(--fg-muted, #94a3b8);
 }
 
 .ah-popup-metrics span:last-child {
@@ -374,12 +572,8 @@
 .ah-popup-readmore-btn:active {
   transform: scale(1);
 }
-/* ========================================================================
-   LISÄÄ tyyleihisi (esim. sightings.css tai Aurorahero.css)
 
-   "Kokeile onneasi" -teaser raportointinapin yläpuolella (vain free).
-======================================================================== */
-
+/* Spin-teaser */
 .ah-spin-teaser {
   display: flex;
   align-items: center;
@@ -408,4 +602,27 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ah-spin-teaser { animation: none; }
+}
+
+/* ========================================================================
+   MOBIILI
+======================================================================== */
+@media (max-width: 768px) {
+  .aurora-hero-container { padding: 3rem 1.25rem; }
+  .ah-content-layout { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .ah-text-side { max-width: 100%; }
+  .ah-main-title { font-size: 2rem; }
+  .ah-mountain-silhouet { bottom: 150px; }
+  .ah-popup-card { max-width: 100%; }
+
+  .ah-carousel-side {
+    margin: 0 -1.25rem;
+    padding: 0 1.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ah-wave { padding: 0 0.25rem; }
+  .ah-wave-panel { padding: 0.7rem 0.6rem 0.35rem 0.6rem; border-radius: 12px; }
+  .ah-wave-title { font-size: 0.78rem; }
+  .ah-ambient { filter: blur(32px); }
 }
