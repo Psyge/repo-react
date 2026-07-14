@@ -12,11 +12,14 @@ import { client } from "../lib/contentfulClient";
    + Kp-ennustegraafi 1 vrk / 3 vrk -valitsimella (3 vrk = premium)
 ======================================================================= */
 
-const NOAA_KP_URL     = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
-const NOAA_PLASMA_URL = "https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json";
-const NOAA_MAG_URL    = "https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json";
+/* HUOM: NOAA:n vanhat product-feedit (kp/plasma/mag) jäätyivät keväällä 2026.
+ * Propagated-feed on elossa ja sisältää plasman + magneettikentän yhdessä.
+ * Nykyinen Kp otetaan ennuste-propista (forecast.slots), ei enää NOAA:n
+ * kuolleesta kp-tuotteesta. */
+const NOAA_PROP_URL = "https://services.swpc.noaa.gov/products/geospace/propagated-solar-wind-1-hour.json";
+const SOLAR_MAX_AGE_MS = 3 * 60 * 60 * 1000; // hylkää tätä vanhempi "reaaliaika"
 
-const HERO_SOLAR_CACHE_KEY = "aurora_session_cache:hero:solar:v1";
+const HERO_SOLAR_CACHE_KEY = "aurora_session_cache:hero:solar:v3";
 const HERO_SOLAR_TTL_MS    = 30 * 60 * 1000;
 const WEATHER_TTL_MS       = 60 * 60 * 1000;
 const THREE_LOAD_TIMEOUT_MS = 4000;
@@ -98,26 +101,24 @@ async function fetchHeroSolarData() {
   const cached = readSessionCache(HERO_SOLAR_CACHE_KEY, HERO_SOLAR_TTL_MS);
   if (cached) return cached;
 
-  const [kpData, plasmaData, magData] = await Promise.all([
-    fetchJsonSafe(NOAA_KP_URL, "NOAA Kp").catch(() => null),
-    fetchJsonSafe(NOAA_PLASMA_URL, "NOAA plasma").catch(() => null),
-    fetchJsonSafe(NOAA_MAG_URL, "NOAA mag").catch(() => null),
-  ]);
+  const propData = await fetchJsonSafe(NOAA_PROP_URL, "NOAA propagated").catch(() => null);
 
-  const kpLast     = lastValidRow(kpData, 1);
-  const plasmaLast = lastValidRow(plasmaData, 2);
-  const magLast    = lastValidRow(magData, 3);
+  /* Sarakkeet: time_tag, speed, density, temperature, bx, by, bz, bt, ... */
+  let wind = null, bz = null;
+  const last = lastValidRow(propData, 1);
+  if (last) {
+    const ts = Date.parse(last[0]);
+    if (Number.isNaN(ts) || Date.now() - ts <= SOLAR_MAX_AGE_MS) {
+      const w = parseFloat(last[1]);
+      const b = parseFloat(last[6]);
+      wind = Number.isNaN(w) ? null : w;
+      bz = Number.isNaN(b) ? null : b;
+    } else {
+      console.warn("NOAA propagated data vanhentunut:", last[0]);
+    }
+  }
 
-  const parsedKp   = kpLast ? parseFloat(kpLast[1]) : null;
-  const parsedWind = plasmaLast ? parseFloat(plasmaLast[2]) : null;
-  const parsedBz   = magLast ? parseFloat(magLast[3]) : null;
-
-  const data = {
-    kp:   Number.isNaN(parsedKp)   ? null : parsedKp,
-    wind: Number.isNaN(parsedWind) ? null : parsedWind,
-    bz:   Number.isNaN(parsedBz)   ? null : parsedBz,
-    fetchedAt: Date.now(),
-  };
+  const data = { wind, bz, fetchedAt: Date.now() };
   writeSessionCache(HERO_SOLAR_CACHE_KEY, data);
   return data;
 }
@@ -386,17 +387,32 @@ export default function AuroraHero({ forecast, children }) {
   const skyRef    = useRef(null);
   const probRef   = useRef(null);
 
-  /* Solar data fetch */
+  /* Solar data fetch (tuuli + Bz propagated-feedistä) */
   useEffect(() => {
     let cancelled = false;
     fetchHeroSolarData()
       .then((d) => {
         if (cancelled) return;
-        setKp(d.kp); setWind(d.wind); setBz(d.bz);
+        setWind(d.wind); setBz(d.bz);
       })
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
+
+  /* Nykyinen Kp ennustesarjasta (lähin slotti nykyhetkeen) — NOAA:n vanha
+     kp-tuote jäätyi keväällä 2026 eikä päivity enää. */
+  useEffect(() => {
+    if (!slots.length) return;
+    const now = Date.now();
+    let best = null, bestD = Infinity;
+    for (const s of slots) {
+      const ms = Date.parse(s.tsUtc);
+      if (Number.isNaN(ms)) continue;
+      const d = Math.abs(ms - now);
+      if (d < bestD) { bestD = d; best = s; }
+    }
+    if (best?.kp != null) setKp(best.kp);
+  }, [slots]);
 
   const aurora = useMemo(
     () => calculateAurora({ kp, speed: wind, density: 5, bz, cloudCover: 50, latitude: activePlace?.lat || 66.5 }),
