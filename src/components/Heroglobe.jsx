@@ -7,7 +7,7 @@ import useTranslation from "../hooks/useTranslation";
    Klikkaus vie oikeaan 3D-globeen map-sivulle.
    Tyylit: Aurorahero.css (.ah-globe*)
 ======================================================================= */
-export default function HeroGlobe() {
+export default function Heroglobe() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
