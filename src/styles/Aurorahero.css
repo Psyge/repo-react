@@ -26,7 +26,7 @@
       rgba(2, 6, 14, 0.78) 45%,
       rgba(4, 8, 18, 0.92) 80%,
       #050816 100%),
-    url("/pics/hero-bg.jpg");
+    url("/images/hero-bg.jpg");
   background-size: cover;
   background-position: center 30%;
 }
