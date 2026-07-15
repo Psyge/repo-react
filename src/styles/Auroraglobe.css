@@ -1,0 +1,138 @@
+/* ========================================================================
+   HERO-GLOBE — kevyt CSS-maapallo (klikkaus → oikea 3D-globe map-sivulla)
+   Pyöritys: tekstuuri liukuu saumattomasti ympyrän sisällä (leveys 200 %,
+   siirto -50 % = tasan yksi tekstuurinleveys → ei saumaa).
+======================================================================== */
+.ah-globe {
+  position: relative;
+  width: 260px;
+  aspect-ratio: 1;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  filter: drop-shadow(0 0 28px rgba(0, 230, 255, 0.18));
+}
+
+.ah-globe:hover {
+  transform: scale(1.03);
+  filter: drop-shadow(0 0 42px rgba(0, 255, 198, 0.3));
+}
+
+.ah-globe-clip {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  display: block;
+}
+
+.ah-globe-map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 200%;
+  display: block;
+  /* HUOM: vaihda omaan, pienempään self-hostattuun tekstuuriin
+     (esim. /images/earth-1024.jpg) — unpkg-versio on raskas. */
+  background-image: url("//unpkg.com/three-globe/example/img/earth-blue-marble.jpg");
+  background-size: 50% 100%;
+  background-repeat: repeat-x;
+  animation: ah-globe-spin 80s linear infinite;
+}
+
+@keyframes ah-globe-spin {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Revontulikaari pohjoisnavan tienoille */
+.ah-globe-aurora {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: block;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 62% 30% at 50% 6%,
+      rgba(0, 255, 140, 0.55) 0%,
+      rgba(0, 255, 180, 0.25) 45%,
+      transparent 70%);
+  filter: blur(4px);
+  animation: ah-globe-aurora-pulse 6s ease-in-out infinite;
+}
+
+@keyframes ah-globe-aurora-pulse {
+  0%, 100% { opacity: 0.75; }
+  50%      { opacity: 1; }
+}
+
+/* Pallomainen valaistus: varjopuoli + kajastus */
+.ah-globe-shade {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: block;
+  pointer-events: none;
+  box-shadow:
+    inset -30px -22px 60px rgba(0, 0, 0, 0.8),
+    inset 8px 8px 24px rgba(160, 220, 255, 0.12),
+    inset 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+.ah-globe-label {
+  position: absolute;
+  left: 50%;
+  bottom: -34px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #00ffc6;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.ah-globe:hover .ah-globe-label,
+.ah-globe:focus-visible .ah-globe-label {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-globe-map { animation: none; }
+  .ah-globe-aurora { animation: none; }
+}
+
+@media (max-width: 768px) {
+  .ah-globe { width: 180px; }
+  .ah-globe-label { opacity: 1; bottom: -30px; } /* mobiilissa ei hoveria */
+}
+
+/* ========================================================================
+   MOBIILI
+======================================================================== */
+@media (max-width: 768px) {
+  .aurora-hero-container { padding: 3rem 1.25rem; }
+  .ah-content-layout { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .ah-text-side { max-width: 100%; }
+  .ah-main-title { font-size: 2rem; }
+  .ah-mountain-silhouet { bottom: 150px; }
+  .ah-popup-card { max-width: 100%; }
+
+  .ah-carousel-side {
+    margin: 0 -1.25rem;
+    padding: 0 1.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ah-wave { padding: 0 0.25rem; }
+  .ah-wave-panel { padding: 0.7rem 0.6rem 0.35rem 0.6rem; border-radius: 12px; }
+  .ah-wave-title { font-size: 0.78rem; }
+  .ah-ambient { filter: blur(32px); }
+}

@@ -14,6 +14,23 @@
   justify-content: center;
 }
 
+/* Dashboard-hero: valokuvatausta (lataa kuva public/images/hero-bg.jpg,
+   esim. Unsplash LtnPejWDSAY self-hostattuna) + tumma liukuväri päälle,
+   jotta teksti ja mittarit erottuvat. */
+.ah-hero--dash {
+  justify-content: flex-start;
+  padding: 3rem 2rem 4rem;
+  background-image:
+    linear-gradient(180deg,
+      rgba(2, 6, 14, 0.62) 0%,
+      rgba(2, 6, 14, 0.78) 45%,
+      rgba(4, 8, 18, 0.92) 80%,
+      #050816 100%),
+    url("/images/hero-bg.jpg");
+  background-size: cover;
+  background-position: center 30%;
+}
+
 /* ---- Tähtitaivas (hienovarainen, aina näkyvissä) ---- */
 .aurora-hero-container::before {
   content: "";
@@ -605,24 +622,212 @@
 }
 
 /* ========================================================================
-   MOBIILI
+   DASHBOARD-LAYOUT — iso Kp, mittarikortit, kaksipalstainen grid
 ======================================================================== */
-@media (max-width: 768px) {
-  .aurora-hero-container { padding: 3rem 1.25rem; }
-  .ah-content-layout { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-  .ah-text-side { max-width: 100%; }
-  .ah-main-title { font-size: 2rem; }
-  .ah-mountain-silhouet { bottom: 150px; }
-  .ah-popup-card { max-width: 100%; }
-
-  .ah-carousel-side {
-    margin: 0 -1.25rem;
-    padding: 0 1.25rem;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .ah-wave { padding: 0 0.25rem; }
-  .ah-wave-panel { padding: 0.7rem 0.6rem 0.35rem 0.6rem; border-radius: 12px; }
-  .ah-wave-title { font-size: 0.78rem; }
-  .ah-ambient { filter: blur(32px); }
+.ah-dash {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
 }
+
+.ah-dash-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.ah-dash-headline {
+  max-width: 560px;
+  min-width: 0;
+}
+
+.ah-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #00ffc6;
+  margin-bottom: 1.1rem;
+}
+
+.ah-eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00ffc6;
+  box-shadow: 0 0 8px #00ffc6;
+  flex: 0 0 auto;
+}
+
+.ah-kp-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-bottom: 0.9rem;
+}
+
+.ah-kp-big {
+  font-size: 6.2rem;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: 0.03em;
+  color: #00ffc6;
+  text-shadow: 0 0 44px rgba(0, 255, 198, 0.35);
+}
+
+.ah-kp-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 0.7rem;
+  min-width: 0;
+}
+
+.ah-kp-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #00ffc6;
+}
+
+.ah-kp-status {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.15;
+}
+
+.ah-kp-storm {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.ah-dash-desc {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  line-height: 1.6;
+  max-width: 46ch;
+  margin: 0 0 1.1rem;
+}
+
+.ah-dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.ah-dash-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.ah-dash-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* Graafi ja extra-lohko täyttävät palstansa (yleistyylin keskitys pois) */
+.ah-dash-main .ah-wave { max-width: none; margin: 0; padding: 0; }
+.ah-dash-side .ah-extra-wrapper { max-width: none; margin: 0; padding: 0; }
+
+/* Mittarikortit */
+.ah-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.9rem;
+}
+
+.ah-metric {
+  background: rgba(8, 14, 26, 0.55);
+  border: 1px solid rgba(0, 255, 198, 0.12);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  min-width: 0;
+}
+
+.ah-metric-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7d8aa0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ah-metric-value {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #e6e9ef;
+  line-height: 1.1;
+}
+
+.ah-metric-value small {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #7d8aa0;
+  margin-left: 4px;
+}
+
+.ah-metric-delta { font-size: 0.7rem; font-weight: 600; }
+.ah-metric-delta--up   { color: #4ade80; }
+.ah-metric-delta--down { color: #f87171; }
+.ah-metric-delta--flat { color: #7d8aa0; }
+
+/* Paikat-paneeli oikeassa palstassa */
+.ah-places-panel {
+  background: rgba(8, 14, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.ah-places-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0 0 0.8rem;
+}
+
+.ah-places-panel .ah-horizontal-scroll-track { padding-right: 0.5rem; }
+
+/* Dashboardin mobiili */
+@media (max-width: 900px) {
+  .ah-dash-grid { grid-template-columns: 1fr; }
+  .ah-dash-top { flex-direction: column-reverse; align-items: center; text-align: left; }
+  .ah-dash-headline { max-width: 100%; }
+}
+
+@media (max-width: 560px) {
+  .ah-hero--dash { padding: 2.25rem 1.25rem 3rem; }
+  .ah-kp-big { font-size: 4.4rem; }
+  .ah-kp-status { font-size: 1.2rem; }
+  .ah-metrics { grid-template-columns: 1fr 1fr; }
+  .ah-metric:last-child { grid-column: 1 / -1; }
+}
+

@@ -4,12 +4,15 @@ import useTranslation from "../hooks/useTranslation";
 import { calculateAurora } from "../utils/auroraEngine";
 import staticPlaces from "../data/places";
 import { client } from "../lib/contentfulClient";
+import HeroGlobe from "./HeroGlobe";
 
 /* ========================================================================
-   AuroraHero — revontulitaivas-hero etusivulle
-   + paikkakohtainen pilvisyys (Open-Meteo)
-   + Contentful-kuvaus (place.short)
-   + Kp-ennustegraafi 1 vrk / 3 vrk -valitsimella (3 vrk = premium)
+   AuroraHero — dashboard-tyylinen etusivun hero
+   - Valokuvatausta + CSS-revontulet
+   - Iso Kp + tilateksti (free näkee Kp:n, premium myös todennäköisyyden)
+   - Mittarikortit (tuuli / Bz / pilvet) deltoineen — näkyvät kaikille
+   - Kp-ennustegraafi 1 vrk / 3 vrk -valitsimella (3 vrk = premium)
+   - Oikea palsta: havainnot (children) + paikat
 ======================================================================= */
 
 /* HUOM: NOAA:n vanhat product-feedit (kp/plasma/mag) jäätyivät keväällä 2026.
@@ -19,7 +22,7 @@ import { client } from "../lib/contentfulClient";
 const NOAA_PROP_URL = "https://services.swpc.noaa.gov/products/geospace/propagated-solar-wind-1-hour.json";
 const SOLAR_MAX_AGE_MS = 3 * 60 * 60 * 1000; // hylkää tätä vanhempi "reaaliaika"
 
-const HERO_SOLAR_CACHE_KEY = "aurora_session_cache:hero:solar:v3";
+const HERO_SOLAR_CACHE_KEY = "aurora_session_cache:hero:solar:v4";
 const HERO_SOLAR_TTL_MS    = 30 * 60 * 1000;
 const WEATHER_TTL_MS       = 60 * 60 * 1000;
 const THREE_LOAD_TIMEOUT_MS = 4000;
@@ -97,6 +100,17 @@ function lastValidRow(rows, colIndex) {
   }
   return null;
 }
+function firstValidRow(rows, colIndex) {
+  if (!Array.isArray(rows)) return null;
+  for (let i = 1; i < rows.length; i++) {
+    const v = parseFloat(rows[i]?.[colIndex]);
+    if (!Number.isNaN(v)) return rows[i];
+  }
+  return null;
+}
+
+/* Tuuli + Bz propagated-feedistä. Delta = muutos feedin tunnin ikkunan yli
+   ("vs. tunti sitten" -indikaattorit). */
 async function fetchHeroSolarData() {
   const cached = readSessionCache(HERO_SOLAR_CACHE_KEY, HERO_SOLAR_TTL_MS);
   if (cached) return cached;
@@ -104,7 +118,7 @@ async function fetchHeroSolarData() {
   const propData = await fetchJsonSafe(NOAA_PROP_URL, "NOAA propagated").catch(() => null);
 
   /* Sarakkeet: time_tag, speed, density, temperature, bx, by, bz, bt, ... */
-  let wind = null, bz = null;
+  let wind = null, bz = null, windDelta = null, bzDelta = null;
   const last = lastValidRow(propData, 1);
   if (last) {
     const ts = Date.parse(last[0]);
@@ -113,12 +127,20 @@ async function fetchHeroSolarData() {
       const b = parseFloat(last[6]);
       wind = Number.isNaN(w) ? null : w;
       bz = Number.isNaN(b) ? null : b;
+
+      const first = firstValidRow(propData, 1);
+      if (first && first !== last) {
+        const w0 = parseFloat(first[1]);
+        const b0 = parseFloat(first[6]);
+        if (!Number.isNaN(w0) && wind != null) windDelta = Math.round(wind - w0);
+        if (!Number.isNaN(b0) && bz != null) bzDelta = Math.round((bz - b0) * 10) / 10;
+      }
     } else {
       console.warn("NOAA propagated data vanhentunut:", last[0]);
     }
   }
 
-  const data = { wind, bz, fetchedAt: Date.now() };
+  const data = { wind, bz, windDelta, bzDelta, fetchedAt: Date.now() };
   writeSessionCache(HERO_SOLAR_CACHE_KEY, data);
   return data;
 }
@@ -183,6 +205,17 @@ function nextAwakening(slots) {
   return { hours, kp: hit.kp };
 }
 
+/* NOAA:n G-myrskyluokitus Kp:stä (kansainvälinen asteikko, ei lokalisoida) */
+function kpStormLabel(kp) {
+  if (kp == null) return null;
+  if (kp >= 9) return "G5 Geomagnetic Storm";
+  if (kp >= 8) return "G4 Geomagnetic Storm";
+  if (kp >= 7) return "G3 Geomagnetic Storm";
+  if (kp >= 6) return "G2 Geomagnetic Storm";
+  if (kp >= 5) return "G1 Geomagnetic Storm";
+  return null;
+}
+
 /* Pehmennetty polku (cubic bezier) — polyline näyttää kulmikkaalta */
 function smoothPath(pts) {
   if (!pts.length) return "";
@@ -196,9 +229,7 @@ function smoothPath(pts) {
   return d;
 }
 
-/* Rakentaa Kp-ennustegraafin datan valitulle aikaikkunalle.
-   Lukituslogiikkaa ei enää tarvita: worker rajaa free-datan 24 tuntiin,
-   ja 3 vrk -valinta on premium-käyttäjien takana. */
+/* Rakentaa Kp-ennustegraafin datan valitulle aikaikkunalle. */
 function buildWave(slots, locale, horizonHours) {
   if (!Array.isArray(slots) || slots.length < 2) return null;
 
@@ -223,23 +254,19 @@ function buildWave(slots, locale, horizonHours) {
 
   const linePts = pts.map((p) => [x(p.ms), y(p.kp)]);
 
-  /* Täyttöalue käyrän alle (revontulihehku) */
   const areaPath =
     `${smoothPath(linePts)} L ${linePts[linePts.length - 1][0].toFixed(1)} ${baseY} L ${linePts[0][0].toFixed(1)} ${baseY} Z`;
 
-  /* Kp-asteikko (0/3/6/9) */
   const yTicks = [0, 3, 6, 9].map((kp) => ({ y: y(kp), kp }));
 
-  /* Päivämerkinnät: paikalliset keskiyöt + viikonpäivä */
   const dayFmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
   const dayTicks = [];
   const d0 = new Date(t0);
-  d0.setHours(24, 0, 0, 0); // seuraava paikallinen keskiyö
+  d0.setHours(24, 0, 0, 0);
   for (let ms = d0.getTime(); ms < t1; ms += 24 * 60 * 60 * 1000) {
     dayTicks.push({ x: x(ms), label: dayFmt.format(ms) });
   }
 
-  /* Ennustehuippu */
   const peakSrc = pts.reduce((a, b) => (b.kp > a.kp ? b : a));
   const peak = { x: x(peakSrc.ms), y: y(peakSrc.kp), kp: peakSrc.kp };
 
@@ -256,6 +283,25 @@ function buildWave(slots, locale, horizonHours) {
   };
 }
 
+/* Mittarikortti (tuuli/Bz/pilvet) delta-indikaattorilla */
+function MetricCard({ label, value, unit, delta, deltaUnit, deltaSuffix }) {
+  const dir = delta == null ? null : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+  return (
+    <div className="ah-metric">
+      <span className="ah-metric-label">{label}</span>
+      <span className="ah-metric-value">
+        {value}
+        {unit && <small>{unit}</small>}
+      </span>
+      {delta != null && (
+        <span className={`ah-metric-delta ah-metric-delta--${dir}`}>
+          {delta > 0 ? "▲" : delta < 0 ? "▼" : "•"} {delta > 0 ? "+" : ""}{delta}{deltaUnit} {deltaSuffix}
+        </span>
+      )}
+    </div>
+  );
+}
+
 /* ======================================================================== */
 export default function AuroraHero({ forecast, children }) {
   const navigate = useNavigate();
@@ -268,14 +314,15 @@ export default function AuroraHero({ forecast, children }) {
   const [kp, setKp]     = useState(null);
   const [wind, setWind] = useState(null);
   const [bz, setBz]     = useState(null);
+  const [windDelta, setWindDelta] = useState(null);
+  const [bzDelta, setBzDelta]     = useState(null);
   const [threeReady, setThreeReady] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const [contentfulPlaces, setContentfulPlaces] = useState([]);
   const [placeWeather, setPlaceWeather] = useState({}); // { [id]: { clouds, temp } }
 
-  /* Aikaikkuna: 1 vrk (free & premium) / 3 vrk (vain premium).
-     Premiumilla oletus 3 vrk, valinta muistetaan. */
+  /* Aikaikkuna: 1 vrk (free & premium) / 3 vrk (vain premium). */
   const [range, setRange] = useState(() => {
     try {
       const v = localStorage.getItem(RANGE_KEY);
@@ -387,13 +434,15 @@ export default function AuroraHero({ forecast, children }) {
   const skyRef    = useRef(null);
   const probRef   = useRef(null);
 
-  /* Solar data fetch (tuuli + Bz propagated-feedistä) */
+  /* Solar data fetch (tuuli + Bz + deltat propagated-feedistä) */
   useEffect(() => {
     let cancelled = false;
     fetchHeroSolarData()
       .then((d) => {
         if (cancelled) return;
         setWind(d.wind); setBz(d.bz);
+        setWindDelta(d.windDelta ?? null);
+        setBzDelta(d.bzDelta ?? null);
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -492,8 +541,19 @@ export default function AuroraHero({ forecast, children }) {
     ? String(t("aurora.next")).replace("{h}", awakening.hours)
     : (!calm ? "" : t("aurora.quiet"));
 
+  /* Iso tilateksti Kp:n mukaan */
+  const statusWord =
+    kp == null ? "–"
+    : kp >= 5   ? trh("hero.status.high", "Korkea aktiivisuus", "High Activity")
+    : kp >= 3.5 ? trh("hero.status.elevated", "Kohonnut aktiivisuus", "Elevated Activity")
+    : kp >= 1.5 ? trh("hero.status.moderate", "Kohtalainen aktiivisuus", "Moderate Activity")
+    :             trh("hero.status.quiet", "Rauhallinen", "Quiet");
+
+  const storm = kpStormLabel(kp);
+  const vsLastHour = trh("hero.vsLastHour", "vs. tunti sitten", "vs last hour");
+
   return (
-    <section className={`aurora-hero-container ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
+    <section className={`aurora-hero-container ah-hero--dash ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
 
       <div className="ah-sky-wrap">
         {kpStep > 0 && <div className="ah-sky--css" aria-hidden="true" />}
@@ -503,191 +563,245 @@ export default function AuroraHero({ forecast, children }) {
       {/* CSS-revontuliverhot + tähdet (aina näkyvissä, hienovaraiset) */}
       <div className="ah-ambient" aria-hidden="true" />
 
-      <div className="ah-content-layout">
-        {/* Vasen puoli */}
-        <div className="ah-text-side">
-          <h1 className="ah-main-title">
-            {headline} {nextLine}
-          </h1>
+      <div className="ah-dash">
 
-          <div className="ah-probability-box">
-            <span className="ah-prob-label">{t("probability.label")}:</span>
-            {isPremium ? (
-              <strong className="ah-premium-prob-value">
-                {probability != null ? `${probability}%` : "--"}
-              </strong>
-            ) : (
-              <div className="ah-premium-cta-container">
-                <button className="ah-premium-link-btn" onClick={() => navigate('/premium')}>
-                  🔒 {t("forecast.unlock48")}
-                </button>
-                <span className="ah-premium-subtext">
-                  {t("premium.teaser.short")}
-                </span>
+        {/* Ylärivi: iso Kp + tila vasemmalla, globe oikealla */}
+        <div className="ah-dash-top">
+          <div className="ah-dash-headline">
+            <div className="ah-eyebrow">
+              <span className="ah-eyebrow-dot" />
+              {trh("hero.eyebrow", "AURORA-AKTIIVISUUS · GEOMAGNEETTINEN INDEKSI", "AURORA ACTIVITY · GEOMAGNETIC INDEX")}
+            </div>
+
+            <div className="ah-kp-row">
+              <span className="ah-kp-big">{kp != null ? kp.toFixed(1) : "–"}</span>
+              <div className="ah-kp-meta">
+                <span className="ah-kp-label">KP INDEX</span>
+                <span className="ah-kp-status">{statusWord}</span>
+                {storm && <span className="ah-kp-storm">{storm}</span>}
               </div>
-            )}
+            </div>
+
+            <h1 className="ah-dash-desc">
+              {headline} {nextLine}
+            </h1>
+
+            <div className="ah-probability-box">
+              <span className="ah-prob-label">{t("probability.label")}:</span>
+              {isPremium ? (
+                <strong className="ah-premium-prob-value">
+                  {probability != null ? `${probability}%` : "--"}
+                </strong>
+              ) : (
+                <div className="ah-premium-cta-container">
+                  <button className="ah-premium-link-btn" onClick={() => navigate('/premium')}>
+                    🔒 {t("forecast.unlock48")}
+                  </button>
+                  <span className="ah-premium-subtext">
+                    {t("premium.teaser.short")}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
+
+          <HeroGlobe />
         </div>
 
-        {/* Oikea puoli */}
-        <div className="ah-carousel-side">
-          <div className="ah-horizontal-scroll-track">
-            {placesList.map((p) => {
-              const isSelected = activePlace && p.id === activePlace.id;
-              return (
-                <div
-                  key={p.id}
-                  className={`ah-carousel-item-box ${isSelected ? "is-active-item" : ""}`}
-                  onClick={() => {
-                    setActivePlace(p);
-                    setIsPopupOpen(true);
-                  }}
-                >
-                  <div className="ah-item-top-row">
-                    <div className="ah-item-dot-indicator" />
-                    <span className="ah-place-cloud-badge">
-                      ☁ {p.currentClouds != null ? `${p.currentClouds}%` : "--"}
-                    </span>
-                  </div>
-                  <span className="ah-item-name-label">{p.name}</span>
-                  <div className="ah-place-metrics">
-                    <span className="ah-place-kp-badge">
-                      Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "--"}
-                    </span>
-                    <span className="ah-place-prob-badge">
-                      {p.currentKp != null ? `${p.prob}%` : "--"}
-                    </span>
+        {/* Alarivi: vasen palsta (mittarit + graafi), oikea palsta (havainnot + paikat) */}
+        <div className="ah-dash-grid">
+          <div className="ah-dash-main">
+
+            {/* Mittarikortit — samat arvot kaikille (julkista dataa) */}
+            <div className="ah-metrics">
+              <MetricCard
+                label={trh("hero.metric.wind", "Aurinkotuuli", "Solar Wind Speed")}
+                value={wind != null ? Math.round(wind) : "–"}
+                unit="km/s"
+                delta={windDelta}
+                deltaUnit=""
+                deltaSuffix={vsLastHour}
+              />
+              <MetricCard
+                label={trh("hero.metric.bz", "Bz-komponentti", "Bz Component")}
+                value={bz != null ? bz.toFixed(1) : "–"}
+                unit="nT"
+                delta={bzDelta}
+                deltaUnit=""
+                deltaSuffix={vsLastHour}
+              />
+              <MetricCard
+                label={`${trh("hero.metric.clouds", "Pilvisyys", "Cloud Cover")}${activePlace ? ` · ${activePlace.name}` : ""}`}
+                value={activePlace?.currentClouds != null ? activePlace.currentClouds : "–"}
+                unit="%"
+                delta={null}
+              />
+            </div>
+
+            {/* Kp-ennustegraafi */}
+            <div className="ah-wave">
+              <div className="ah-wave-panel">
+                <div className="ah-wave-head">
+                  <span className="ah-wave-title">
+                    {effectiveRange === "1d"
+                      ? trh("forecast.waveTitle1d", "Kp-ennuste · seuraavat 24 h", "Kp forecast · next 24 h")
+                      : trh("forecast.waveTitle3d", "Kp-ennuste · seuraavat 3 vrk", "Kp forecast · next 3 days")}
+                  </span>
+
+                  <div className="ah-range">
+                    {[
+                      ["1d", trh("forecast.range1d", "1 vrk", "1 day")],
+                      ["3d", trh("forecast.range3d", "3 vrk", "3 days")],
+                    ].map(([key, label]) => {
+                      const active = effectiveRange === key;
+                      const locked = key === "3d" && !isPremium;
+                      return (
+                        <button
+                          key={key}
+                          className={`ah-range-btn ${active ? "ah-range-btn--active" : ""}`}
+                          onClick={() => selectRange(key)}
+                          title={locked ? trh("forecast.rangeLocked", "Koko 3 vrk ennuste Premiumilla", "Full 3-day forecast with Premium") : undefined}
+                        >
+                          {locked ? "🔒 " : ""}{label}
+                        </button>
+                      );
+                    })}
+                    <span className="ah-wave-source">NOAA</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
 
-      {/* Tunturit */}
-      <div className="ah-mountain-silhouet" aria-hidden="true">
-        <svg viewBox="0 0 1440 180" className="ah-mountain-svg">
-          <path d="M0,140 L160,115 C320,90 640,60 960,100 C1280,140 1360,165 1440,170 L1440,180 L0,180 Z" />
-        </svg>
-      </div>
-
-      {/* Kp-ennustegraafi — kaikki tyylit Aurorahero.css:ssä */}
-      <div className="ah-wave">
-        <div className="ah-wave-panel">
-          <div className="ah-wave-head">
-            <span className="ah-wave-title">
-              {effectiveRange === "1d"
-                ? trh("forecast.waveTitle1d", "Kp-ennuste · seuraavat 24 h", "Kp forecast · next 24 h")
-                : trh("forecast.waveTitle3d", "Kp-ennuste · seuraavat 3 vrk", "Kp forecast · next 3 days")}
-            </span>
-
-            {/* 1 vrk / 3 vrk -valitsin — 3 vrk vaatii premiumin */}
-            <div className="ah-range">
-              {[
-                ["1d", trh("forecast.range1d", "1 vrk", "1 day")],
-                ["3d", trh("forecast.range3d", "3 vrk", "3 days")],
-              ].map(([key, label]) => {
-                const active = effectiveRange === key;
-                const locked = key === "3d" && !isPremium;
-                return (
-                  <button
-                    key={key}
-                    className={`ah-range-btn ${active ? "ah-range-btn--active" : ""}`}
-                    onClick={() => selectRange(key)}
-                    title={locked ? trh("forecast.rangeLocked", "Koko 3 vrk ennuste Premiumilla", "Full 3-day forecast with Premium") : undefined}
+                {wave ? (
+                  <svg
+                    className="ah-wave-svg"
+                    viewBox={`0 0 ${WAVE_W} ${WAVE_H}`}
+                    role="img"
+                    aria-label={trh("forecast.waveAria", "Revontuliaktiivisuuden Kp-ennuste", "Aurora activity Kp forecast")}
                   >
-                    {locked ? "🔒 " : ""}{label}
-                  </button>
-                );
-              })}
-              <span className="ah-wave-source">NOAA</span>
+                    <defs>
+                      <linearGradient id="ah-wave-grad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%"  stopColor="#00ffc6" />
+                        <stop offset="60%" stopColor="#14e0ff" />
+                        <stop offset="100%" stopColor="#7d5fff" />
+                      </linearGradient>
+                      <linearGradient id="ah-wave-area-grad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%"   stopColor="#00ffc6" stopOpacity="0.26" />
+                        <stop offset="100%" stopColor="#00ffc6" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+
+                    {wave.yTicks.map((tick) => (
+                      <g key={tick.kp}>
+                        <line
+                          className="ah-wave-grid"
+                          x1={WAVE_PAD.l} y1={tick.y}
+                          x2={WAVE_W - WAVE_PAD.r} y2={tick.y}
+                        />
+                        <text className="ah-wave-ylabel" x={WAVE_PAD.l - 7} y={tick.y + 3}>
+                          {tick.kp}
+                        </text>
+                      </g>
+                    ))}
+
+                    {wave.dayTicks.map((tick, i) => (
+                      <g key={i}>
+                        <line
+                          className="ah-wave-day-line"
+                          x1={tick.x} y1={WAVE_PAD.t} x2={tick.x} y2={wave.baseY}
+                        />
+                        <text className="ah-wave-xlabel" x={tick.x + 4} y={WAVE_H - 6}>
+                          {tick.label}
+                        </text>
+                      </g>
+                    ))}
+
+                    {wave.areaPath && <path className="ah-wave-area" d={wave.areaPath} />}
+                    <path className="ah-wave-line" d={wave.openPath} />
+
+                    {wave.nowX != null && (
+                      <>
+                        <line
+                          className="ah-wave-now"
+                          x1={wave.nowX} y1={WAVE_PAD.t} x2={wave.nowX} y2={wave.baseY}
+                        />
+                        <text className="ah-wave-now-label" x={wave.nowX + 4} y={WAVE_PAD.t + 9}>
+                          {trh("forecast.now", "nyt", "now")}
+                        </text>
+                      </>
+                    )}
+
+                    {wave.peak && (
+                      <>
+                        <circle className="ah-wave-peak-dot" cx={wave.peak.x} cy={wave.peak.y} r="4" />
+                        <text
+                          className="ah-wave-peak-label"
+                          x={wave.peak.x > WAVE_W - 130 ? wave.peak.x - 8 : wave.peak.x + 8}
+                          y={Math.max(wave.peak.y - 8, WAVE_PAD.t + 10)}
+                          textAnchor={wave.peak.x > WAVE_W - 130 ? "end" : "start"}
+                        >
+                          {trh("forecast.peak", "huippu", "peak")} Kp {wave.peak.kp.toFixed(1)}
+                        </text>
+                      </>
+                    )}
+                  </svg>
+                ) : (
+                  <div className="ah-wave-empty">
+                    {trh("forecast.loading", "Ladataan ennustetta…", "Loading forecast…")}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {wave ? (
-            <svg
-              className="ah-wave-svg"
-              viewBox={`0 0 ${WAVE_W} ${WAVE_H}`}
-              role="img"
-              aria-label={trh("forecast.waveAria", "Revontuliaktiivisuuden Kp-ennuste", "Aurora activity Kp forecast")}
-            >
-              <defs>
-                <linearGradient id="ah-wave-grad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%"  stopColor="#00ffc6" />
-                  <stop offset="60%" stopColor="#14e0ff" />
-                  <stop offset="100%" stopColor="#7d5fff" />
-                </linearGradient>
-                <linearGradient id="ah-wave-area-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="#00ffc6" stopOpacity="0.26" />
-                  <stop offset="100%" stopColor="#00ffc6" stopOpacity="0" />
-                </linearGradient>
-              </defs>
+          <aside className="ah-dash-side">
+            {children && (
+              <div className="ah-extra-wrapper">
+                {!isPremium && (
+                  <div className="ah-spin-teaser">
+                    🎰 {t("spin.teaser") ||
+                      "Spotted the lights? Report a sighting and spin to win free Premium."}
+                  </div>
+                )}
+                {children}
+              </div>
+            )}
 
-              {/* Kp-asteikko (0/3/6/9) */}
-              {wave.yTicks.map((tick) => (
-                <g key={tick.kp}>
-                  <line
-                    className="ah-wave-grid"
-                    x1={WAVE_PAD.l} y1={tick.y}
-                    x2={WAVE_W - WAVE_PAD.r} y2={tick.y}
-                  />
-                  <text className="ah-wave-ylabel" x={WAVE_PAD.l - 7} y={tick.y + 3}>
-                    {tick.kp}
-                  </text>
-                </g>
-              ))}
-
-              {/* Päivärajat + viikonpäivät */}
-              {wave.dayTicks.map((tick, i) => (
-                <g key={i}>
-                  <line
-                    className="ah-wave-day-line"
-                    x1={tick.x} y1={WAVE_PAD.t} x2={tick.x} y2={wave.baseY}
-                  />
-                  <text className="ah-wave-xlabel" x={tick.x + 4} y={WAVE_H - 6}>
-                    {tick.label}
-                  </text>
-                </g>
-              ))}
-
-              {/* Hehkuva täyttöalue + käyrä */}
-              {wave.areaPath && <path className="ah-wave-area" d={wave.areaPath} />}
-              <path className="ah-wave-line" d={wave.openPath} />
-
-              {/* Nyt-viiva */}
-              {wave.nowX != null && (
-                <>
-                  <line
-                    className="ah-wave-now"
-                    x1={wave.nowX} y1={WAVE_PAD.t} x2={wave.nowX} y2={wave.baseY}
-                  />
-                  <text className="ah-wave-now-label" x={wave.nowX + 4} y={WAVE_PAD.t + 9}>
-                    {trh("forecast.now", "nyt", "now")}
-                  </text>
-                </>
-              )}
-
-              {/* Ennustehuippu */}
-              {wave.peak && (
-                <>
-                  <circle className="ah-wave-peak-dot" cx={wave.peak.x} cy={wave.peak.y} r="4" />
-                  <text
-                    className="ah-wave-peak-label"
-                    x={wave.peak.x > WAVE_W - 130 ? wave.peak.x - 8 : wave.peak.x + 8}
-                    y={Math.max(wave.peak.y - 8, WAVE_PAD.t + 10)}
-                    textAnchor={wave.peak.x > WAVE_W - 130 ? "end" : "start"}
-                  >
-                    {trh("forecast.peak", "huippu", "peak")} Kp {wave.peak.kp.toFixed(1)}
-                  </text>
-                </>
-              )}
-            </svg>
-          ) : (
-            <div className="ah-wave-empty">
-              {trh("forecast.loading", "Ladataan ennustetta…", "Loading forecast…")}
+            <div className="ah-places-panel">
+              <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
+              <div className="ah-carousel-side">
+                <div className="ah-horizontal-scroll-track">
+                  {placesList.map((p) => {
+                    const isSelected = activePlace && p.id === activePlace.id;
+                    return (
+                      <div
+                        key={p.id}
+                        className={`ah-carousel-item-box ${isSelected ? "is-active-item" : ""}`}
+                        onClick={() => {
+                          setActivePlace(p);
+                          setIsPopupOpen(true);
+                        }}
+                      >
+                        <div className="ah-item-top-row">
+                          <div className="ah-item-dot-indicator" />
+                          <span className="ah-place-cloud-badge">
+                            ☁ {p.currentClouds != null ? `${p.currentClouds}%` : "--"}
+                          </span>
+                        </div>
+                        <span className="ah-item-name-label">{p.name}</span>
+                        <div className="ah-place-metrics">
+                          <span className="ah-place-kp-badge">
+                            Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "--"}
+                          </span>
+                          <span className="ah-place-prob-badge">
+                            {p.currentKp != null ? `${p.prob}%` : "--"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          )}
+          </aside>
         </div>
       </div>
 
@@ -731,18 +845,6 @@ export default function AuroraHero({ forecast, children }) {
               {t("places.viewAuroraMap")} 🗺️
             </button>
           </div>
-        </div>
-      )}
-
-      {children && (
-        <div className="ah-extra-wrapper">
-          {!isPremium && (
-            <div className="ah-spin-teaser">
-              🎰 {t("spin.teaser") ||
-                "Spotted the lights? Report a sighting and spin to win free Premium."}
-            </div>
-          )}
-          {children}
         </div>
       )}
     </section>
