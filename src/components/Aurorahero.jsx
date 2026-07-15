@@ -4,7 +4,7 @@ import useTranslation from "../hooks/useTranslation";
 import { calculateAurora } from "../utils/auroraEngine";
 import staticPlaces from "../data/places";
 import { client } from "../lib/contentfulClient";
-import HeroGlobe from "./HeroGlobe";
+import Heroglobe from "./Heroglobe";
 
 /* ========================================================================
    AuroraHero — dashboard-tyylinen etusivun hero
