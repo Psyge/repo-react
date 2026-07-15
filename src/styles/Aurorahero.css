@@ -19,7 +19,7 @@
    jotta teksti ja mittarit erottuvat. */
 .ah-hero--dash {
   justify-content: flex-start;
-  padding: 3rem 2rem 4rem;
+  padding: 6rem 2rem 4rem;
   background-image:
     linear-gradient(180deg,
       rgba(2, 6, 14, 0.62) 0%,
