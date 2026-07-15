@@ -605,7 +605,7 @@ export default function AuroraHero({ forecast, children }) {
             </div>
           </div>
 
-          <HeroGlobe />
+          <Heroglobe />
         </div>
 
         {/* Alarivi: vasen palsta (mittarit + graafi), oikea palsta (havainnot + paikat) */}
