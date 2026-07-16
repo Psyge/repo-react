@@ -8,17 +8,13 @@ import Heroglobe from "./Heroglobe";
 
 /* ========================================================================
    AuroraHero — dashboard-tyylinen etusivun hero
-   - Valokuvatausta + CSS-revontulet
-   - Iso Kp + tilateksti (free näkee Kp:n, premium myös todennäköisyyden)
-   - Mittarikortit (tuuli / Bz / pilvet) deltoineen — näkyvät kaikille
-   - Kp-ennustegraafi 1 vrk / 3 vrk -valitsimella (3 vrk = premium)
-   - Oikea palsta: havainnot (children) + paikat
+   Vasen palsta: mittarit → Kp-ennuste → "Näen revontulia" -toimintarivi
+   Oikea palsta: Paikat (4 satunnaista per sivulataus)
 ======================================================================= */
 
 /* HUOM: NOAA:n vanhat product-feedit (kp/plasma/mag) jäätyivät keväällä 2026.
  * Propagated-feed on elossa ja sisältää plasman + magneettikentän yhdessä.
- * Nykyinen Kp otetaan ennuste-propista (forecast.slots), ei enää NOAA:n
- * kuolleesta kp-tuotteesta. */
+ * Nykyinen Kp otetaan ennuste-propista (forecast.slots). */
 const NOAA_PROP_URL = "https://services.swpc.noaa.gov/products/geospace/propagated-solar-wind-1-hour.json";
 const SOLAR_MAX_AGE_MS = 3 * 60 * 60 * 1000; // hylkää tätä vanhempi "reaaliaika"
 
@@ -34,6 +30,9 @@ const WAVE_PAD = { l: 34, r: 12, t: 14, b: 22 };
 
 /* Graafin aikaikkunan valinta (1 vrk free / 3 vrk premium) */
 const RANGE_KEY = "hero_wave_range_v1";
+
+/* Montako paikkaa näytetään Paikat-paneelissa (arvotaan per sivulataus) */
+const FEATURED_PLACES_COUNT = 4;
 
 /* ---- lokalisoidun Contentful-kentän purku ---- */
 function getField(field, lang) {
@@ -109,8 +108,7 @@ function firstValidRow(rows, colIndex) {
   return null;
 }
 
-/* Tuuli + Bz propagated-feedistä. Delta = muutos feedin tunnin ikkunan yli
-   ("vs. tunti sitten" -indikaattorit). */
+/* Tuuli + Bz propagated-feedistä. Delta = muutos feedin tunnin ikkunan yli. */
 async function fetchHeroSolarData() {
   const cached = readSessionCache(HERO_SOLAR_CACHE_KEY, HERO_SOLAR_TTL_MS);
   if (cached) return cached;
@@ -430,6 +428,19 @@ export default function AuroraHero({ forecast, children }) {
     }
   }, [placesList]);
 
+  /* Paikat-paneeli: arvotaan per sivulataus 4 paikkaa. Valinta tehdään
+     kerran mountissa (id-lista), data päivittyy placesListin mukana. */
+  const [featuredIds] = useState(() =>
+    [...staticPlaces]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, FEATURED_PLACES_COUNT)
+      .map((p) => p.id)
+  );
+  const featuredPlaces = useMemo(
+    () => placesList.filter((p) => featuredIds.includes(p.id)),
+    [placesList, featuredIds]
+  );
+
   const canvasRef = useRef(null);
   const skyRef    = useRef(null);
   const probRef   = useRef(null);
@@ -448,8 +459,7 @@ export default function AuroraHero({ forecast, children }) {
     return () => { cancelled = true; };
   }, []);
 
-  /* Nykyinen Kp ennustesarjasta (lähin slotti nykyhetkeen) — NOAA:n vanha
-     kp-tuote jäätyi keväällä 2026 eikä päivity enää. */
+  /* Nykyinen Kp ennustesarjasta (lähin slotti nykyhetkeen) */
   useEffect(() => {
     if (!slots.length) return;
     const now = Date.now();
@@ -608,9 +618,10 @@ export default function AuroraHero({ forecast, children }) {
           <Heroglobe />
         </div>
 
-        {/* Alarivi: vasen palsta (mittarit + graafi), oikea palsta (havainnot + paikat) */}
+        {/* Alarivi: vasen palsta (mittarit → graafi → toimintarivi),
+            oikea palsta (paikat) */}
         <div className="ah-dash-grid">
-          
+          <div className="ah-dash-main">
 
             {/* Mittarikortit — samat arvot kaikille (julkista dataa) */}
             <div className="ah-metrics">
@@ -750,11 +761,11 @@ export default function AuroraHero({ forecast, children }) {
                 )}
               </div>
             </div>
-          
 
-          <aside className="ah-dash-side-top">
+            {/* "Näen revontulia" -toimintarivi — graafin alla, huomiota
+                herättävä (tyylit .ah-see-strip) */}
             {children && (
-              <div className="ah-extra-wrapper">
+              <div className="ah-see-strip">
                 {!isPremium && (
                   <div className="ah-spin-teaser">
                     🎰 {t("spin.teaser") ||
@@ -764,52 +775,57 @@ export default function AuroraHero({ forecast, children }) {
                 {children}
               </div>
             )}
+          </div>
+
+          <aside className="ah-dash-side">
+            <div className="ah-places-panel">
+              <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
+              <div className="ah-place-list">
+                {featuredPlaces.map((p) => {
+                  const isSelected = activePlace && p.id === activePlace.id;
+                  const prob = p.currentKp != null ? p.prob : null;
+                  const barColor =
+                    prob == null ? "#475569"
+                    : prob >= 70 ? "#00ffc6"
+                    : prob >= 40 ? "#fee440"
+                    : "#f87171";
+                  return (
+                    <div
+                      key={p.id}
+                      className={`ah-place-row ${isSelected ? "is-active-item" : ""}`}
+                      onClick={() => { setActivePlace(p); setIsPopupOpen(true); }}
+                    >
+                      <div className="ah-place-row-head">
+                        <span className="ah-place-row-name">
+                          <span
+                            className="ah-item-dot-indicator"
+                            style={isSelected ? { background: barColor, boxShadow: `0 0 8px ${barColor}` } : {}}
+                          />
+                          {p.name}
+                        </span>
+                        <span className="ah-place-row-prob" style={{ color: barColor }}>
+                          {prob != null ? `${prob}%` : "–"}
+                        </span>
+                      </div>
+                      <div className="ah-place-row-meta">
+                        <span>Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "–"}</span>
+                        <span>☁ {p.currentClouds != null ? `${p.currentClouds}%` : "–"}</span>
+                      </div>
+                      <div className="ah-place-bar-track">
+                        <div
+                          className="ah-place-bar-fill"
+                          style={{
+                            width: prob != null ? `${prob}%` : "0%",
+                            background: `linear-gradient(to right, ${barColor}80, ${barColor})`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </aside>
-            <div className="ah-place-list">
-  {placesList.map((p) => {
-    const isSelected = activePlace && p.id === activePlace.id;
-    const prob = p.currentKp != null ? p.prob : null;
-    const barColor =
-      prob == null ? "#475569"
-      : prob >= 70 ? "#00ffc6"
-      : prob >= 40 ? "#fee440"
-      : "#f87171";
-    return (
-      <div
-        key={p.id}
-        className={`ah-place-row ${isSelected ? "is-active-item" : ""}`}
-        onClick={() => { setActivePlace(p); setIsPopupOpen(true); }}
-      >
-        <div className="ah-place-row-head">
-          <span className="ah-place-row-name">
-            <span
-              className="ah-item-dot-indicator"
-              style={isSelected ? { background: barColor, boxShadow: `0 0 8px ${barColor}` } : {}}
-            />
-            {p.name}
-          </span>
-          <span className="ah-place-row-prob" style={{ color: barColor }}>
-            {prob != null ? `${prob}%` : "–"}
-          </span>
-        </div>
-        <div className="ah-place-row-meta">
-          <span>Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "–"}</span>
-          <span>☁ {p.currentClouds != null ? `${p.currentClouds}%` : "–"}</span>
-        </div>
-        <div className="ah-place-bar-track">
-          <div
-            className="ah-place-bar-fill"
-            style={{
-              width: prob != null ? `${prob}%` : "0%",
-              background: `linear-gradient(to right, ${barColor}80, ${barColor})`,
-            }}
-          />
-        </div>
-      </div>
-    );
-  })}
-</div>
-          
         </div>
       </div>
 

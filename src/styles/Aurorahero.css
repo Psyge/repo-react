@@ -896,4 +896,115 @@
   .ah-metrics { grid-template-columns: 1fr 1fr; }
   .ah-metric:last-child { grid-column: 1 / -1; }
 }
+/* ========================================================================
+   LIITÄ NÄMÄ Aurorahero.css:n LOPPUUN
+   + KORJAA rivi 29: url("../../public/images/hero-bg.jpg")
+     →  url("/images/hero-bg.jpg")
+     (CRA ei salli viittausta src:n ulkopuolelle — absoluuttinen polku
+      haetaan suoraan public-kansiosta ajon aikana)
+======================================================================== */
 
+/* Palstat: vasen (mittarit → graafi → toimintarivi), oikea (paikat) */
+.ah-dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.ah-dash-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.ah-dash-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* Graafi täyttää palstansa (yleistyylin keskitys/max-width pois) */
+.ah-dash-main .ah-wave {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---- "Näen revontulia nyt" -toimintarivi — i-wanna-click-that ---- */
+.ah-see-strip {
+  background: linear-gradient(135deg, rgba(0, 255, 198, 0.10), rgba(125, 95, 255, 0.10));
+  border: 1px solid rgba(0, 255, 198, 0.3);
+  border-radius: 16px;
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 0 24px rgba(0, 255, 180, 0.12);
+}
+
+.ah-see-strip .ah-spin-teaser {
+  margin-bottom: 12px;
+  animation: none; /* strip hoitaa huomion — ei kahta pulssia päällekkäin */
+}
+
+/* Itse nappi: hehkuva gradientti + kutsuva pulssi. HUOM: osuu kaikkiin
+   stripin nappeihin — jos Sightings-komponentissa on useampi nappi,
+   vaihda valitsimeksi sen oma luokka (esim. .report-btn). */
+.ah-see-strip button {
+  background: linear-gradient(135deg, #00ffc6, #14e0ff);
+  color: #04120f;
+  font-weight: 800;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.8rem 1.6rem;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(0, 255, 198, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: ah-see-pulse 2.6s ease-in-out infinite;
+}
+
+.ah-see-strip button:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 36px rgba(0, 255, 198, 0.7);
+  animation: none;
+}
+
+.ah-see-strip button:active {
+  transform: scale(0.98);
+}
+
+@keyframes ah-see-pulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(0, 255, 198, 0.35); }
+  50%      { box-shadow: 0 0 30px rgba(0, 255, 198, 0.65); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-see-strip button { animation: none; }
+}
+
+/* ---- Paikat-paneeli (4 satunnaista per sivulataus, ei scrollia) ---- */
+.ah-places-panel {
+  background: rgba(8, 14, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.ah-places-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0 0 0.6rem;
+}
+
+/* Dashboardin mobiili */
+@media (max-width: 900px) {
+  .ah-dash-grid { grid-template-columns: 1fr; }
+}
