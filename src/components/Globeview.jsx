@@ -17,7 +17,7 @@ import {
   PLACE_NAMES_ENTER_ALT, PLACE_NAMES_EXIT_ALT,
   readLayers, readDeviceKey, requestIdle, cancelIdle,
   loadAuroraPoints, loadBorders, loadCities,
-} from "./globe/globeData";
+} from "../utils/Globedata";
 import {
   getGlobeQuality, deviceCanRenderGlobe, getAuroraColor,
   subsolarPoint, buildTerminator,
@@ -25,7 +25,7 @@ import {
 import "./globe/Globeview.css";
 
 /* HomePagen ennakkolataus-importti pysyy ennallaan tämän re-exportin kautta */
-export { preloadGlobeAssets } from "./globe/globeData";
+export { preloadGlobeAssets } from "../utils/Globedata";
 
 const Globe = lazy(() => import("react-globe.gl"));
 
