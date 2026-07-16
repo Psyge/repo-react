@@ -21,8 +21,8 @@ import {
 import {
   getGlobeQuality, deviceCanRenderGlobe, getAuroraColor,
   subsolarPoint, buildTerminator,
-} from "./globe/globeMath";
-import "./globe/Globeview.css";
+} from "../utils/Globemath";
+
 
 /* HomePagen ennakkolataus-importti pysyy ennallaan tämän re-exportin kautta */
 export { preloadGlobeAssets } from "../utils/Globedata";
