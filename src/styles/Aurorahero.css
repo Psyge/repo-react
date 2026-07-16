@@ -1026,3 +1026,77 @@
     order: -1;
   }
 }
+/* ========================================================================
+   LIITÄ Aurorahero.css:n LOPPUUN — Kp-palkki (0–9-asteikko)
+======================================================================== */
+
+.ah-kp-bar {
+  max-width: 420px;
+  margin: 0.25rem 0 1.1rem;
+}
+
+.ah-kp-bar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.ah-kp-bar-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7d8aa0;
+}
+
+.ah-kp-bar-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #00ffc6;
+}
+
+.ah-kp-bar-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.ah-kp-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  /* Kiinteä gradientti koko asteikolle: vihreä → keltainen → punainen.
+     Täyttö leikkaa siitä näkyviin arvoa vastaavan osan, joten palkin
+     kärjen väri kertoo tason (Kp 2 = vihreä, Kp 7 = punertava). */
+  background: linear-gradient(to right, #00ffc6 0%, #a3e635 40%, #fee440 60%, #fb923c 78%, #f87171 100%);
+  background-size: 420px 100%; /* = .ah-kp-bar max-width → gradientti ei skaalaudu täytön mukana */
+  box-shadow: 0 0 12px rgba(0, 255, 198, 0.35);
+  transition: width 0.6s ease;
+}
+
+/* Myrskyraja Kp 5 (= 55.6 % asteikosta) */
+.ah-kp-bar-storm-mark {
+  position: absolute;
+  left: 55.6%;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.ah-kp-bar-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+@media (max-width: 560px) {
+  .ah-kp-bar { max-width: 100%; }
+  .ah-kp-bar-fill { background-size: 100vw 100%; }
+}
