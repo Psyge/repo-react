@@ -637,9 +637,10 @@
 
 .ah-dash-top {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  gap: 2rem;
+  gap: clamp(2rem, 8vw, 6rem);
+  padding-bottom: 48px;
 }
 
 .ah-dash-headline {
@@ -723,27 +724,20 @@
 .ah-dash-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-rows: auto 1fr;
   gap: 1.25rem;
   align-items: start;
 }
 
-.ah-dash-main {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  min-width: 0;
-}
-
-.ah-dash-side {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  min-width: 0;
-}
-
 /* Graafi ja extra-lohko täyttävät palstansa (yleistyylin keskitys pois) */
-.ah-dash-main .ah-wave { max-width: none; margin: 0; padding: 0; }
-.ah-dash-side .ah-extra-wrapper { max-width: none; margin: 0; padding: 0; }
+.ah-dash-grid .ah-wave { max-width: none; margin: 0; padding: 0; }
+.ah-dash-grid .ah-extra-wrapper { max-width: none; margin: 0; padding: 0; }
+
+.ah-dash-side-top {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
 /* Mittarikortit */
 .ah-metrics {
@@ -814,12 +808,84 @@
   margin: 0 0 0.8rem;
 }
 
-.ah-places-panel .ah-horizontal-scroll-track { padding-right: 0.5rem; }
+/* Vertical place list — Space Weather -tyylinen allekkaisasettelu */
+.ah-place-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  max-height: 360px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.ah-place-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.ah-place-row:last-child { border-bottom: none; }
+.ah-place-row:hover { background: rgba(0,255,198,0.05); }
+.ah-place-row.is-active-item { background: rgba(0,255,198,0.08); }
+
+.ah-place-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.ah-place-row-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e6e9ef;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.ah-place-row-prob {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+  flex: 0 0 auto;
+}
+
+.ah-place-row-meta {
+  font-size: 0.7rem;
+  color: #64748b;
+  display: flex;
+  gap: 10px;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.ah-place-bar-track {
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ah-place-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.8s ease;
+}
 
 /* Dashboardin mobiili */
 @media (max-width: 900px) {
-  .ah-dash-grid { grid-template-columns: 1fr; }
-  .ah-dash-top { flex-direction: column-reverse; align-items: center; text-align: left; }
+  .ah-dash-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+  .ah-dash-top { flex-direction: column-reverse; align-items: center; text-align: left; padding-bottom: 16px; }
   .ah-dash-headline { max-width: 100%; }
 }
 

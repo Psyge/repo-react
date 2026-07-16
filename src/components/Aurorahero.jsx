@@ -610,7 +610,7 @@ export default function AuroraHero({ forecast, children }) {
 
         {/* Alarivi: vasen palsta (mittarit + graafi), oikea palsta (havainnot + paikat) */}
         <div className="ah-dash-grid">
-          <div className="ah-dash-main">
+          
 
             {/* Mittarikortit — samat arvot kaikille (julkista dataa) */}
             <div className="ah-metrics">
@@ -750,9 +750,9 @@ export default function AuroraHero({ forecast, children }) {
                 )}
               </div>
             </div>
-          </div>
+          
 
-          <aside className="ah-dash-side">
+          <aside className="ah-dash-side-top">
             {children && (
               <div className="ah-extra-wrapper">
                 {!isPremium && (
@@ -764,44 +764,52 @@ export default function AuroraHero({ forecast, children }) {
                 {children}
               </div>
             )}
-
-            <div className="ah-places-panel">
-              <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
-              <div className="ah-carousel-side">
-                <div className="ah-horizontal-scroll-track">
-                  {placesList.map((p) => {
-                    const isSelected = activePlace && p.id === activePlace.id;
-                    return (
-                      <div
-                        key={p.id}
-                        className={`ah-carousel-item-box ${isSelected ? "is-active-item" : ""}`}
-                        onClick={() => {
-                          setActivePlace(p);
-                          setIsPopupOpen(true);
-                        }}
-                      >
-                        <div className="ah-item-top-row">
-                          <div className="ah-item-dot-indicator" />
-                          <span className="ah-place-cloud-badge">
-                            ☁ {p.currentClouds != null ? `${p.currentClouds}%` : "--"}
-                          </span>
-                        </div>
-                        <span className="ah-item-name-label">{p.name}</span>
-                        <div className="ah-place-metrics">
-                          <span className="ah-place-kp-badge">
-                            Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "--"}
-                          </span>
-                          <span className="ah-place-prob-badge">
-                            {p.currentKp != null ? `${p.prob}%` : "--"}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
           </aside>
+            <div className="ah-place-list">
+  {placesList.map((p) => {
+    const isSelected = activePlace && p.id === activePlace.id;
+    const prob = p.currentKp != null ? p.prob : null;
+    const barColor =
+      prob == null ? "#475569"
+      : prob >= 70 ? "#00ffc6"
+      : prob >= 40 ? "#fee440"
+      : "#f87171";
+    return (
+      <div
+        key={p.id}
+        className={`ah-place-row ${isSelected ? "is-active-item" : ""}`}
+        onClick={() => { setActivePlace(p); setIsPopupOpen(true); }}
+      >
+        <div className="ah-place-row-head">
+          <span className="ah-place-row-name">
+            <span
+              className="ah-item-dot-indicator"
+              style={isSelected ? { background: barColor, boxShadow: `0 0 8px ${barColor}` } : {}}
+            />
+            {p.name}
+          </span>
+          <span className="ah-place-row-prob" style={{ color: barColor }}>
+            {prob != null ? `${prob}%` : "–"}
+          </span>
+        </div>
+        <div className="ah-place-row-meta">
+          <span>Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "–"}</span>
+          <span>☁ {p.currentClouds != null ? `${p.currentClouds}%` : "–"}</span>
+        </div>
+        <div className="ah-place-bar-track">
+          <div
+            className="ah-place-bar-fill"
+            style={{
+              width: prob != null ? `${prob}%` : "0%",
+              background: `linear-gradient(to right, ${barColor}80, ${barColor})`,
+            }}
+          />
+        </div>
+      </div>
+    );
+  })}
+</div>
+          
         </div>
       </div>
 

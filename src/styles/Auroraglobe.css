@@ -5,7 +5,7 @@
 ======================================================================== */
 .ah-globe {
   position: relative;
-  width: 260px;
+  width: 210px;
   aspect-ratio: 1;
   border: 0;
   padding: 0;
@@ -87,21 +87,22 @@
 .ah-globe-label {
   position: absolute;
   left: 50%;
-  bottom: -34px;
+  bottom: -30px;
   transform: translateX(-50%);
   white-space: nowrap;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #00ffc6;
-  opacity: 0;
+  opacity: 0.7;
   transition: opacity 0.2s ease, transform 0.2s ease;
   pointer-events: none;
+  letter-spacing: 0.03em;
 }
 
 .ah-globe:hover .ah-globe-label,
 .ah-globe:focus-visible .ah-globe-label {
   opacity: 1;
-  transform: translateX(-50%) translateY(-4px);
+  transform: translateX(-50%) translateY(-3px);
 }
 
 @media (prefers-reduced-motion: reduce) {
