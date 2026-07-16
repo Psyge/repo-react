@@ -1008,3 +1008,21 @@
 @media (max-width: 900px) {
   .ah-dash-grid { grid-template-columns: 1fr; }
 }
+@media (max-width: 900px) {
+  /* Kumoaa aiemman column-reverse-säännön: otsikot ensin, globe niiden alla */
+  .ah-dash-top {
+    flex-direction: column;
+    align-items: center;
+  }
+ 
+  .ah-dash-top .ah-globe {
+    margin-top: 0.75rem;
+    margin-bottom: 2.5rem; /* tilaa "Avaa 3D-kartta" -tekstille */
+  }
+ 
+  /* Toimintarivi ensimmäiseksi vasemmassa palstassa (ennen mittareita).
+     Toimii koska .ah-dash-main on flex-kolumni. */
+  .ah-see-strip {
+    order: -1;
+  }
+}

@@ -168,3 +168,8 @@
     bottom: 105px;
   }
 }
+@media (max-width: 768px) {
+  .map-sun-panel {
+    padding-bottom: 110px; /* tilaa Globe/2D/Sun-palkille */
+  }
+}

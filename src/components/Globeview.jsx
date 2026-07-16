@@ -17,15 +17,15 @@ import {
   PLACE_NAMES_ENTER_ALT, PLACE_NAMES_EXIT_ALT,
   readLayers, readDeviceKey, requestIdle, cancelIdle,
   loadAuroraPoints, loadBorders, loadCities,
-} from "../utils/Globedata";
+} from "./globe/globeData";
 import {
   getGlobeQuality, deviceCanRenderGlobe, getAuroraColor,
   subsolarPoint, buildTerminator,
-} from "../utils/Globemath";
-
+} from "./globe/globeMath";
+import "./globe/Globeview.css";
 
 /* HomePagen ennakkolataus-importti pysyy ennallaan tämän re-exportin kautta */
-export { preloadGlobeAssets } from "../utils/Globedata";
+export { preloadGlobeAssets } from "./globe/globeData";
 
 const Globe = lazy(() => import("react-globe.gl"));
 
@@ -291,7 +291,9 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     // 100.8 = ei ihan pintaan asti — lähizoomin tiilet ovat tällä jo tarkat
     controls.minDistance = 100.8;
     controls.maxDistance = 500;
-    g.pointOfView({ lat: 40, lng: -20, altitude: 2.3 }, 0);
+    // Mobiilissa aloitetaan kauempaa, jotta koko pallo mahtuu kapeaan ruutuun
+    const isNarrow = (wrapRef.current?.clientWidth || window.innerWidth) < 640;
+    g.pointOfView({ lat: 40, lng: -20, altitude: isNarrow ? 3.4 : 2.3 }, 0);
 
     // Korkeusperustaiset tilat hystereesillä (tiilet + nimilaput)
     controls.addEventListener("change", () => {

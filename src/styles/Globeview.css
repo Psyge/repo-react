@@ -256,3 +256,13 @@
   box-shadow: 0 0 10px rgba(0, 255, 198, 0.8);
   margin: 0;
 }
+
+/* ---- Mobiili: header on kaksirivinen ja alhaalla on näkymäpalkki ---- */
+@media (max-width: 768px) {
+  /* Mittaripalkki + Kerrokset-nappi kaksirivisen headerin alle */
+  .gv-hudbar { top: 104px; }
+  .gv-layers-menu { top: 148px; }
+
+  /* Premium-osto ei saa jäädä näkymäpalkin (Globe/2D/Sun) alle */
+  .globe-upsell { bottom: 96px !important; }
+}
