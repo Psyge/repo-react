@@ -119,7 +119,7 @@
    MOBIILI
 ======================================================================== */
 @media (max-width: 768px) {
-  .aurora-hero-container { padding: 3rem 1.25rem; }
+  .aurora-hero-container { padding-top: 80px; }
   .ah-content-layout { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
   .ah-text-side { max-width: 100%; }
   .ah-main-title { font-size: 2rem; }
