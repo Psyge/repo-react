@@ -1,7 +1,300 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useTranslation from "./hooks/useTranslation";
-import { activate, bySession } from "./lib/premium";
+import { activate, bySession, getAlerts, setAlerts, getTelegramLink } from "./lib/premium";
+
+const SENSITIVITY_OPTIONS = [
+  { value: "strong", fi: "Vain vahvat", en: "Only strong" },
+  { value: "good", fi: "Hyvät mahdollisuudet", en: "Good chances" },
+  { value: "all", fi: "Kaikki havainnot", en: "All sightings" },
+];
+
+/* ============================================================
+ * Aurora Alerts -asetusosio
+ * ============================================================
+ * Näytetään heti onnistuneen premium-aktivoinnin jälkeen.
+ * Kutsuu /api/alerts/settings (GET+POST) ja /api/alerts/telegram-link
+ * lib/premium.js:n uusien helperien kautta. deviceKey haetaan
+ * automaattisesti localStoragesta (ks. requireDeviceKey premium.js:ssä).
+ * ============================================================ */
+function AuroraAlertsSetup({ fi }) {
+  const [loaded, setLoaded] = useState(false);
+  const [lat, setLat] = useState(null);
+  const [lon, setLon] = useState(null);
+  const [sensitivity, setSensitivity] = useState("good");
+  const [channel, setChannel] = useState("telegram");
+  const [emailSet, setEmailSet] = useState(false);
+  const [telegramConnected, setTelegramConnected] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState(null);
+  const [tgLinking, setTgLinking] = useState(false);
+  const [tgError, setTgError] = useState(null);
+
+  // Lataa nykyiset asetukset (jos tilaus on jo olemassa tältä laitteelta)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await getAlerts();
+        if (cancelled) return;
+        if (data.active) {
+          setLat(data.lat ?? null);
+          setLon(data.lon ?? null);
+          setSensitivity(data.sensitivity || "good");
+          setChannel(data.channel || "telegram");
+          setTelegramConnected(!!data.telegramConnected);
+          setEmailSet(!!data.emailSet);
+        }
+      } catch {
+        // Ei vielä tilausta — jätetään oletusarvot, ei virheilmoitusta käyttäjälle.
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function useMyLocation() {
+    if (!navigator.geolocation) {
+      setSaveMsg({
+        type: "error",
+        text: fi ? "Selain ei tue sijainnin hakua." : "Your browser does not support geolocation.",
+      });
+      return;
+    }
+    setLocating(true);
+    setSaveMsg(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLat(Math.round(pos.coords.latitude * 100) / 100);
+        setLon(Math.round(pos.coords.longitude * 100) / 100);
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        setSaveMsg({
+          type: "error",
+          text: fi
+            ? "Sijainnin haku epäonnistui. Voit yhdistää Telegramin ja jakaa sijainnin sen kautta."
+            : "Could not get your location. You can connect Telegram and share your location there instead.",
+        });
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }
+
+  async function handleSave() {
+    if (lat == null || lon == null) {
+      setSaveMsg({
+        type: "error",
+        text: fi
+          ? "Aseta sijainti ensin (tai yhdistä Telegram ja jaa sijainti sen kautta)."
+          : "Set a location first (or connect Telegram and share it from there).",
+      });
+      return;
+    }
+
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      const data = await setAlerts({ lat, lon, sensitivity, channel });
+      setTelegramConnected(!!data.telegramConnected);
+      setSaveMsg({ type: "success", text: fi ? "Asetukset tallennettu." : "Settings saved." });
+    } catch (e) {
+      setSaveMsg({
+        type: "error",
+        text: e?.message || (fi ? "Tallennus epäonnistui." : "Failed to save settings."),
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleTelegramConnect() {
+    setTgLinking(true);
+    setTgError(null);
+    try {
+      const data = await getTelegramLink();
+      window.open(data.url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setTgError(e?.message || (fi ? "Telegram-linkin haku epäonnistui." : "Failed to get Telegram link."));
+    } finally {
+      setTgLinking(false);
+    }
+  }
+
+  const secondaryBtnStyle = {
+    fontSize: 13,
+    padding: "8px 14px",
+    borderRadius: 8,
+    border: "1px solid var(--accent)",
+    background: "transparent",
+    color: "var(--accent)",
+    cursor: "pointer",
+  };
+
+  if (!loaded) return null;
+
+  return (
+    <div
+      style={{
+        marginTop: 40,
+        padding: 24,
+        borderRadius: 12,
+        border: "1px solid rgba(0,255,204,0.2)",
+        background: "rgba(0,255,204,0.04)",
+        textAlign: "left",
+      }}
+    >
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginBottom: 4 }}>
+        🌌 RepoTracker Alerts
+      </h2>
+      <p style={{ color: "var(--fg-muted)", fontSize: 14, marginBottom: 20 }}>
+        {fi
+          ? "Saat ilmoituksen kun revontulien näkymismahdollisuudet paranevat sijainnissasi."
+          : "Get notified when aurora conditions improve at your location."}
+      </p>
+
+      {/* Sijainti */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", fontSize: 13, color: "var(--fg-muted)", marginBottom: 6 }}>
+          {fi ? "Sijainti" : "Location"}
+        </label>
+        {lat != null && lon != null ? (
+          <p style={{ fontSize: 14, marginBottom: 8 }}>
+            📍 {lat.toFixed(2)}, {lon.toFixed(2)}
+          </p>
+        ) : (
+          <p style={{ fontSize: 13, color: "var(--fg-muted)", marginBottom: 8 }}>
+            {fi ? "Ei vielä asetettu." : "Not set yet."}
+          </p>
+        )}
+        <button type="button" onClick={useMyLocation} disabled={locating} style={secondaryBtnStyle}>
+          {locating
+            ? fi
+              ? "Haetaan…"
+              : "Locating…"
+            : fi
+            ? "📍 Käytä nykyistä sijaintia"
+            : "📍 Use current location"}
+        </button>
+      </div>
+
+      {/* Herkkyys */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", fontSize: 13, color: "var(--fg-muted)", marginBottom: 6 }}>
+          {fi ? "Herkkyys" : "Sensitivity"}
+        </label>
+        <select
+          value={sensitivity}
+          onChange={(e) => setSensitivity(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            borderRadius: 8,
+            background: "var(--bg-elevated, #12151c)",
+            color: "var(--fg)",
+            border: "1px solid rgba(255,255,255,0.15)",
+          }}
+        >
+          {SENSITIVITY_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {fi ? opt.fi : opt.en}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Kanava */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ display: "block", fontSize: 13, color: "var(--fg-muted)", marginBottom: 6 }}>
+          {fi ? "Kanava" : "Channel"}
+        </label>
+        <div style={{ display: "flex", gap: 16 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14 }}>
+            <input
+              type="radio"
+              name="alert-channel"
+              value="telegram"
+              checked={channel === "telegram"}
+              onChange={() => setChannel("telegram")}
+            />
+            Telegram
+          </label>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 14,
+              opacity: emailSet ? 1 : 0.4,
+            }}
+          >
+            <input
+              type="radio"
+              name="alert-channel"
+              value="email"
+              checked={channel === "email"}
+              disabled={!emailSet}
+              onChange={() => setChannel("email")}
+            />
+            {fi ? "Sähköposti" : "Email"}
+            {!emailSet && (
+              <span style={{ fontSize: 11 }}>
+                {fi ? " (ei sähköpostia tiedossa)" : " (no email on file)"}
+              </span>
+            )}
+          </label>
+        </div>
+      </div>
+
+      {channel === "telegram" && (
+        <div style={{ marginBottom: 20 }}>
+          <button type="button" onClick={handleTelegramConnect} disabled={tgLinking} style={secondaryBtnStyle}>
+            {tgLinking
+              ? fi
+                ? "Haetaan linkkiä…"
+                : "Getting link…"
+              : telegramConnected
+              ? fi
+                ? "✅ Telegram yhdistetty — yhdistä uudelleen"
+                : "✅ Telegram connected — reconnect"
+              : fi
+              ? "Yhdistä Telegram →"
+              : "Connect Telegram →"}
+          </button>
+          {tgError && <p style={{ color: "#ff6b6b", fontSize: 13, marginTop: 8 }}>{tgError}</p>}
+          {!telegramConnected && (
+            <p style={{ fontSize: 12, color: "var(--fg-muted)", marginTop: 8 }}>
+              {fi
+                ? "Jos et ole vielä asettanut sijaintia yllä, botti pyytää sitä automaattisesti kytkennän jälkeen."
+                : "If you haven't set a location above yet, the bot will ask for it automatically after connecting."}
+            </p>
+          )}
+        </div>
+      )}
+
+      <button type="button" onClick={handleSave} disabled={saving} className="cta-btn" style={{ fontSize: 14 }}>
+        {saving ? (fi ? "Tallennetaan…" : "Saving…") : fi ? "Tallenna asetukset" : "Save settings"}
+      </button>
+
+      {saveMsg && (
+        <p
+          style={{
+            marginTop: 12,
+            fontSize: 13,
+            color: saveMsg.type === "error" ? "#ff6b6b" : "var(--accent)",
+          }}
+        >
+          {saveMsg.text}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function PremiumSuccessPage() {
   const { lang } = useTranslation();
@@ -149,6 +442,9 @@ export default function PremiumSuccessPage() {
               ? "Aktivointilinkki on myös lähetetty sähköpostiisi — tallenna se, jotta voit käyttää ostoa enintään kahdella muulla laitteella."
               : "An activation link has also been sent to your email — bookmark it to use this purchase on up to 2 more devices."}
           </p>
+
+          <AuroraAlertsSetup fi={fi} />
+
           <p style={{ marginTop: 32 }}>
             <Link to="/map" className="cta-btn">
               {fi ? "Avaa kartta →" : "Open the map →"}

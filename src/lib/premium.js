@@ -2,6 +2,7 @@
  * Aurora Premium — React-friendly client helper.
  * Updated: installId-based activation + env API base + safer polling.
  *          openCheckout välittää nyt ostosuostumuksen (consent).
+ *          + Aurora Alerts -helperit (Telegram/email-hälytysten asetukset).
  *
  * Usage:
  *   import { isActive, openCheckout, activate, bySession, read } from "@/lib/premium";
@@ -167,6 +168,112 @@ await new Promise((resolve) =>
   }
 
   throw new Error("Timeout waiting for payment confirmation");
+}
+
+/* ============================================================
+ * AURORA ALERTS — Telegram / email -hälytysasetukset
+ * ============================================================
+ * Kaikki kolme vaativat aktiivisen deviceKey:n (localStoragessa).
+ * Backend-endpointit: /api/alerts/settings (GET+POST), /api/alerts/disable,
+ * /api/alerts/telegram-link. Katso worker.js:n handleAlerts*-funktiot.
+ * ============================================================ */
+
+function requireDeviceKey() {
+  const p = read();
+  if (!p || !p.deviceKey) {
+    const err = new Error("No active premium on this device");
+    err.status = 403;
+    throw err;
+  }
+  return p.deviceKey;
+}
+
+/**
+ * Hakee nykyiset Aurora Alerts -asetukset tälle laitteelle.
+ * Palauttaa { active: false } jos tilausta ei vielä ole tehty,
+ * muuten { active: true, channel, lat, lon, sensitivity, telegramConnected, emailSet }.
+ */
+export async function getAlerts() {
+  const deviceKey = requireDeviceKey();
+
+  const res = await fetch(`${BASE}/api/alerts/settings?deviceKey=${encodeURIComponent(deviceKey)}`);
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    const err = new Error(data.error || "Failed to load alert settings");
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+/**
+ * Tallentaa Aurora Alerts -asetukset.
+ * @param {object} opts { lat, lon, sensitivity: "strong"|"good"|"all", channel: "telegram"|"email" }
+ */
+export async function setAlerts({ lat, lon, sensitivity, channel }) {
+  const deviceKey = requireDeviceKey();
+
+  const res = await fetch(`${BASE}/api/alerts/settings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ deviceKey, lat, lon, sensitivity, channel }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    const err = new Error(data.message || data.error || "Failed to save alert settings");
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+/** Poistaa Aurora Alerts -tilauksen kokonaan tältä laitteelta. */
+export async function disableAlerts() {
+  const deviceKey = requireDeviceKey();
+
+  const res = await fetch(`${BASE}/api/alerts/disable`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ deviceKey }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    const err = new Error(data.error || "Failed to disable alerts");
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+/**
+ * Pyytää kertakäyttöisen Telegram-kytkentälinkin.
+ * Palauttaa { ok: true, url: "https://t.me/<bot>?start=<koodi>" }.
+ * Linkki vanhenee 7 vrk:ssa tai heti käytön jälkeen.
+ */
+export async function getTelegramLink() {
+  const deviceKey = requireDeviceKey();
+
+  const res = await fetch(`${BASE}/api/alerts/telegram-link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ deviceKey }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    const err = new Error(data.error || "Failed to get Telegram link");
+    err.status = res.status;
+    throw err;
+  }
+  return data;
 }
 
 export { read, getOrCreateInstallId };
