@@ -37,15 +37,18 @@ function AuroraAlertsSetup({ fi }) {
     (async () => {
       try {
         const data = await getAlerts();
-if (cancelled) return;
-setEmailSet(!!data.emailSet); // luetaan aina, myös kun active: false
-if (data.active) {
-  setLat(data.lat ?? null);
-  setLon(data.lon ?? null);
-  setSensitivity(data.sensitivity || "good");
-  setChannel(data.channel || "telegram");
-  setTelegramConnected(!!data.telegramConnected);
-}
+        if (cancelled) return;
+        // emailSet luetaan aina — se koskee koko premium-tietuetta, ei
+        // vielä-tallentamatonta alert-tilausta, joten se on saatavilla
+        // vaikka active: false (ensimmäinen käynti sivulla).
+        setEmailSet(!!data.emailSet);
+        if (data.active) {
+          setLat(data.lat ?? null);
+          setLon(data.lon ?? null);
+          setSensitivity(data.sensitivity || "good");
+          setChannel(data.channel || "telegram");
+          setTelegramConnected(!!data.telegramConnected);
+        }
       } catch {
         // Ei vielä tilausta — jätetään oletusarvot, ei virheilmoitusta käyttäjälle.
       } finally {
