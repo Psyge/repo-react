@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import useTranslation from "./hooks/useTranslation";
 import { activate, bySession, getAlerts, setAlerts, getTelegramLink } from "./lib/premium";
 
-const SENSITIVITY_OPTIONS = [
-  { value: "strong", fi: "Vain vahvat", en: "Only strong" },
-  { value: "good", fi: "Hyvät mahdollisuudet", en: "Good chances" },
-  { value: "all", fi: "Kaikki havainnot", en: "All sightings" },
+
+const SENSITIVITY_KEYS = [
+  { value: "strong", key: "alerts.sensitivity.strong" },
+  { value: "good", key: "alerts.sensitivity.good" },
+  { value: "all", key: "alerts.sensitivity.all" },
 ];
 
 /* ============================================================
@@ -17,7 +18,7 @@ const SENSITIVITY_OPTIONS = [
  * lib/premium.js:n uusien helperien kautta. deviceKey haetaan
  * automaattisesti localStoragesta (ks. requireDeviceKey premium.js:ssä).
  * ============================================================ */
-function AuroraAlertsSetup({ fi }) {
+function AuroraAlertsSetup({ t }) {
   const [loaded, setLoaded] = useState(false);
   const [lat, setLat] = useState(null);
   const [lon, setLon] = useState(null);
@@ -62,10 +63,7 @@ function AuroraAlertsSetup({ fi }) {
 
   function useMyLocation() {
     if (!navigator.geolocation) {
-      setSaveMsg({
-        type: "error",
-        text: fi ? "Selain ei tue sijainnin hakua." : "Your browser does not support geolocation.",
-      });
+      setSaveMsg({ type: "error", text: t("alerts.location.unsupported") });
       return;
     }
     setLocating(true);
@@ -78,12 +76,7 @@ function AuroraAlertsSetup({ fi }) {
       },
       () => {
         setLocating(false);
-        setSaveMsg({
-          type: "error",
-          text: fi
-            ? "Sijainnin haku epäonnistui. Voit yhdistää Telegramin ja jakaa sijainnin sen kautta."
-            : "Could not get your location. You can connect Telegram and share your location there instead.",
-        });
+        setSaveMsg({ type: "error", text: t("alerts.location.error") });
       },
       { enableHighAccuracy: false, timeout: 10000 }
     );
@@ -91,12 +84,7 @@ function AuroraAlertsSetup({ fi }) {
 
   async function handleSave() {
     if (lat == null || lon == null) {
-      setSaveMsg({
-        type: "error",
-        text: fi
-          ? "Aseta sijainti ensin (tai yhdistä Telegram ja jaa sijainti sen kautta)."
-          : "Set a location first (or connect Telegram and share it from there).",
-      });
+      setSaveMsg({ type: "error", text: t("alerts.save.missingLocation") });
       return;
     }
 
@@ -105,12 +93,9 @@ function AuroraAlertsSetup({ fi }) {
     try {
       const data = await setAlerts({ lat, lon, sensitivity, channel });
       setTelegramConnected(!!data.telegramConnected);
-      setSaveMsg({ type: "success", text: fi ? "Asetukset tallennettu." : "Settings saved." });
+      setSaveMsg({ type: "success", text: t("alerts.save.success") });
     } catch (e) {
-      setSaveMsg({
-        type: "error",
-        text: e?.message || (fi ? "Tallennus epäonnistui." : "Failed to save settings."),
-      });
+      setSaveMsg({ type: "error", text: e?.message || t("alerts.save.error") });
     } finally {
       setSaving(false);
     }
@@ -123,101 +108,60 @@ function AuroraAlertsSetup({ fi }) {
       const data = await getTelegramLink();
       window.open(data.url, "_blank", "noopener,noreferrer");
     } catch (e) {
-      setTgError(e?.message || (fi ? "Telegram-linkin haku epäonnistui." : "Failed to get Telegram link."));
+      setTgError(e?.message || t("alerts.telegram.linkError"));
     } finally {
       setTgLinking(false);
     }
   }
 
-  const secondaryBtnStyle = {
-    fontSize: 13,
-    padding: "8px 14px",
-    borderRadius: 8,
-    border: "1px solid var(--accent)",
-    background: "transparent",
-    color: "var(--accent)",
-    cursor: "pointer",
-  };
-
   if (!loaded) return null;
 
   return (
-    <div
-      style={{
-        marginTop: 40,
-        padding: 24,
-        borderRadius: 12,
-        border: "1px solid rgba(0,255,204,0.2)",
-        background: "rgba(0,255,204,0.04)",
-        textAlign: "left",
-      }}
-    >
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginBottom: 4 }}>
-        🌌 RepoTracker Alerts
-      </h2>
-      <p style={{ color: "var(--fg-muted)", fontSize: 14, marginBottom: 20 }}>
-        {fi
-          ? "Saat ilmoituksen kun revontulien näkymismahdollisuudet paranevat sijainnissasi."
-          : "Get notified when aurora conditions improve at your location."}
-      </p>
+    <div className="aurora-alerts-panel">
+      <h2 className="aurora-alerts-panel__title">🌌 RepoTracker Alerts</h2>
+      <p className="aurora-alerts-panel__subtitle">{t("alerts.subtitle")}</p>
 
       {/* Sijainti */}
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 13, color: "var(--fg-muted)", marginBottom: 6 }}>
-          {fi ? "Sijainti" : "Location"}
-        </label>
+      <div className="aurora-alerts-field">
+        <label className="aurora-alerts-field__label">{t("alerts.location.label")}</label>
         {lat != null && lon != null ? (
-          <p style={{ fontSize: 14, marginBottom: 8 }}>
+          <p className="aurora-alerts-location__value">
             📍 {lat.toFixed(2)}, {lon.toFixed(2)}
           </p>
         ) : (
-          <p style={{ fontSize: 13, color: "var(--fg-muted)", marginBottom: 8 }}>
-            {fi ? "Ei vielä asetettu." : "Not set yet."}
-          </p>
+          <p className="aurora-alerts-location__empty">{t("alerts.location.notSet")}</p>
         )}
-        <button type="button" onClick={useMyLocation} disabled={locating} style={secondaryBtnStyle}>
-          {locating
-            ? fi
-              ? "Haetaan…"
-              : "Locating…"
-            : fi
-            ? "📍 Käytä nykyistä sijaintia"
-            : "📍 Use current location"}
+        <button
+          type="button"
+          onClick={useMyLocation}
+          disabled={locating}
+          className="aurora-alerts-btn-secondary"
+        >
+          {locating ? t("alerts.location.locating") : t("alerts.location.useBtn")}
         </button>
       </div>
 
       {/* Herkkyys */}
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 13, color: "var(--fg-muted)", marginBottom: 6 }}>
-          {fi ? "Herkkyys" : "Sensitivity"}
-        </label>
+      <div className="aurora-alerts-field">
+        <label className="aurora-alerts-field__label">{t("alerts.sensitivity.label")}</label>
         <select
           value={sensitivity}
           onChange={(e) => setSensitivity(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px 12px",
-            borderRadius: 8,
-            background: "var(--bg-elevated, #12151c)",
-            color: "var(--fg)",
-            border: "1px solid rgba(255,255,255,0.15)",
-          }}
+          className="aurora-alerts-select"
         >
-          {SENSITIVITY_OPTIONS.map((opt) => (
+          {SENSITIVITY_KEYS.map((opt) => (
             <option key={opt.value} value={opt.value}>
-              {fi ? opt.fi : opt.en}
+              {t(opt.key)}
             </option>
           ))}
         </select>
       </div>
 
       {/* Kanava */}
-      <div style={{ marginBottom: 20 }}>
-        <label style={{ display: "block", fontSize: 13, color: "var(--fg-muted)", marginBottom: 6 }}>
-          {fi ? "Kanava" : "Channel"}
-        </label>
-        <div style={{ display: "flex", gap: 16 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14 }}>
+      <div className="aurora-alerts-field aurora-alerts-field--channel">
+        <label className="aurora-alerts-field__label">{t("alerts.channel.label")}</label>
+        <div className="aurora-alerts-channel-options">
+          <label className="aurora-alerts-channel-option">
             <input
               type="radio"
               name="alert-channel"
@@ -225,16 +169,13 @@ function AuroraAlertsSetup({ fi }) {
               checked={channel === "telegram"}
               onChange={() => setChannel("telegram")}
             />
-            Telegram
+            {t("alerts.channel.telegram")}
           </label>
           <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 14,
-              opacity: emailSet ? 1 : 0.4,
-            }}
+            className={
+              "aurora-alerts-channel-option" +
+              (emailSet ? "" : " aurora-alerts-channel-option--disabled")
+            }
           >
             <input
               type="radio"
@@ -244,10 +185,10 @@ function AuroraAlertsSetup({ fi }) {
               disabled={!emailSet}
               onChange={() => setChannel("email")}
             />
-            {fi ? "Sähköposti" : "Email"}
+            {t("alerts.channel.email")}
             {!emailSet && (
-              <span style={{ fontSize: 11 }}>
-                {fi ? " (ei sähköpostia tiedossa)" : " (no email on file)"}
+              <span className="aurora-alerts-channel-option__note">
+                {t("alerts.channel.noEmail")}
               </span>
             )}
           </label>
@@ -255,42 +196,41 @@ function AuroraAlertsSetup({ fi }) {
       </div>
 
       {channel === "telegram" && (
-        <div style={{ marginBottom: 20 }}>
-          <button type="button" onClick={handleTelegramConnect} disabled={tgLinking} style={secondaryBtnStyle}>
+        <div className="aurora-alerts-telegram-block">
+          <button
+            type="button"
+            onClick={handleTelegramConnect}
+            disabled={tgLinking}
+            className="aurora-alerts-btn-secondary"
+          >
             {tgLinking
-              ? fi
-                ? "Haetaan linkkiä…"
-                : "Getting link…"
+              ? t("alerts.telegram.linking")
               : telegramConnected
-              ? fi
-                ? "✅ Telegram yhdistetty — yhdistä uudelleen"
-                : "✅ Telegram connected — reconnect"
-              : fi
-              ? "Yhdistä Telegram →"
-              : "Connect Telegram →"}
+              ? t("alerts.telegram.reconnect")
+              : t("alerts.telegram.connect")}
           </button>
-          {tgError && <p style={{ color: "#ff6b6b", fontSize: 13, marginTop: 8 }}>{tgError}</p>}
+          {tgError && <p className="aurora-alerts-telegram-error">{tgError}</p>}
           {!telegramConnected && (
-            <p style={{ fontSize: 12, color: "var(--fg-muted)", marginTop: 8 }}>
-              {fi
-                ? "Jos et ole vielä asettanut sijaintia yllä, botti pyytää sitä automaattisesti kytkennän jälkeen."
-                : "If you haven't set a location above yet, the bot will ask for it automatically after connecting."}
-            </p>
+            <p className="aurora-alerts-telegram-hint">{t("alerts.telegram.hint")}</p>
           )}
         </div>
       )}
 
-      <button type="button" onClick={handleSave} disabled={saving} className="cta-btn" style={{ fontSize: 14 }}>
-        {saving ? (fi ? "Tallennetaan…" : "Saving…") : fi ? "Tallenna asetukset" : "Save settings"}
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        className="cta-btn aurora-alerts-save-btn"
+      >
+        {saving ? t("alerts.save.saving") : t("alerts.save.button")}
       </button>
 
       {saveMsg && (
         <p
-          style={{
-            marginTop: 12,
-            fontSize: 13,
-            color: saveMsg.type === "error" ? "#ff6b6b" : "var(--accent)",
-          }}
+          className={
+            "aurora-alerts-save-msg " +
+            (saveMsg.type === "error" ? "aurora-alerts-save-msg--error" : "aurora-alerts-save-msg--success")
+          }
         >
           {saveMsg.text}
         </p>
@@ -300,7 +240,7 @@ function AuroraAlertsSetup({ fi }) {
 }
 
 export default function PremiumSuccessPage() {
-  const { lang } = useTranslation();
+  const { lang, t } = useTranslation();
   const fi = lang === "fi";
 
   const [state, setState] = useState({ kind: "loading" });
@@ -446,7 +386,7 @@ export default function PremiumSuccessPage() {
               : "An activation link has also been sent to your email — bookmark it to use this purchase on up to 2 more devices."}
           </p>
 
-          <AuroraAlertsSetup fi={fi} />
+          <AuroraAlertsSetup t={t} />
 
           <p style={{ marginTop: 32 }}>
             <Link to="/map" className="cta-btn">

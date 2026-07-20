@@ -290,6 +290,141 @@
 }
 
 /* ========================================
+   AURORA ALERTS -ASETUSOSIO (PremiumSuccessPage)
+======================================== */
+
+.aurora-alerts-panel {
+  margin-top: 40px;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 204, 0.2);
+  background: rgba(0, 255, 204, 0.04);
+  text-align: left;
+}
+
+.aurora-alerts-panel__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.aurora-alerts-panel__subtitle {
+  color: var(--fg-muted);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.aurora-alerts-field {
+  margin-bottom: 16px;
+}
+
+.aurora-alerts-field--channel {
+  margin-bottom: 20px;
+}
+
+.aurora-alerts-field__label {
+  display: block;
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin-bottom: 6px;
+}
+
+.aurora-alerts-location__value {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.aurora-alerts-location__empty {
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin-bottom: 8px;
+}
+
+.aurora-alerts-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-elevated, #12151c);
+  color: var(--fg);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.aurora-alerts-channel-options {
+  display: flex;
+  gap: 16px;
+}
+
+.aurora-alerts-channel-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.aurora-alerts-channel-option--disabled {
+  opacity: 0.4;
+}
+
+.aurora-alerts-channel-option__note {
+  font-size: 11px;
+}
+
+.aurora-alerts-btn-secondary {
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.aurora-alerts-btn-secondary:hover {
+  transform: translateY(-2px);
+}
+
+.aurora-alerts-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.aurora-alerts-telegram-block {
+  margin-bottom: 20px;
+}
+
+/* Sama punainen kuin .premium-error-banner:ssa — yhtenäinen virheväri koko sivustolla */
+.aurora-alerts-telegram-error {
+  color: #ff8a8a;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.aurora-alerts-telegram-hint {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin-top: 8px;
+}
+
+.aurora-alerts-save-btn {
+  font-size: 14px;
+}
+
+.aurora-alerts-save-msg {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.aurora-alerts-save-msg--error {
+  color: #ff8a8a;
+}
+
+.aurora-alerts-save-msg--success {
+  color: var(--accent);
+}
+
+/* ========================================
    RESPONSIIVISUUS (MOBIILIOPTIMOINTI)
 ======================================== */
 
@@ -394,6 +529,32 @@
     font-size: 13px;
     line-height: 1.7;
   }
+
+  /* Aurora Alerts -osion mobiilisäädöt */
+  .aurora-alerts-panel {
+    margin-top: 28px;
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+
+  .aurora-alerts-panel__title {
+    font-size: 18px;
+  }
+
+  .aurora-alerts-panel__subtitle {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .aurora-alerts-channel-options {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .aurora-alerts-btn-secondary {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
 }
 
 /* ========================================
@@ -402,7 +563,8 @@
 
 @media (hover: none) {
   .pricing-card:hover,
-  .buy-btn:hover {
+  .buy-btn:hover,
+  .aurora-alerts-btn-secondary:hover {
     transform: none;
   }
 }

@@ -580,7 +580,7 @@ export default function AuroraHero({ forecast, children }) {
           <div className="ah-dash-headline">
             <div className="ah-eyebrow">
               <span className="ah-eyebrow-dot" />
-              {trh("hero.eyebrow", "AURORA-AKTIIVISUUS · GEOMAGNEETTINEN INDEKSI", "AURORA ACTIVITY · GEOMAGNETIC INDEX")}
+              {trh("hero.eyebrow", "REVONTULI-AKTIIVISUUS · GEOMAGNEETTINEN INDEKSI", "NORTHERN LIGHTS ACTIVITY · GEOMAGNETIC INDEX")}
             </div>
 
             {/* Pääluku: todennäköisyys-% (helpompi ymmärtää kuin Kp).
