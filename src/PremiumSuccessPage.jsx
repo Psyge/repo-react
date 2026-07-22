@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import useTranslation from "./hooks/useTranslation";
 import { activate, bySession, getAlerts, setAlerts, getTelegramLink } from "./lib/premium";
 
+const ranRef = useRef(false);
 
 const SENSITIVITY_KEYS = [
   { value: "strong", key: "alerts.sensitivity.strong" },
@@ -34,6 +35,8 @@ function AuroraAlertsSetup({ t }) {
 
   // Lataa nykyiset asetukset (jos tilaus on jo olemassa tältä laitteelta)
   useEffect(() => {
+    if (ranRef.current) return;
+  ranRef.current = true;
     let cancelled = false;
     (async () => {
       try {
