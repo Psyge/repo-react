@@ -47,7 +47,7 @@ async function fetchHighlights() {
   return data;
 }
 
-export default function PremiumModal({ open, onClose, kp = null, wind = null, bz = null }) {
+export default function Premiummodal({ open, onClose, kp = null, wind = null, bz = null }) {
   const navigate = useNavigate();
   const { currentLanguage, t } = useTranslation();
   const [highlights, setHighlights] = useState(null);
