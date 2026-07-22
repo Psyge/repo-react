@@ -14,7 +14,7 @@ import Contact from "./Contact";
 import MidnightSunV2 from "./components/MidnightSunV2";
 import CookieBanner from "./components/CookieBanner";
 import PlacePage from "./PlacePage";
-import PremiumModalManager from "./components/Premiummodalmanager";
+import Premiummodalmanager from "./components/Premiummodalmanager";
 
 function App() {
   return (
