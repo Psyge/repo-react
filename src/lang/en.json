@@ -354,5 +354,10 @@
   "alerts.save.saving": "Saving…",
   "alerts.save.missingLocation": "Set a location first (or connect Telegram and share it from there).",
   "alerts.save.success": "Settings saved.",
-  "alerts.save.error": "Failed to save settings."
+  "alerts.save.error": "Failed to save settings.",
+
+  "premium.trial.cta": "Haven't tried it yet? Try free for 6 hours first →",
+  "premium.trial.used": "You've already used the free trial on this device.",
+  "premium.trial.limit": "Trial limit reached for this device/network.",
+  "premium.trial.error": "Could not start trial."
 }

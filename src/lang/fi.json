@@ -350,5 +350,10 @@
   "alerts.save.saving": "Tallennetaan…",
   "alerts.save.missingLocation": "Aseta sijainti ensin (tai yhdistä Telegram ja jaa sijainti sen kautta).",
   "alerts.save.success": "Asetukset tallennettu.",
-  "alerts.save.error": "Tallennus epäonnistui."
+  "alerts.save.error": "Tallennus epäonnistui.",
+
+  "premium.trial.cta": "Et ole vielä kokeillut? Kokeile 6 h ilmaiseksi ensin →",
+  "premium.trial.used": "Olet jo käyttänyt ilmaisen kokeilun tällä laitteella.",
+  "premium.trial.limit": "Kokeilurajoitus saavutettu tälle laitteelle/verkolle.",
+  "premium.trial.error": "Kokeilun käynnistys epäonnistui."
 }

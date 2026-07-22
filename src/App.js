@@ -14,11 +14,13 @@ import Contact from "./Contact";
 import MidnightSunV2 from "./components/MidnightSunV2";
 import CookieBanner from "./components/CookieBanner";
 import PlacePage from "./PlacePage";
+import PremiumModalManager from "./components/PremiumModalManager";
 
 function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
+      <PremiumModalManager />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/map" element={<MapPage />} />

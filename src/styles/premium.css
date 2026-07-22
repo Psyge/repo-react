@@ -424,6 +424,38 @@
   color: var(--accent);
 }
 
+/* Ilmainen kokeilu — hillitty tekstilinkki footerin alla, ei kilpaile
+   pricing-gridin kanssa huomiosta (ei korttia, ei täyttöväriä) */
+.premium-trial-footer {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.premium-trial-footer__link {
+  background: none;
+  border: none;
+  color: var(--fg-muted);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.premium-trial-footer__link:hover {
+  color: var(--accent);
+}
+
+.premium-trial-footer__link:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.premium-trial-footer__error {
+  font-size: 13px;
+  color: #ff8a8a;
+  margin: 0;
+}
+
 /* ========================================
    RESPONSIIVISUUS (MOBIILIOPTIMOINTI)
 ======================================== */

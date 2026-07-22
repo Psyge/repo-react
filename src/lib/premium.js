@@ -278,6 +278,42 @@ export async function getTelegramLink() {
 
 export { read, getOrCreateInstallId };
 
+/**
+ * Käynnistää ilmaisen 6 tunnin Premium-kokeilun tälle laitteelle.
+ * Kerran per installId — worker palauttaa 409 jos jo käytetty tällä
+ * laitteella, 429 jos IP-kohtainen raja (2 kokeilua / 30 vrk) on täynnä.
+ * Onnistuessaan kirjoittaa deviceKey/expiresAt localStorageen samaan
+ * tapaan kuin activate(), joten isActive()/refresh() toimivat heti.
+ */
+export async function startTrial() {
+  const installId = getOrCreateInstallId();
+
+  const res = await fetch(`${BASE}/api/trial/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ installId }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    const err = new Error(data.message || data.error || "Trial could not be started");
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+
+  write({
+    deviceKey: data.deviceKey,
+    expiresAt: data.expiresAt,
+    tier: data.tier,
+    lastCheck: Date.now(),
+  });
+
+  if (typeof document !== "undefined") document.body.classList.add("is-premium");
+  return data;
+}
+
 // Init on import (browser only)
 if (typeof window !== "undefined") {
   if (isActive()) document.body.classList.add("is-premium");
