@@ -458,6 +458,14 @@ export default function AuroraHero({ forecast, children }) {
 
   const [activePlace, setActivePlace] = useState(null);
 
+  /* Aina tuorein placesList async-callbackeja varten (esim. geolocation,
+     joka voi ratketa vasta sekunteja myöhemmin käyttäjän hyväksyttyä
+     selaimen lupakyselyn) — estää vanhentuneen datan käytön. */
+  const placesListRef = useRef(placesList);
+  useEffect(() => {
+    placesListRef.current = placesList;
+  }, [placesList]);
+
   useEffect(() => {
     if (placesList.length > 0) {
       setActivePlace((prev) => {
@@ -542,21 +550,37 @@ export default function AuroraHero({ forecast, children }) {
     return 1.0;
   }, [kpStep]);
 
-  /* GPS → lähin piste aktiiviseksi */
+  /* GPS → lähin piste aktiiviseksi.
+     HUOM: pyydetään sijainti VAIN KERRAN (geoRequestedRef-vartija).
+     Ilman tätä efekti käynnistäisi getCurrentPosition-kutsun uudelleen
+     joka kerta kun placesList muuttuu (esim. säädatan latautuessa),
+     jolloin selain jonottaa useita pyyntöjä lupakyselyn taakse — ja kun
+     käyttäjä hyväksyy sen, jokin vanhoista (mahdollisesti ennen
+     säädatan latautumista otetuista) callbackeista voi ratketa
+     viimeisenä ja ylikirjoittaa jo oikein täyttyneen activePlacen
+     pilvettömällä versiolla. Käytetään placesListRef.currentia, jotta
+     callback näkee aina tuoreimman datan riippumatta siitä milloin
+     selain lopulta vastaa. */
+  const geoRequestedRef = useRef(false);
   useEffect(() => {
-    if (typeof window !== "undefined" && navigator.geolocation && placesList.length > 0) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const uLat = position.coords.latitude;
-        const uLon = position.coords.longitude;
-        let closest = placesList[0];
-        let minDst = getDistance(uLat, uLon, placesList[0].lat, placesList[0].lon);
-        placesList.forEach((p) => {
-          const dst = getDistance(uLat, uLon, p.lat, p.lon);
-          if (dst < minDst) { minDst = dst; closest = p; }
-        });
-        setActivePlace(closest);
+    if (geoRequestedRef.current) return;
+    if (typeof window === "undefined" || !navigator.geolocation) return;
+    if (placesList.length === 0) return;
+    geoRequestedRef.current = true;
+
+    navigator.geolocation.getCurrentPosition((position) => {
+      const list = placesListRef.current;
+      if (!list.length) return;
+      const uLat = position.coords.latitude;
+      const uLon = position.coords.longitude;
+      let closest = list[0];
+      let minDst = getDistance(uLat, uLon, list[0].lat, list[0].lon);
+      list.forEach((p) => {
+        const dst = getDistance(uLat, uLon, p.lat, p.lon);
+        if (dst < minDst) { minDst = dst; closest = p; }
       });
-    }
+      setActivePlace(closest);
+    });
   }, [placesList]);
 
   /* Three.js taivas */
