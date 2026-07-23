@@ -147,29 +147,47 @@ async function fetchHeroSolarData() {
 function placesWeatherCacheKey(places) {
   return `aurora_session_cache:hero:weather-all:${places.length}:v1`;
 }
+/* Rinnakkaisten kutsujen dedupe: tuplamount (esim. StrictMode) ei enää
+   käynnistä kahta hakua, joista väärä voittaa → pilvet näkyvät heti. */
+let inflightWeather = null;
+
 async function fetchAllPlacesWeather(places) {
   if (!places.length) return {};
-  return sessionCachedJson(placesWeatherCacheKey(places), WEATHER_TTL_MS, async () => {
-    const url = new URL("https://api.open-meteo.com/v1/forecast");
-    url.searchParams.set("latitude",  places.map((p) => p.lat).join(","));
-    url.searchParams.set("longitude", places.map((p) => p.lon).join(","));
-    url.searchParams.set("current",   "temperature_2m,cloud_cover");
-    url.searchParams.set("timezone",  "auto");
+  const key = placesWeatherCacheKey(places);
 
-    const res  = await fetch(url, { cache: "default" });
-    const data = await res.json();
-    const arr = Array.isArray(data) ? data : [data];
+  const cached = readSessionCache(key, WEATHER_TTL_MS);
+  if (cached) return cached;
 
-    const map = {};
-    places.forEach((p, i) => {
-      const c = arr[i]?.current || {};
-      map[p.id] = {
-        temp:   c.temperature_2m != null ? Math.round(c.temperature_2m) : null,
-        clouds: c.cloud_cover    != null ? Math.round(c.cloud_cover)     : null,
-      };
-    });
-    return map;
-  });
+  if (inflightWeather) return inflightWeather;
+
+  inflightWeather = (async () => {
+    try {
+      const url = new URL("https://api.open-meteo.com/v1/forecast");
+      url.searchParams.set("latitude",  places.map((p) => p.lat).join(","));
+      url.searchParams.set("longitude", places.map((p) => p.lon).join(","));
+      url.searchParams.set("current",   "temperature_2m,cloud_cover");
+      url.searchParams.set("timezone",  "auto");
+
+      const res  = await fetch(url, { cache: "default" });
+      const data = await res.json();
+      const arr = Array.isArray(data) ? data : [data];
+
+      const map = {};
+      places.forEach((p, i) => {
+        const c = arr[i]?.current || {};
+        map[p.id] = {
+          temp:   c.temperature_2m != null ? Math.round(c.temperature_2m) : null,
+          clouds: c.cloud_cover    != null ? Math.round(c.cloud_cover)     : null,
+        };
+      });
+      writeSessionCache(key, map);
+      return map;
+    } finally {
+      inflightWeather = null;
+    }
+  })();
+
+  return inflightWeather;
 }
 
 function shouldEnhanceWith3D() {
