@@ -111,7 +111,7 @@
 }
 
 @media (max-width: 768px) {
-  .ah-globe { width: 180px; }
+  .ah-globe { width: 125px; }
   .ah-globe-label { opacity: 1; bottom: -30px; } /* mobiilissa ei hoveria */
 }
 

@@ -1030,8 +1030,8 @@
   }
  
   .ah-dash-top .ah-globe {
-    margin-top: 0.75rem;
-    margin-bottom: 2.5rem; /* tilaa "Avaa 3D-kartta" -tekstille */
+    margin-top: 0.1rem;
+    margin-bottom: 0.5rem; /* tilaa "Avaa 3D-kartta" -tekstille */
   }
  
   /* Toimintarivi ensimmäiseksi vasemmassa palstassa (ennen mittareita).
@@ -1046,7 +1046,7 @@
 
 .ah-kp-bar {
   max-width: 420px;
-  margin: 0.25rem 0 1.1rem;
+  margin: 0.25rem 0 0.3rem;
 }
 
 .ah-kp-bar-head {
