@@ -76,14 +76,6 @@ function writeSessionCache(key, data) {
     sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
   } catch {}
 }
-async function sessionCachedJson(key, ttlMs, fetcher) {
-  const cached = readSessionCache(key, ttlMs);
-  if (cached) return cached;
-  const data = await fetcher();
-  writeSessionCache(key, data);
-  return data;
-}
-
 async function fetchJsonSafe(url, label) {
   const res = await fetch(url, { cache: "no-store" });
   const text = await res.text();
