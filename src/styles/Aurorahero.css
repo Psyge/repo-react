@@ -889,12 +889,26 @@
   .ah-dash-headline { max-width: 100%; }
 }
 
+/* Headerin oma mobiilibreakpoint on 768px (header.css), jolla se muuttuu
+   position: fixed + min-height: 96px -kaksirivikseksi. Tämä breakpoint
+   ei täsmännyt Auroraheron aiempien 900px/560px-rajojen kanssa, joten
+   väli 561–768px käytti desktop-paddingia (96px) ilman puskuria, ja
+   ≤560px käytti vain 36px:ää — molemmat jättivät otsikon osittain
+   kiinteän headerin alle. Korjataan täsmäämällä headerin breakpoint. */
+@media (max-width: 768px) {
+  .ah-hero--dash { padding-top: 7.25rem; }
+}
+
 @media (max-width: 560px) {
-  .ah-hero--dash { padding: 2.25rem 1.25rem 3rem; }
+  .ah-hero--dash { padding: 8rem 1.25rem 2.5rem; }
   .ah-kp-big { font-size: 4.4rem; }
   .ah-kp-status { font-size: 1.2rem; }
   .ah-metrics { grid-template-columns: 1fr 1fr; }
   .ah-metric:last-child { grid-column: 1 / -1; }
+  /* gap: clamp(2rem, 8vw, 6rem) venyi turhan suureksi kapeammillakin
+     mobiilinäytöillä (esim. 8vw ≈ 32–48px + kasautuu column-asettelun
+     kanssa) — kiinnitetään maltillinen kiinteä arvo mobiilissa. */
+  .ah-dash-top { gap: 1.25rem; padding-bottom: 24px; }
 }
 /* ========================================================================
    LIITÄ NÄMÄ Aurorahero.css:n LOPPUUN
