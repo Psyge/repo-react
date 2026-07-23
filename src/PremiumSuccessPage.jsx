@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import useTranslation from "./hooks/useTranslation";
 import { activate, bySession, getAlerts, setAlerts, getTelegramLink } from "./lib/premium";
-
-const ranRef = useRef(false);
 
 const SENSITIVITY_KEYS = [
   { value: "strong", key: "alerts.sensitivity.strong" },
@@ -32,6 +30,7 @@ function AuroraAlertsSetup({ t }) {
   const [saveMsg, setSaveMsg] = useState(null);
   const [tgLinking, setTgLinking] = useState(false);
   const [tgError, setTgError] = useState(null);
+  const ranRef = useRef(false);
 
   // Lataa nykyiset asetukset (jos tilaus on jo olemassa tältä laitteelta)
   useEffect(() => {

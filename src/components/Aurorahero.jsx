@@ -148,7 +148,8 @@ function placesWeatherCacheKey(places) {
   return `aurora_session_cache:hero:weather-all:${places.length}:v1`;
 }
 /* Rinnakkaisten kutsujen dedupe: tuplamount (esim. StrictMode) ei enää
-   käynnistä kahta hakua, joista väärä voittaa → pilvet näkyvät heti. */
+   käynnistä kahta hakua, joista väärä voittaa → pilvet näkyvät heti.
+   Lisäksi yksi automaattinen uusintayritys jos fetch epäonnistuu. */
 let inflightWeather = null;
 
 async function fetchAllPlacesWeather(places) {
@@ -168,7 +169,16 @@ async function fetchAllPlacesWeather(places) {
       url.searchParams.set("current",   "temperature_2m,cloud_cover");
       url.searchParams.set("timezone",  "auto");
 
-      const res  = await fetch(url, { cache: "default" });
+      let res;
+      try {
+        res = await fetch(url, { cache: "default" });
+        if (!res.ok) throw new Error(`open-meteo ${res.status}`);
+      } catch {
+        /* yksi uusintayritys 1,5 s päästä — kattaa hetkelliset katkokset */
+        await new Promise((r) => setTimeout(r, 1500));
+        res = await fetch(url, { cache: "default" });
+        if (!res.ok) throw new Error(`open-meteo retry ${res.status}`);
+      }
       const data = await res.json();
       const arr = Array.isArray(data) ? data : [data];
 
@@ -180,7 +190,11 @@ async function fetchAllPlacesWeather(places) {
           clouds: c.cloud_cover    != null ? Math.round(c.cloud_cover)     : null,
         };
       });
-      writeSessionCache(key, map);
+
+      /* Älä cachea kokonaan tyhjää tulosta — muuten viivat jäisivät
+         näkyviin tunniksi vaikka seuraava yritys onnistuisi */
+      const hasData = Object.values(map).some((v) => v && v.clouds != null);
+      if (hasData) writeSessionCache(key, map);
       return map;
     } finally {
       inflightWeather = null;
@@ -375,12 +389,30 @@ export default function AuroraHero({ forecast, children }) {
       .catch((err) => console.error("Contentful places error:", err));
   }, []);
 
-  /* Paikkakohtainen pilvisyys Open-Meteosta — yksi batch-kutsu (kerran mountissa) */
+  /* Paikkakohtainen pilvisyys Open-Meteosta — yksi batch-kutsu.
+     Jos haku epäonnistuu tai palauttaa tyhjää, yritetään vielä
+     2 kertaa 4 s välein — ei jäädä "--"-tilaan ilman refreshiä. */
   useEffect(() => {
     let cancelled = false;
-    fetchAllPlacesWeather(staticPlaces)
-      .then((map) => { if (!cancelled) setPlaceWeather(map); })
-      .catch((e) => console.warn("Open-Meteo batch failed:", e));
+    let tries = 0;
+    const load = () => {
+      fetchAllPlacesWeather(staticPlaces)
+        .then((map) => {
+          if (cancelled) return;
+          const hasData =
+            map && Object.values(map).some((v) => v && v.clouds != null);
+          if (hasData) { setPlaceWeather(map); return; }
+          throw new Error("empty weather map");
+        })
+        .catch((e) => {
+          console.warn("Open-Meteo batch failed:", e);
+          if (!cancelled && tries < 2) {
+            tries += 1;
+            setTimeout(load, 4000);
+          }
+        });
+    };
+    load();
     return () => { cancelled = true; };
   }, []);
 
