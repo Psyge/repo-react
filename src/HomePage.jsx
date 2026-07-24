@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Header from "./components/Header";
 import Aurorahero from "./components/Aurorahero";
 import Sightings from "./components/Sightings";
-import AdRotator from "./components/adRotator";
+import adRotator from "./components/adRotator";
 
 import useTranslation from "./hooks/useTranslation";
 
