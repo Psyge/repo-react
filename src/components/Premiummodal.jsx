@@ -47,7 +47,7 @@ async function fetchHighlights() {
   return data;
 }
 
-export default function Premiummodal({ open, onClose, kp = null, wind = null, bz = null }) {
+export default function PremiumModal({ open, onClose, kp = null, wind = null, bz = null }) {
   const navigate = useNavigate();
   const { currentLanguage, t } = useTranslation();
   const [highlights, setHighlights] = useState(null);
@@ -77,6 +77,18 @@ export default function Premiummodal({ open, onClose, kp = null, wind = null, bz
       setTrialLoading(false);
       setDontShowAgain(false);
     }
+  }, [open]);
+
+  // Lukitaan taustasivun scroll modaalin ollessa auki — ilman tätä
+  // mobiilissa kosketusvieritys voi vierittää taustasivua modaalin alla,
+  // jolloin syntyy vaikutelma että sisältö "jää modaalin alle".
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open]);
 
   if (!open) return null;

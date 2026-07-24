@@ -5,7 +5,7 @@
 .pm-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: 3200; /* headerin z-index on 3000 (header.css) — modaalin on oltava sen yllä */
   background: rgba(2, 4, 10, 0.75);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -21,6 +21,7 @@
   width: 100%;
   max-width: 560px;
   max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem); /* dvh: huomioi mobiiliselainten liikkuvan osoiterivin, ettei sisältö leikkaudu */
   overflow-y: auto;
   background: linear-gradient(180deg, rgba(10, 16, 30, 0.98), rgba(5, 8, 20, 0.99));
   border: 1px solid rgba(0, 255, 198, 0.2);
@@ -252,10 +253,44 @@
 
 /* Mobiili */
 @media (max-width: 560px) {
-  .pm-box { padding: 1.5rem 1rem 1rem; }
-  .pm-compare { grid-template-columns: 1fr; }
+  .pm-overlay { padding: 0.5rem; }
+  .pm-box {
+    padding: 1.25rem 1rem 0.85rem;
+    border-radius: 16px;
+    max-width: 94vw;
+  }
+
+  .pm-title { font-size: 1.15rem; }
+  .pm-sub { font-size: 0.78rem; margin-bottom: 0.75rem; }
+
+  .pm-proof { font-size: 0.76rem; padding: 0.6rem 0.8rem; margin-bottom: 0.75rem; }
+
+  .pm-compare { grid-template-columns: 1fr; gap: 0.5rem; margin-bottom: 0.75rem; }
   .pm-vs { display: none; }
-  .pm-tiers { grid-template-columns: 1fr; }
-  .pm-tier { flex-direction: row; justify-content: space-between; padding: 0.8rem 1rem; }
+  .pm-col { padding: 0.6rem 0.75rem; }
+  .pm-col h4 { font-size: 0.78rem; margin-bottom: 0.35rem; }
+  .pm-col li { font-size: 0.72rem; }
+
+  /* Laskentakaava vie paljon pystytilaa eikä ole yhtä kriittinen mobiilissa
+     kuin hintapainikkeet — tiivistetään reilusti, ei piiloteta kokonaan. */
+  .pm-formula { padding: 0.6rem 0.75rem; margin-bottom: 0.85rem; font-size: 0.72rem; }
+  .pm-formula-head { margin-bottom: 0.35rem; }
+
+  .pm-tiers { grid-template-columns: 1fr; gap: 0.4rem; margin-bottom: 0.7rem; }
+  .pm-tier { flex-direction: row; justify-content: space-between; padding: 0.65rem 0.9rem; }
   .pm-tier-badge { left: auto; right: 10px; transform: none; }
+  .pm-tier-days { font-size: 0.72rem; }
+  .pm-tier-price { font-size: 1rem; }
+
+  .pm-trial-btn { font-size: 0.72rem; padding: 7px 14px; }
+
+  .pm-footer { font-size: 0.65rem; margin-bottom: 0.5rem; gap: 4px; }
+  .pm-skip { font-size: 0.72rem; }
+  .pm-dismiss { font-size: 0.68rem; }
+}
+
+@media (max-width: 380px) {
+  .pm-box { padding: 1rem 0.85rem 0.7rem; max-width: 96vw; }
+  .pm-title { font-size: 1.05rem; }
+  .pm-tier-price { font-size: 0.92rem; }
 }
