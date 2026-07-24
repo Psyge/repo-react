@@ -1,4 +1,26 @@
 /* ========================================================================
+   Ulompi kääre, joka väistää kiinteän (position: fixed) headerin.
+   HUOM: EI koske #mainos-kontti-laatikon omiin mittoihin — ne ovat
+   tarkoituksella sanasta sanaan sama kuin vanhassa versiossa. Tämä
+   hoitaa vain sen, ettei mainoslaatikko jää kiinteän headerin alle
+   silloin kun <AdRotator /> on ensimmäinen elementti <Header />:n
+   jälkeen (header.css: position:fixed, ei vie tilaa dokumenttivirrasta).
+
+   Laskettu header.css:n perusteella: desktopilla header-inner padding
+   16px×2 + sisällön korkeus (~36px, header-socials-ikonit) ≈ 68px,
+   mobiilissa header { min-height: 96px }. Puskuri lisätty kummallekin.
+======================================================================= */
+.ad-rotator-top-spacer {
+  margin-top: 5.5rem; /* ≈ 88px, kattaa desktopin ~68px header + puskuri */
+}
+
+@media (max-width: 768px) {
+  .ad-rotator-top-spacer {
+    margin-top: 7.5rem; /* ≈ 120px, kattaa mobiilin min-height:96px + puskuri */
+  }
+}
+
+/* ========================================================================
    AdRotator — #mainos-kontti / .mainos-elementti / .aktiivinen
    Kopioitu SANASTA SANAAN vanhasta style.css:stä (rivit 5–34 ja
    mobiiliylikirjoitus @media max-width:768px sisältä, rivit 825–838),

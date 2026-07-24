@@ -48,17 +48,19 @@ export default function AdRotator({ intervalMs = 6000 }) {
   if (!visibleAds.length) return null;
 
   return (
-    <div id="mainos-kontti">
-      {visibleAds.map((ad, i) => (
-        <div
-          key={i}
-          className={"mainos-elementti" + (i === activeIndex ? " aktiivinen" : "")}
-          // HUOM: sisältö tulee omasta data/adRotator.js-listastasi (ei
-          // käyttäjän syötettä) — sama malli kuin vanhassa versiossa,
-          // jossa affiliate-koodit injektoitiin innerHTML:llä.
-          dangerouslySetInnerHTML={{ __html: ad.html }}
-        />
-      ))}
+    <div className="ad-rotator-top-spacer">
+      <div id="mainos-kontti">
+        {visibleAds.map((ad, i) => (
+          <div
+            key={i}
+            className={"mainos-elementti" + (i === activeIndex ? " aktiivinen" : "")}
+            // HUOM: sisältö tulee omasta data/adRotator.js-listastasi (ei
+            // käyttäjän syötettä) — sama malli kuin vanhassa versiossa,
+            // jossa affiliate-koodit injektoitiin innerHTML:llä.
+            dangerouslySetInnerHTML={{ __html: ad.html }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
