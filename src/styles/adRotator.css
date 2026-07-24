@@ -1,0 +1,55 @@
+/* ========================================================================
+   AdRotator — #mainos-kontti / .mainos-elementti / .aktiivinen
+   Kopioitu SANASTA SANAAN vanhasta style.css:stä (rivit 5–34 ja
+   mobiiliylikirjoitus @media max-width:768px sisältä, rivit 825–838),
+   jotta ulkoasu ja häivytys ovat täsmälleen samat kuin vanhassa versiossa.
+======================================================================= */
+
+#mainos-kontti {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  height: 100px; /* Säädä mainosten korkeuden mukaan */
+  margin: 0 auto;
+}
+
+.mainos-elementti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out; /* Tässä säädät pehmeyden (1.5 sekuntia) */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mainos-elementti.aktiivinen {
+  opacity: 1;
+  z-index: 10;
+}
+
+.mainos-elementti img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  .mainos-elementti img {
+    width: 340px;
+    height: 32px;
+    border: 0;
+    overflow: hidden; /* Varmistaa ettei kuva tule yli reunojen */
+    margin: 20px auto;
+  }
+
+  #mainos-kontti {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    height: 50px;
+    margin: 0 auto;
+  }
+}
