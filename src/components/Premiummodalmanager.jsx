@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import PremiumModal from "./PremiumModal";
+import Premiummodal from "./Premiummodal";
 import { isActive } from "../lib/premium";
 /* ========================================================================
    PremiumModalManager — näyttää premium-modaalin millä tahansa sivulla.
@@ -20,7 +20,7 @@ const LAST_KEY = "pm_last_shown";
 const DISMISSED_KEY = "pm_dismissed_forever";
 const COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000; // paluukäynnillä aikaisintaan 3 vrk
 const DELAY_MS = 30 * 1000;
-export default function PremiumModalManager() {
+export default function Premiummodalmanager() {
   const [show, setShow] = useState(false);
   const location = useLocation();
   /* Poissuljettujen sivujen tila refiin, jotta ajastin näkee sen tuoreena */
@@ -111,5 +111,5 @@ export default function PremiumModalManager() {
     }
     return cleanup;
   }, []);
-  return <PremiumModal open={show} onClose={handleClose} />;
+  return <Premiummodal open={show} onClose={handleClose} />;
 }
