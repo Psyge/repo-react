@@ -17,7 +17,7 @@ import adRotator from "../data/adRotator";
             <AdRotator intervalMs={8000} />  (oma väli)
 ======================================================================= */
 
-export default function adRotator({ intervalMs = 6000 }) {
+export default function AdRotator({ intervalMs = 6000 }) {
   // Eri komponenteissa on käytetty sekä "lang" että "currentLanguage"
   // -nimeä hookin palautusarvolle — tuetaan molempia, fallback "fi".
   const { lang, currentLanguage } = useTranslation();
