@@ -36,8 +36,12 @@ const adRotator = [
   //     Jos saat kaverilta myös englanninkielisen kuvaversion, lisää se
   //     omana rivinään lang: "en" -merkinnällä. ---
   {
-    html: '<a href="https://apps.apple.com/app/idXXXXXXXXX" target="_blank" rel="noopener noreferrer"><img src="/images/rahora.png" width="728" height="90" alt="Lopeta arvailu — budjetointiappi" /></a>',
+    html: '<a href="https://apps.apple.com/fi/app/rahora-budget/id6763693217" target="_blank" rel="noopener noreferrer"><img src="/images/rahora.png" width="728" height="90" alt="Lopeta arvailu — budjetointiappi" /></a>',
     lang: "fi",
+  },
+   {
+    html: '<a href="https://apps.apple.com/fi/app/rahora-budget/id6763693217" target="_blank" rel="noopener noreferrer"><img src="/images/rahoraen.png" width="728" height="90" alt="Stop Guessing — Budgeting App" /></a>',
+    lang: "en",
   },
 ];
 
