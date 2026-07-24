@@ -5,6 +5,8 @@ import { calculateAurora } from "../utils/auroraEngine";
 import staticPlaces from "../data/places";
 import { client } from "../lib/contentfulClient";
 import Heroglobe from "./Heroglobe";
+import LiveCamSpotlight from "./LiveCamSpotlight";
+import AdRotator from "./AdRotator";
 
 /* ========================================================================
    AuroraHero — dashboard-tyylinen etusivun hero
@@ -640,6 +642,9 @@ export default function AuroraHero({ forecast, children }) {
       <div className="ah-ambient" aria-hidden="true" />
 
       <div className="ah-dash">
+        <div className="ah-adrotator-slot">
+          <AdRotator />
+        </div>
 
         {/* Ylärivi: iso Kp + tila vasemmalla, globe oikealla */}
         <div className="ah-dash-top">
@@ -869,6 +874,7 @@ export default function AuroraHero({ forecast, children }) {
           </div>
 
           <aside className="ah-dash-side">
+            <LiveCamSpotlight />
             <div className="ah-places-panel">
               <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
               <div className="ah-place-list">

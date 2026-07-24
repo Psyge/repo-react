@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Header from "./components/Header";
 import Aurorahero from "./components/Aurorahero";
 import Sightings from "./components/Sightings";
-import AdRotator from "./components/AdRotator";
+
 
 import useTranslation from "./hooks/useTranslation";
 
@@ -269,7 +269,7 @@ export default function HomePage() {
       <Header />
       
       <main>
-        <AdRotator />
+        
         {/* HERO */}
        <Aurorahero forecast={forecast}>
   
