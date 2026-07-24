@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import Premiummodal from "./Premiummodal";
+import PremiumModal from "./PremiumModal";
 import { isActive } from "../lib/premium";
 /* ========================================================================
    PremiumModalManager — näyttää premium-modaalin millä tahansa sivulla.
@@ -20,7 +20,7 @@ const LAST_KEY = "pm_last_shown";
 const DISMISSED_KEY = "pm_dismissed_forever";
 const COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000; // paluukäynnillä aikaisintaan 3 vrk
 const DELAY_MS = 30 * 1000;
-export default function Premiummodalmanager() {
+export default function PremiumModalManager() {
   const [show, setShow] = useState(false);
   const location = useLocation();
   /* Poissuljettujen sivujen tila refiin, jotta ajastin näkee sen tuoreena */
@@ -46,6 +46,23 @@ export default function Premiummodalmanager() {
       localStorage.setItem(LAST_KEY, String(Date.now()));
     } catch {}
   };
+
+  /* Kehitys-/testikytkin: ?pmtest=1 avaa modaalin AINA heti, ohittaen
+     kaiken porttilogiikan (isActive, cooldown, sessio, poissuljetut
+     sivut). Ei tallenna sessionStorage/localStorage-avaimia, joten
+     tämä ei vaikuta millään tavalla siihen miten modaali käyttäytyy
+     oikeille kävijöille — käytä design-iterointiin, poista käytöstä
+     yksinkertaisesti jättämällä parametri pois osoitteesta.
+     Esim.: https://repotracker.fi/?pmtest=1 */
+  useEffect(() => {
+    const forceOpen = new URLSearchParams(location.search).get("pmtest") === "1";
+    if (!forceOpen) return;
+    if (excludedRef.current) {
+      pendingRef.current = true;
+    } else {
+      setShow(true); // huom: ei openNow() — ei tallenneta mitään testauksessa
+    }
+  }, [location.search]);
   /* permanent = true kun käyttäjä rastitti "älä näytä uudelleen" -täpän
      modaalissa ennen sulkemista. Tallennetaan pysyvästi eikä kysytä enää. */
   const handleClose = (permanent) => {
@@ -94,5 +111,5 @@ export default function Premiummodalmanager() {
     }
     return cleanup;
   }, []);
-  return <Premiummodal open={show} onClose={handleClose} />;
+  return <PremiumModal open={show} onClose={handleClose} />;
 }
