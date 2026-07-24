@@ -5,7 +5,7 @@ import { calculateAurora } from "../utils/auroraEngine";
 import staticPlaces from "../data/places";
 import { client } from "../lib/contentfulClient";
 import Heroglobe from "./Heroglobe";
-import LiveCamSpotlight from "./LiveCamSpotlight";
+// import LiveCamSpotlight from "./LiveCamSpotlight"; // TODO: lisätään myöhemmin
 import AdRotator from "./AdRotator";
 
 /* ========================================================================
@@ -874,7 +874,7 @@ export default function AuroraHero({ forecast, children }) {
           </div>
 
           <aside className="ah-dash-side">
-            <LiveCamSpotlight />
+            {/* <LiveCamSpotlight /> */} {/* TODO: lisätään myöhemmin */}
             <div className="ah-places-panel">
               <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
               <div className="ah-place-list">
