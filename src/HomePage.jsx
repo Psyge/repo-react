@@ -267,8 +267,9 @@ export default function HomePage() {
       />
 
       <Header />
-      <AdRotator />
+      
       <main>
+        <AdRotator />
         {/* HERO */}
        <Aurorahero forecast={forecast}>
   
