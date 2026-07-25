@@ -1,7 +1,7 @@
 /* ============================================================
  * Globeview.jsx — 3D-revontulikartta (map-sivun päänäkymä)
- * Apurit: ./globe/globeMath.js (laskenta), ./globe/globeData.js
- * (vakiot + lataajat), ./globe/Globeview.css (tyylit).
+ * Apurit: ../utils/Globemath.js (laskenta), ../utils/Globedata.js
+ * (vakiot + lataajat), ../styles/Globeview.css (tyylit).
  * Sijainti: src/components/Globeview.jsx
  * ============================================================ */
 import { useEffect, useRef, useState, Suspense, lazy, useCallback, useMemo } from "react";
@@ -37,6 +37,18 @@ const labelColor = () => "rgba(212, 175, 55, 0.85)";
 const heatmapPointsAccessor = d => d;
 const ringColor = () => "rgba(0, 255, 198, 0.6)";
 const terminatorColor = () => "rgba(110, 150, 255, 0.6)";
+const heatmapColorFn = () => getAuroraColor;
+
+/* Ilmaiskäyttäjällä zoom ja kierto ovat lukossa. Täysin liikkumaton pallo luetaan
+ * helposti rikkinäiseksi eikä lukituksi, joten pyöritetään sitä hitaasti itsekseen.
+ * Kunnioitetaan silti prefers-reduced-motion -asetusta, kuten deviceCanRenderGlobe. */
+function prefersReducedMotion() {
+  try {
+    return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+  } catch {
+    return false;
+  }
+}
 
 function HudBadge({ label, value }) {
   return (
@@ -167,7 +179,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   const onPolygonClick = useCallback((p, e, coords) => handleGlobeClick(coords, e), [handleGlobeClick]);
   const onHeatmapClick = useCallback((h, e, coords) => handleGlobeClick(coords, e), [handleGlobeClick]);
 
-  /* Marker: kaukaa pelkkä piste, lähempää piste + nimi */
+  /* Marker: kaukaa pelkkä piste, lähempää piste + nimi.
+     HUOM: tämä EI saa riippua showPlaceNames-tilasta. Jos riippuisi, accessorin
+     identiteetti muuttuisi zoom-kynnyksellä ja react-globe.gl rakentaisi jokaisen
+     markerin DOM-elementin uudelleen — samalla framella kuin tiilimoottori vaihtuu.
+     Nimen näkyvyys hoidetaan CSS:llä juuren .gv-root--names-luokan kautta. */
   const makePlaceMarker = useCallback((d) => {
     const el = document.createElement("button");
     el.type = "button";
@@ -177,15 +193,13 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     const wrap = document.createElement("span");
     wrap.className = "gv-marker-wrap";
 
-    if (showPlaceNames) {
-      const badge = document.createElement("span");
-      badge.textContent = d.name;
-      badge.className = "gv-marker-badge";
-      wrap.appendChild(badge);
-    }
+    const badge = document.createElement("span");
+    badge.textContent = d.name;
+    badge.className = "gv-marker-badge";
+    wrap.appendChild(badge);
 
     const dot = document.createElement("span");
-    dot.className = showPlaceNames ? "gv-marker-dot" : "gv-marker-dot gv-marker-dot--plain";
+    dot.className = "gv-marker-dot";
     wrap.appendChild(dot);
 
     el.appendChild(wrap);
@@ -194,7 +208,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       handleGlobeClick({ lat: d.lat, lng: d.lon }, ev, d.name);
     };
     return el;
-  }, [handleGlobeClick, showPlaceNames]);
+  }, [handleGlobeClick]);
 
   const closePopup = useCallback(() => {
     setClickPos(null);
@@ -202,30 +216,62 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     setPopupXY(null);
   }, []);
 
-  /* Popup seuraa klikattua pistettä (rAF + suora DOM-päivitys) */
+  /* Escape sulkee kerrosvalikon */
+  useEffect(() => {
+    if (!layersOpen) return;
+    const onKey = (e) => { if (e.key === "Escape") setLayersOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [layersOpen]);
+
+  /* Popup seuraa klikattua pistettä. Silmukka ajetaan VAIN kun globe liikkuu:
+     käynnistetään kontrollien "change"-tapahtumasta ja sammutetaan 300 ms sen
+     jälkeen kun liike loppuu. Aiemmin rAF heräsi joka framella niin kauan kuin
+     popup oli auki, myös täysin paikallaan olevalla globella. */
   useEffect(() => {
     if (!clickPos) return;
-    let raf;
-    let last = 0;
-    const track = (now) => {
-      if (now - last > 50) {
-        last = now;
-        const g = globeEl.current;
-        const el = popupRef.current;
-        if (g && el && typeof g.getScreenCoords === "function") {
-          const p = g.getScreenCoords(clickPos.lat, clickPos.lng, 0.003);
-          if (p) {
-            const x = Math.min(Math.max(p.x, 110), Math.max(size.w - 110, 110));
-            const y = Math.min(Math.max(p.y, 90), Math.max(size.h - 16, 90));
-            el.style.left = `${x}px`;
-            el.style.top = `${y - 10}px`;
-          }
-        }
-      }
-      raf = requestAnimationFrame(track);
+    const g = globeEl.current;
+    if (!g) return;
+
+    let raf = null;
+    let stopAt = 0;
+
+    const place = () => {
+      const el = popupRef.current;
+      if (!el || typeof g.getScreenCoords !== "function") return;
+      const p = g.getScreenCoords(clickPos.lat, clickPos.lng, 0.003);
+      if (!p) return;
+      const x = Math.min(Math.max(p.x, 110), Math.max(size.w - 110, 110));
+      const y = Math.min(Math.max(p.y, 90), Math.max(size.h - 16, 90));
+      el.style.left = `${x}px`;
+      el.style.top = `${y - 10}px`;
     };
-    raf = requestAnimationFrame(track);
-    return () => cancelAnimationFrame(raf);
+
+    const loop = () => {
+      place();
+      if (performance.now() < stopAt) {
+        raf = requestAnimationFrame(loop);
+      } else {
+        raf = null;
+      }
+    };
+
+    /* Jatka seurantaa 300 ms viimeisen liikkeen jälkeen — damping valuu vielä hetken */
+    const kick = () => {
+      stopAt = performance.now() + 300;
+      if (raf == null) raf = requestAnimationFrame(loop);
+    };
+
+    place();  // heti oikeaan kohtaan, ei odoteta ensimmäistä framea
+    kick();
+
+    const controls = typeof g.controls === "function" ? g.controls() : null;
+    controls?.addEventListener("change", kick);
+
+    return () => {
+      if (raf != null) cancelAnimationFrame(raf);
+      controls?.removeEventListener("change", kick);
+    };
   }, [clickPos, size.w, size.h]);
 
   useEffect(() => {
@@ -234,8 +280,21 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       if (el) setSize({ w: el.clientWidth, h: el.clientHeight });
     };
     measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+
+    /* Debounce: mobiiliselaimet laukaisevat resizen kun osoiterivi piiloutuu
+       vierittäessä. Ilman viivettä jokainen tapahtuma pakottaisi Globen
+       uudelleenmittaukseen ja canvasin koon vaihtoon. */
+    let timer = null;
+    const onResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(measure, 150);
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", onResize);
+    };
   }, []);
 
   /* ---- Datan lataus (välimuistit hoitaa globeData) ---- */
@@ -280,8 +339,8 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     const g = globeEl.current;
     if (!g) return;
     const controls = g.controls();
-    controls.autoRotate = false;
     controls.autoRotateSpeed = 0.25;
+    controls.autoRotate = !premium && !prefersReducedMotion();
     controls.enablePan = false;
     controls.enableZoom = premium;
     controls.enableRotate = premium;
@@ -295,8 +354,17 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     const isNarrow = (wrapRef.current?.clientWidth || window.innerWidth) < 640;
     g.pointOfView({ lat: 40, lng: -20, altitude: isNarrow ? 3.4 : 2.3 }, 0);
 
-    // Korkeusperustaiset tilat hystereesillä (tiilet + nimilaput)
+    // Korkeusperustaiset tilat hystereesillä (tiilet + nimilaput).
+    // enableDamping pitää "change"-tapahtuman käynnissä joka framella noin sekunnin
+    // ajan jokaisen vedon jälkeen, ja pointOfView() tekee täyden koordinaatti-
+    // muunnoksen. Kynnykset eivät tarvitse framekohtaista tarkkuutta → näytteistetään
+    // korkeintaan 10 kertaa sekunnissa.
+    let lastAltCheck = 0;
     controls.addEventListener("change", () => {
+      const now = performance.now();
+      if (now - lastAltCheck < 100) return;
+      lastAltCheck = now;
+
       const alt = g.pointOfView()?.altitude;
       if (alt == null) return;
       const next = closeUpRef.current ? alt < CLOSEUP_EXIT_ALT : alt < CLOSEUP_ENTER_ALT;
@@ -320,7 +388,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     const g = globeEl.current;
     if (!g) return;
     const controls = g.controls();
-    controls.autoRotate = false;
+    controls.autoRotate = !premium && !prefersReducedMotion();
     controls.enableZoom = premium;
     controls.enableRotate = premium;
   }, [premium]);
@@ -365,8 +433,11 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
             }
           `,
         });
+        // Liuku lasketaan fragmenttivarjostimessa normaalista, joten segmenttimäärä
+        // ei juuri näy ulospäin — kevennetään low-laadulla.
+        const seg = quality === "high" ? 64 : 32;
         const mesh = new THREE.Mesh(
-          new THREE.SphereGeometry(g.getGlobeRadius() * 1.01, 64, 64),
+          new THREE.SphereGeometry(g.getGlobeRadius() * 1.01, seg, seg),
           mat
         );
         mesh.renderOrder = 2; // pilvien (1) yläpuolelle → yö tummentaa myös pilvet
@@ -381,7 +452,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     update();
     const timer = setInterval(update, 10 * 60 * 1000);
     return () => clearInterval(timer);
-  }, [layers.night, globeReady]);
+  }, [layers.night, globeReady, quality]);
 
   /* ---- Pilvikerros ---- */
   useEffect(() => {
@@ -403,8 +474,9 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       CLOUDS_IMG_URL,
       (texture) => {
         if (cancelled || !globeEl.current) { texture.dispose(); return; }
+        const seg = quality === "high" ? 64 : 32;
         const mesh = new THREE.Mesh(
-          new THREE.SphereGeometry(globeEl.current.getGlobeRadius() * 1.008, 64, 64),
+          new THREE.SphereGeometry(globeEl.current.getGlobeRadius() * 1.008, seg, seg),
           new THREE.MeshLambertMaterial({
             map: texture,
             transparent: true,
@@ -420,7 +492,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       (e) => console.warn("Pilvitekstuurin lataus epäonnistui:", e)
     );
     return () => { cancelled = true; };
-  }, [layers.clouds, globeReady]);
+  }, [layers.clouds, globeReady, quality]);
 
   /* Meshien siivous kun komponentti puretaan */
   useEffect(() => () => {
@@ -440,18 +512,25 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
   }, []);
 
   /* Karttapohja: lähizoom → Carto dark; kaukana → Esri-tiilet (detailed)
-     tai kevyt blue-marble-tekstuuri (oletus) */
-  const tileProps = closeUp
-    ? { globeTileEngineUrl: CARTO_TILE_URL }
-    : useDetailedTiles
-      ? { globeTileEngineUrl: ESRI_TILE_URL }
-      : {
-          globeImageUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
-          bumpImageUrl: "//unpkg.com/three-globe/example/img/earth-topology.png",
-        };
+     tai kevyt blue-marble-tekstuuri (oletus).
+     useMemo estää uuden olion syntymisen joka renderillä — ilman sitä spread
+     antaisi Globelle joka kerta uudet propsi-identiteetit. */
+  const tileProps = useMemo(() => (
+    closeUp
+      ? { globeTileEngineUrl: CARTO_TILE_URL }
+      : useDetailedTiles
+        ? { globeTileEngineUrl: ESRI_TILE_URL }
+        : {
+            globeImageUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
+            bumpImageUrl: "//unpkg.com/three-globe/example/img/earth-topology.png",
+          }
+  ), [closeUp, useDetailedTiles]);
 
   return (
-    <div className="globe-view parannettu-globe gv-root" ref={wrapRef}>
+    <div
+      className={`globe-view parannettu-globe gv-root${showPlaceNames ? " gv-root--names" : ""}`}
+      ref={wrapRef}
+    >
       <Suspense fallback={<div className="globe-loading">{tr("globe.loading", "Loading globe…")}</div>}>
         {size.w > 0 && (
           <Globe
@@ -487,7 +566,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
             heatmapPointLng="lng"
             heatmapPointWeight="val"
             heatmapBandwidth={quality === "low" ? 1.4 : 1.7}
-            heatmapColorFn={() => getAuroraColor}
+            heatmapColorFn={heatmapColorFn}
             heatmapColorSaturation={2.6}
             heatmapBaseAltitude={0.012}
             heatmapsTransitionDuration={0}
@@ -533,6 +612,9 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
         <button
           className={`gv-layers-btn ${layersOpen ? "gv-layers-btn--open" : ""}`}
           onClick={() => setLayersOpen((o) => !o)}
+          aria-expanded={layersOpen}
+          aria-haspopup="true"
+          aria-controls="gv-layers-menu"
         >
           ☰ {tr("globe.layers", "Kerrokset")}
         </button>
@@ -540,7 +622,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
 
       {/* Kerrosvalikko */}
       {layersOpen && (
-        <div className="gv-layers-menu">
+        <div className="gv-layers-menu" id="gv-layers-menu">
           {[
             ["aurora", tr("globe.layer.aurora", "Revontulet")],
             ["clouds", tr("globe.layer.clouds", "Pilvet")],

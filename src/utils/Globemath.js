@@ -9,11 +9,12 @@ export function getGlobeQuality() {
   if (typeof window === "undefined") return "low";
   const c = navigator.connection || navigator.webkitConnection || {};
   const cores = navigator.hardwareConcurrency || 4;
-  const mem = navigator.deviceMemory || 4;
-  if (c.saveData) return "low";
-  if (c.effectiveType && !/4g/i.test(c.effectiveType)) return "low";
-  if (cores < 6 || mem < 6) return "low";
-  return "high";
+const mem = navigator.deviceMemory;          // Chromium-only, voi olla undefined
+if (c.saveData) return "low";
+if (c.effectiveType && !/4g/i.test(c.effectiveType)) return "low";
+if (cores < 6) return "low";
+if (mem != null && mem < 6) return "low";    // ohitetaan Safarissa
+return "high";
 }
 
 /* Pystyykö laite ylipäätään renderöimään globen (muuten 2D-fallback) */

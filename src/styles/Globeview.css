@@ -1,6 +1,6 @@
 /* ============================================================
    Globeview.css — globen UI-tyylit (HUD, valikko, popup, markerit)
-   Sijainti: src/components/globe/Globeview.css
+   Sijainti: src/styles/Globeview.css
 ============================================================ */
 
 .gv-root {
@@ -248,8 +248,15 @@
   margin: 2px auto 0;
 }
 
-/* Pistetila (ei nimeä): isompi, reunustettu piste */
-.gv-marker-dot--plain {
+/* Pistetila (ei nimeä): isompi, reunustettu piste.
+   Ohjataan juuren .gv-root--names-luokalla, EI markerin uudelleenrakennuksella —
+   niin htmlElement-accessor pysyy vakaana eikä react-globe.gl luo DOM-elementtejä
+   uudelleen zoom-kynnyksellä (osui aiemmin samaan frameen tiilivaihdon kanssa). */
+.gv-root:not(.gv-root--names) .gv-marker-badge {
+  display: none;
+}
+
+.gv-root:not(.gv-root--names) .gv-marker-dot {
   width: 10px;
   height: 10px;
   border: 2px solid rgba(2, 4, 10, 0.8);
