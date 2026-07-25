@@ -15,8 +15,7 @@ import { startTrial } from "../lib/premium";
 
    Käyttö:
      const [showPm, setShowPm] = useState(false);
-     <PremiumModal open={showPm} onClose={() => setShowPm(false)}
-                   kp={kp} wind={wind} bz={bz} />
+     <PremiumModal open={showPm} onClose={() => setShowPm(false)} />
 ======================================================================= */
 
 const BASE = process.env.REACT_APP_API_BASE || "";
@@ -47,7 +46,7 @@ async function fetchHighlights() {
   return data;
 }
 
-export default function PremiumModal({ open, onClose, kp = null, wind = null, bz = null }) {
+export default function PremiumModal({ open, onClose }) {
   const navigate = useNavigate();
   const { currentLanguage, t } = useTranslation();
   const [highlights, setHighlights] = useState(null);
@@ -197,28 +196,6 @@ export default function PremiumModal({ open, onClose, kp = null, wind = null, bz
               <li>✅ <strong>{trh("pm.p5", "Havainnot kartalla reaaliajassa", "Live sightings on the map")}</strong></li>
               <li>✅ <strong>{trh("pm.p6", "Telegram-/sähköpostihälytykset sijaintiisi", "Telegram/email alerts for your location")}</strong></li>
             </ul>
-          </div>
-        </div>
-
-        {/* Miten todennäköisyys lasketaan — elävillä arvoilla jos saatavilla */}
-        <div className="pm-formula">
-          <div className="pm-formula-head">
-            🧮 {trh("pm.how", "Miksi Kp yksin ei riitä?", "Why Kp alone isn't enough")}
-          </div>
-          <div className="pm-formula-row pm-formula-row--free">
-            <span className="pm-formula-label">{trh("pm.free", "Ilmainen", "Free")}:</span>
-            <span>Kp {kp != null ? kp.toFixed(1) : "2.0"} → “{trh("pm.level", "Kohtalainen aktiivisuus", "Moderate activity")}”</span>
-          </div>
-          <div className="pm-formula-arrow">⬇</div>
-          <div className="pm-formula-row pm-formula-row--premium">
-            <span className="pm-formula-label">⭐ Premium:</span>
-            <span>
-              Kp {kp != null ? kp.toFixed(1) : "2.0"}
-              {" + "}{trh("pm.wind", "tuuli", "wind")} {wind != null ? Math.round(wind) : 450} km/s
-              {" + "}Bz {bz != null ? bz.toFixed(1) : "-1.2"} nT
-              {" + "}{trh("pm.clouds", "pilvisyys sijainnissasi", "clouds at your spot")}
-              {" → "}<strong>{trh("pm.result", "tarkka % ja paras kellonaika", "exact % and the best hour")}</strong>
-            </span>
           </div>
         </div>
 

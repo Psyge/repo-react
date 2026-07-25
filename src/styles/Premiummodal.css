@@ -106,22 +106,6 @@
   color: #64748b;
 }
 
-/* Laskentakaava */
-.pm-formula {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  margin-bottom: 1.1rem;
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
-.pm-formula-head { font-weight: 700; color: #e6e9ef; margin-bottom: 0.5rem; }
-.pm-formula-row { color: #94a3b8; }
-.pm-formula-row--premium { color: #d9fff4; }
-.pm-formula-label { font-weight: 700; margin-right: 4px; }
-.pm-formula-arrow { text-align: center; color: #475569; margin: 2px 0; }
-
 /* Hintapassit */
 .pm-tiers {
   display: grid;
@@ -270,11 +254,6 @@
   .pm-col { padding: 0.6rem 0.75rem; }
   .pm-col h4 { font-size: 0.78rem; margin-bottom: 0.35rem; }
   .pm-col li { font-size: 0.72rem; }
-
-  /* Laskentakaava vie paljon pystytilaa eikä ole yhtä kriittinen mobiilissa
-     kuin hintapainikkeet — tiivistetään reilusti, ei piiloteta kokonaan. */
-  .pm-formula { padding: 0.6rem 0.75rem; margin-bottom: 0.85rem; font-size: 0.72rem; }
-  .pm-formula-head { margin-bottom: 0.35rem; }
 
   .pm-tiers { grid-template-columns: 1fr; gap: 0.4rem; margin-bottom: 0.7rem; }
   .pm-tier { flex-direction: row; justify-content: space-between; padding: 0.65rem 0.9rem; }
