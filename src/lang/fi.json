@@ -1,7 +1,7 @@
 {
   "premium.consent.disclaimer": "Palvelu tarjotaan sellaisena kuin se on. RepoTracker on riippuvainen kolmansien osapuolten datasta ja käyttökiintiöistä. Maksuja ei palauteta mahdollisten käyttökatkojen tai luonnollisten ennustemuutosten (kuten pilvisyyden) vuoksi.",
   "faq.q.res": "Palvelun saatavuus, datan oikeellisuus ja vastuunrajoitus",
-  "faq.a.res1'": "RepoTracker tarjoaa ennusteita, jotka perustuvat kolmansien osapuolten (kuten avaruussää- ja sääpalveluiden) reaaliaikaisiin tietolähteisiin. Palvelu tarjotaan sellaisena kuin se on ja siten kuin se on saatavilla.",
+  "faq.a.res1": "RepoTracker tarjoaa ennusteita, jotka perustuvat kolmansien osapuolten (kuten avaruussää- ja sääpalveluiden) reaaliaikaisiin tietolähteisiin. Palvelu tarjotaan sellaisena kuin se on ja siten kuin se on saatavilla.",
   "faq.a.res2": "Koska kyseessä on yhden hengen harrastusprojekti ja olemme riippuvaisia ulkopuolisesta datasta sekä rajapintojen käyttökiintiöistä, ylläpitäjä pidättää oikeuden muuttaa, keskeyttää tai lopettaa palvelun tai sen ominaisuuksien tarjoamisen milloin tahansa ilman ennakkoilmoitusta. RepoTracker ei ole korvausvelvollinen mahdollisista katkoista, datan viiveistä tai epätarkkuuksista ennusteissa.",
   "globe.toggle": "Maapallo",
 "globe.loading": "Ladataan maapalloa…",
@@ -86,8 +86,6 @@
 "spin.doneTitle": "✅ Premium aktivoitu!",
 "spin.doneSub": "{label} Premiumia on nyt aktiivinen tällä laitteella. Lähetimme aktivointilinkin myös osoitteeseen {email} varmuuden vuoksi.",
 "spin.startExploring": "Aloita tutkiminen",
-  "sightings.thanks_daylight": "Kiitos! Nyt on liian valoisaa revontulille, joten raporttia ei näytetä kartalla.",
-"common.loading": "Ladataan…",
   "spin.teaser": "Näitkö revontulia? Raportoi ja pyöräytä — voita ilmaista Premiumia!",
   "sightings.none": "Ei havaintoja juuri nyt",
   "sightings.latest": "viimeisin {m} min sitten",
@@ -103,8 +101,6 @@
    "contact.privacy": "Lomakkeen kautta lähetettyjä tietoja käytetään ainoastaan yhteydenottoosi vastaamiseen eikä niitä luovuteta kolmansille osapuolille.",
   "contact.privacyLink": "Tietosuojaseloste",
   "contact.termsLink": "Käyttöehdot",
-  "privacy.a.contact": "Tietosuojaan liittyvissä kysymyksissä voit ottaa yhteyttä yhteydenottolomakkeella tai sähköpostitse.",
-  
   "privacy.a.cookies1": "RepoTracker käyttää evästeitä ja vastaavia teknologioita sivuston toiminnan parantamiseen, kävijätilastointiin sekä mahdollisten mainospalveluiden toteuttamiseen.",
   "privacy.a.cookies2": "Voit hyväksyä tai hylätä ei-välttämättömät evästeet sivuston evästebannerin kautta.",
 
@@ -299,7 +295,7 @@
   "terms.q.service": "1. Tietoja palvelusta",
   "terms.a.service1": "RepoTracker tarjoaa avaruussäädataa, revontuliennusteita ja pilvisyystietoja. Käyttämällä ilmaista karttaa tai ostamalla Northern Lights Premiumia hyväksyt nämä ehdot.",
   "terms.a.service2": "Tiedot tarjotaan vain tiedotuskäyttöön. Luonto on arvaamaton, emmekä voi taata revontulien näkymistä, vaikka ennusteet olisivat suotuisat.",
-  "terms.q.payments": "2. Maksut & Nothern Lights Premium",
+  "terms.q.payments": "2. Maksut & Northern Lights Premium",
   "terms.a.payments1": "Kertamaksu: Northern Lights Premium -pääsy myydään kertamaksuna (esim. 1 päivä, 3 päivää tai 1 viikko). Kyseessä ei ole jatkuva tilaus. Sinulta ei veloiteta automaattisesti uudelleen.",
   "terms.a.payments2": "Maksunvälitys: Kaikki maksut käsitellään turvallisesti Stripen kautta. RepoTracker ei tallenna tai käsittele luottokorttitietojasi suoraan.",
   "terms.q.refunds": "3. Palautusehdot ja peruuttamisoikeus",
