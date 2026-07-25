@@ -3,6 +3,7 @@
    "faq.q.res": "Service Availability, Data Accuracy, and Limitation of Liability",
   "faq.a.res1": "RepoTracker provides forecasts based on real-time data sources from third parties (such as space weather and weather services). The service is provided 'as is' and 'as available'.",
   "faq.a.res2": "Since this is a one-person hobby project and we rely on external data and API usage quotas, the administrator reserves the right to modify, suspend, or terminate the service or the provision of its features at any time without prior notice. RepoTracker is not liable for any service interruptions, data delays, or inaccuracies in forecasts.",
+  "faq.a.res3" : "Data sources: Finnish Meteorological Institute (weather forecasts and aurora activity, CC BY 4.0), NOAA SWPC (space weather), OpenStreetMap / Nominatim (place names).",
   "globe.toggle": "Globe",
 "globe.loading": "Loading globe…",
 "globe.upsell": "Rotate & zoom the globe with Premium — explore the aurora from any angle.",

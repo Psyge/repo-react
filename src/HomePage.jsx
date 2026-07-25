@@ -319,7 +319,7 @@ export default function HomePage() {
       </Link>
     </p>
   </div>
-
+ 
   {/* 2. Lakilinkit ja copyright omalla rivillään aivan alhaalla */}
   <div className="footer-bottom" style={{ textAlign: "center", opacity: 0.6, fontSize: "0.9rem" }}>
     <p style={{ marginBottom: "0.5rem" }}>© RepoTracker</p>
@@ -330,6 +330,29 @@ export default function HomePage() {
       {" - "}
       <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
     </div>
+ 
+    {/* CC BY 4.0 vaatii tekijän nimen ja linkin lisenssiin — lisenssiehto, ei valinnainen */}
+    <p className="footer-attribution" style={{ marginTop: "0.75rem", fontSize: "0.8rem" }}>
+      {t("footer.dataSources") || "Data sources"}:{" "}
+      <a
+        href="https://en.ilmatieteenlaitos.fi/open-data"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: "inherit" }}
+      >
+        Ilmatieteen laitos
+      </a>{" "}
+      (
+      <a
+        href="https://creativecommons.org/licenses/by/4.0/"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: "inherit" }}
+      >
+        CC BY 4.0
+      </a>
+      ) · NOAA SWPC · OpenStreetMap
+    </p>
   </div>
 </footer>
     </div>

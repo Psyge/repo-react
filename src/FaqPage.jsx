@@ -15,7 +15,7 @@ const QUESTIONS = [
   { q: 'faq.q.bz', body: ['faq.a.bz'] },
   { q: 'faq.q.gear', body: ['faq.a.gear1', 'faq.a.gear2', 'faq.a.gear3', 'faq.a.gear4', 'faq.a.gear5'] },
   { q: 'faq.q.tips', body: ['faq.a.tips1', 'faq.a.tips2'] },
-  { q: 'faq.q.res', body: ['faq.a.res1', 'faq.a.res2'] },
+  { q: 'faq.q.res', body: ['faq.a.res1', 'faq.a.res2', 'faq.a.res3'] },
 ];
 
 export default function FaqPage() {

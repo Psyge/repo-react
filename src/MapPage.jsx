@@ -282,8 +282,18 @@ export default function MapPage() {
       hintPopupRef.current = hintPopup;
     }
 
+    /* Leafletin oma attribuutiokontrolli hoitaa alareunan rivin — ei tarvita
+       omaa footeria. CARTO-tiilet vaativat OSM- ja CARTO-maininnan, FMI:n
+       avoin data CC BY 4.0 -maininnan. */
     L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {
+        attribution:
+          '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> ' +
+          '© <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a> · ' +
+          'Data: <a href="https://en.ilmatieteenlaitos.fi/open-data" target="_blank" rel="noopener noreferrer">Ilmatieteen laitos</a> ' +
+          '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>) · NOAA SWPC',
+      }
     ).addTo(map);
 
     const overlay = createAuroraOverlay();

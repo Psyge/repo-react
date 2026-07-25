@@ -3,6 +3,7 @@
   "faq.q.res": "Palvelun saatavuus, datan oikeellisuus ja vastuunrajoitus",
   "faq.a.res1": "RepoTracker tarjoaa ennusteita, jotka perustuvat kolmansien osapuolten (kuten avaruussää- ja sääpalveluiden) reaaliaikaisiin tietolähteisiin. Palvelu tarjotaan sellaisena kuin se on ja siten kuin se on saatavilla.",
   "faq.a.res2": "Koska kyseessä on yhden hengen harrastusprojekti ja olemme riippuvaisia ulkopuolisesta datasta sekä rajapintojen käyttökiintiöistä, ylläpitäjä pidättää oikeuden muuttaa, keskeyttää tai lopettaa palvelun tai sen ominaisuuksien tarjoamisen milloin tahansa ilman ennakkoilmoitusta. RepoTracker ei ole korvausvelvollinen mahdollisista katkoista, datan viiveistä tai epätarkkuuksista ennusteissa.",
+  "faq.a.res3": "Tietolähteet: Ilmatieteen laitos (sääennusteet ja revontuliaktiivisuus, CC BY 4.0), NOAA SWPC (avaruussää), OpenStreetMap / Nominatim (paikannimet).",
   "globe.toggle": "Maapallo",
 "globe.loading": "Ladataan maapalloa…",
 "globe.upsell": "Pyöritä ja zoomaa maapalloa Premiumilla — tutki revontulia mistä kulmasta tahansa.",

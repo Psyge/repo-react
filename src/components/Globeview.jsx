@@ -668,16 +668,18 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       )}
 
       {/* Attribuutiot */}
-      {(closeUp || useDetailedTiles || layers.clouds) && (
-        <div className="gv-attribution">
-          {[
-            closeUp
-              ? "© OpenStreetMap contributors © CARTO"
-              : (useDetailedTiles ? "Imagery © Esri, Maxar, Earthstar Geographics" : null),
-            layers.clouds ? "Clouds © EUMETSAT" : null,
-          ].filter(Boolean).join(" · ")}
-        </div>
-      )}
+      {/* Renderöidään AINA: FMI:n data on CC BY 4.0 ja vaatii maininnan
+          riippumatta siitä mikä karttapohja tai kerros on päällä. */}
+      <div className="gv-attribution">
+        {[
+          closeUp
+            ? "© OpenStreetMap contributors © CARTO"
+            : (useDetailedTiles ? "Imagery © Esri, Maxar, Earthstar Geographics" : null),
+          layers.clouds ? "Clouds © EUMETSAT" : null,
+          "Data: Ilmatieteen laitos (CC BY 4.0)",
+          "NOAA SWPC",
+        ].filter(Boolean).join(" · ")}
+      </div>
 
       {!premium && (
         <div className="globe-upsell">
