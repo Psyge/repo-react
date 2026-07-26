@@ -1,7 +1,7 @@
 /* ============================================================
  * globeMath.js — puhtaat laskenta-apurit globeen.
  * Ei Reactia, ei verkkohakuja, ei sivuvaikutuksia.
- * Sijainti: src/components/globe/globeMath.js
+ * Sijainti: src/utils/Globemath.js
  * ============================================================ */
 
 /* Laitteen kyvykkyys: high = täydet efektit, low = kevennetty */
@@ -9,12 +9,11 @@ export function getGlobeQuality() {
   if (typeof window === "undefined") return "low";
   const c = navigator.connection || navigator.webkitConnection || {};
   const cores = navigator.hardwareConcurrency || 4;
-const mem = navigator.deviceMemory;          // Chromium-only, voi olla undefined
-if (c.saveData) return "low";
-if (c.effectiveType && !/4g/i.test(c.effectiveType)) return "low";
-if (cores < 6) return "low";
-if (mem != null && mem < 6) return "low";    // ohitetaan Safarissa
-return "high";
+  const mem = navigator.deviceMemory || 4;
+  if (c.saveData) return "low";
+  if (c.effectiveType && !/4g/i.test(c.effectiveType)) return "low";
+  if (cores < 6 || mem < 6) return "low";
+  return "high";
 }
 
 /* Pystyykö laite ylipäätään renderöimään globen (muuten 2D-fallback) */
@@ -82,6 +81,32 @@ export function subsolarPoint(date = new Date()) {
   if (lng > 180) lng -= 360;
   if (lng < -180) lng += 360;
   return { lat: dec / rad, lng };
+}
+
+/* Isoympyräetäisyys kilometreinä. */
+export function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+/* Auringon korkeuskulma asteina annetussa pisteessä.
+ * < -6°  = siviilihämärän jälkeen, all-sky-kamerat kuvaavat
+ * < -12° = nautical twilight, revontulet erottuvat hyvin */
+export function sunAltitudeAt(lat, lon, date = new Date()) {
+  const rad = Math.PI / 180;
+  const sub = subsolarPoint(date);
+  const phi = lat * rad;
+  const dec = sub.lat * rad;
+  const H = (lon - sub.lng) * rad;
+  const sinAlt =
+    Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H);
+  return Math.asin(Math.max(-1, Math.min(1, sinAlt))) / rad;
 }
 
 export function buildTerminator(date = new Date()) {
