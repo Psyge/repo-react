@@ -5,7 +5,9 @@ import { calculateAurora } from "../utils/auroraEngine";
 import staticPlaces from "../data/places";
 import { client } from "../lib/contentfulClient";
 import Heroglobe from "./Heroglobe";
-// import LiveCamSpotlight from "./LiveCamSpotlight"; // TODO: lisätään myöhemmin
+import LiveCamSpotlight from "./LiveCamSpotlight";
+import SeasonNotice from "./SeasonNotice";
+import { saveUserLocation } from "../utils/userLocation";
 import AdRotator from "./AdRotator";
 
 /* ========================================================================
@@ -575,6 +577,9 @@ export default function AuroraHero({ forecast, children }) {
       if (!list.length) return;
       const uLat = position.coords.latitude;
       const uLon = position.coords.longitude;
+      /* Jaetaan muille komponenteille (LiveCamSpotlight) — näin niiden ei
+         tarvitse pyytää sijaintilupaa uudelleen. */
+      saveUserLocation(uLat, uLon);
       let closest = list[0];
       let minDst = getDistance(uLat, uLon, list[0].lat, list[0].lon);
       list.forEach((p) => {
@@ -874,7 +879,10 @@ export default function AuroraHero({ forecast, children }) {
           </div>
 
           <aside className="ah-dash-side">
-            {/* <LiveCamSpotlight /> */} {/* TODO: lisätään myöhemmin */}
+            {/* Kesällä: kertoo miksi revontulia ei näy ja milloin kausi alkaa.
+                Kaudella: ei renderöi mitään ja LiveCam ottaa paikan. */}
+            <SeasonNotice />
+            <LiveCamSpotlight />
             <div className="ah-places-panel">
               <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
               <div className="ah-place-list">

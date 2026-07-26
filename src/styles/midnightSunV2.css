@@ -1,5 +1,11 @@
 /* ============================================================
    MidnightSunV2 – layout & UI  (canvas-renderer ei kosketa)
+
+   Tyylit yhtenäistetty muun sivuston kanssa:
+   - ei omaa Courier-fonttia, peritään sivuston fontti
+   - aksentti #00ffc6 (sama kuin gv-badge, footer-linkit, sähköpostit)
+   - pillerit 999px kuten .gv-badge ja .gv-layers-btn
+   - tausta sama tumma gradientti kuin .gv-root
    ============================================================ */
 
 .midnight-v2 {
@@ -7,8 +13,9 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background: #000;
-  font-family: "Courier New", Courier, monospace;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(0, 230, 255, 0.10), rgba(0, 0, 0, 0) 34%),
+    linear-gradient(180deg, #02040a 0%, #050816 48%, #010208 100%);
 }
 
 .midnight-canvas {
@@ -25,13 +32,14 @@
   top: 14px;
   right: 16px;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.55);
-  border: 0.5px solid rgba(255, 255, 255, 0.18);
-  border-radius: 20px;
+  background: rgba(8, 14, 26, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
   padding: 4px 14px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.95);
-  letter-spacing: 0.04em;
+  font-weight: 600;
+  color: #e6e9ef;
+  letter-spacing: 0.02em;
 }
 
 /* ----------------------------------------------------------
@@ -44,24 +52,27 @@
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
-  gap: 5px 10px;
+  gap: 5px 8px;
   max-width: calc(100% - 180px);
 }
 
 .msv2-pill {
-  background: rgba(0, 0, 0, 0.55);
-  border: 0.5px solid rgba(255, 255, 255, 0.18);
-  border-radius: 20px;
+  background: rgba(8, 14, 26, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
   padding: 3px 11px;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--fg-muted, #94a3b8);
   white-space: nowrap;
-  letter-spacing: 0.03em;
 }
 
 .msv2-pill strong {
-  color: #fff;
+  color: #e6e9ef;
+  font-weight: 700;
 }
+
+.msv2-kp--mid  { color: #a8ff78 !important; }
+.msv2-kp--high { color: #00ffc6 !important; }
 
 /* ----------------------------------------------------------
    INFO-NAUHA – statusviestit (kaamos, yötön yö, revontulet)
@@ -78,16 +89,18 @@
   justify-content: center;
   padding: 0 20px 6px;
   pointer-events: none;
+  text-align: center;
 }
 
 .msv2-info-tag {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-  letter-spacing: 0.03em;
+  color: var(--fg-muted, #94a3b8);
+  opacity: 0.8;
 }
 
 .msv2-info-tag--aurora {
-  color: #5fffc8;
+  color: #00ffc6;
+  opacity: 1;
 }
 
 /* ----------------------------------------------------------
@@ -101,11 +114,11 @@
   width: min(700px, 90vw);
   z-index: 10;
   padding: 16px 22px 18px;
-  border-radius: 20px;
-  background: rgba(0, 0, 0, 0.45);
+  border-radius: 16px;
+  background: rgba(7, 12, 28, 0.75);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -119,26 +132,88 @@
 
 .msv2-ctrl-label {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-  min-width: 46px;
+  font-weight: 600;
+  color: var(--fg-muted, #94a3b8);
+  min-width: 74px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .msv2-ctrl-val {
   font-size: 13px;
-  color: #fff;
-  min-width: 46px;
+  font-weight: 600;
+  color: #e6e9ef;
+  min-width: 52px;
   text-align: right;
-  letter-spacing: 0.04em;
 }
 
 .msv2-controls input[type="range"] {
   flex: 1;
   height: 3px;
-  accent-color: rgba(255, 255, 255, 0.65);
+  accent-color: #00ffc6;
   cursor: pointer;
   border-radius: 2px;
+}
+
+/* ----------------------------------------------------------
+   SeasonNotice — heron kesäkortti (ah-season-*)
+   Sama visuaalinen kieli kuin .ah-livecam-panel
+   ---------------------------------------------------------- */
+.ah-season-panel {
+  margin-bottom: 16px;
+  padding: 14px 16px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ah-season-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ah-season-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.ah-season-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffd479;
+}
+
+.ah-season-body {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--fg-muted, #94a3b8);
+}
+
+.ah-season-starts {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #e6e9ef;
+}
+
+.ah-season-starts strong {
+  color: #00ffc6;
+}
+
+.ah-season-cta {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #00ffc6;
+  text-decoration: none;
+}
+
+.ah-season-cta:hover {
+  text-decoration: underline;
 }
 
 /* ----------------------------------------------------------
@@ -167,7 +242,13 @@
   .msv2-info {
     bottom: 105px;
   }
+
+  .msv2-ctrl-label {
+    min-width: 58px;
+    font-size: 10px;
+  }
 }
+
 @media (max-width: 768px) {
   .map-sun-panel {
     padding-bottom: 110px; /* tilaa Globe/2D/Sun-palkille */

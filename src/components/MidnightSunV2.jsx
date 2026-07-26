@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import SunCalc from "suncalc";
 
+import useTranslation from "../hooks/useTranslation";
 import "../styles/midnightSunV2.css";
 
 import { drawSky, drawSun, drawSunPath } from "../utils/skyRenderer";
@@ -8,16 +9,40 @@ import { drawGround }  from "../utils/groundRenderer";
 import { drawAurora }  from "../utils/auroraRenderer";
 import { drawClouds }  from "../utils/cloudRenderer";
 
-import { fetchKp }         from "../services/auroraService";
-import { fetchCloudCover } from "../services/weatherService";
+const BASE = process.env.REACT_APP_API_BASE || "";
 
 const DEFAULT_LAT = 66.5;
 const DEFAULT_LON = 26;
 
-const MONTHS = [
-  "Jan","Feb","Mar","Apr","May","Jun",
-  "Jul","Aug","Sep","Oct","Nov","Dec",
-];
+/* Kuukausiliukurin nimet tulevat Intl:stä, jotta ne kääntyvät kielen mukana */
+function monthNames(lang) {
+  try {
+    const fmt = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "fi-FI", { month: "short" });
+    return Array.from({ length: 12 }, (_, m) => fmt.format(new Date(2025, m, 1)));
+  } catch {
+    return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  }
+}
+
+/* Nykytilanne omasta workerista.
+   HUOM: aiemmin tässä käytettiin services/auroraService.js -tiedostoa, joka
+   haki NOAA:n noaa-planetary-k-index.json -feedistä. Se feed jäätyi keväällä
+   2026 eikä päivity enää, joten komponentti näytti kuukausia vanhaa Kp:tä
+   live-lukuna. Worker hoitaa tuoreusvahdin ja antaa Suomessa FMI:n
+   pilvidatan OpenWeatherin/Open-Meteon sijaan. */
+async function fetchLiveConditions(lat, lon) {
+  const res = await fetch(`${BASE}/api/aurora/calc`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ lat, lon }),
+  });
+  if (!res.ok) throw new Error(`aurora/calc ${res.status}`);
+  const d = await res.json();
+  return {
+    kp: typeof d.kp === "number" ? d.kp : null,
+    clouds: typeof d.clouds === "number" ? d.clouds : 0,
+  };
+}
 
 function getDayStats(year, month, day, lat, lon) {
   let maxAlt = -999, minAlt = 999;
@@ -57,7 +82,19 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
   const lat = propLat ?? DEFAULT_LAT;
   const lon = propLon ?? DEFAULT_LON;
 
+  const { currentLanguage, t } = useTranslation();
+  const trh = (key, fi, en) => {
+    const s = t(key);
+    if (s != null && s !== key) return s;
+    return currentLanguage === "en" ? en : fi;
+  };
+
   const canvasRef = useRef(null);
+  const starsRef = useRef(null);
+
+  /* Kuluva vuosi, ei kovakoodattu — muuten kevätpäiväntasaus liukuu ajan myötä */
+  const YEAR = useMemo(() => new Date().getFullYear(), []);
+  const MONTHS = useMemo(() => monthNames(currentLanguage), [currentLanguage]);
 
   const [month, setMonth] = useState(new Date().getMonth());
   const [hour,  setHour]  = useState(new Date().getHours());
@@ -74,23 +111,27 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
   const showLiveWeather = month === currentMonth && hourDiff <= 3;
 
   const stats = useMemo(
-    () => getDayStats(2025, month, 15, lat, lon),
-    [month, lat, lon]
+    () => getDayStats(YEAR, month, 15, lat, lon),
+    [YEAR, month, lat, lon]
   );
   const { isPolarNight, isMidnightSun, daylightH, riseH, setH } = stats;
 
-  const hudDate = new Date(2025, month, 15, hour, 0, 0);
+  const hudDate = new Date(YEAR, month, 15, hour, 0, 0);
   const hudPos  = SunCalc.getPosition(hudDate, lat, lon);
   const hudAlt  = hudPos.altitude * (180 / Math.PI);
 
   const isDay      = hudAlt > 0;
   const isTwilight = hudAlt > -6 && hudAlt <= 0;
 
-  const statusLabel = isPolarNight  ? "🌑 Polar Night"
-                    : isMidnightSun ? "☀️ Midnight Sun"
-                    : isDay         ? "☀️ Day"
-                    : isTwilight    ? "🌆 Twilight"
-                    :                 "🌌 Night";
+  const statusLabel = isPolarNight
+    ? `🌑 ${trh("sun.polarNight", "Kaamos", "Polar night")}`
+    : isMidnightSun
+      ? `☀️ ${trh("sun.midnightSun", "Yötön yö", "Midnight sun")}`
+      : isDay
+        ? `☀️ ${trh("sun.day", "Päivä", "Day")}`
+        : isTwilight
+          ? `🌆 ${trh("sun.twilight", "Hämärä", "Twilight")}`
+          : `🌌 ${trh("sun.night", "Yö", "Night")}`;
 
   const sunPathPoints = useMemo(() => {
     const pts = [];
@@ -98,7 +139,7 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
       const hFloor = Math.floor(h2);
       const mRound = Math.round((h2 % 1) * 60);
       const p = SunCalc.getPosition(
-        new Date(2025, month, 15, hFloor, mRound, 0),
+        new Date(YEAR, month, 15, hFloor, mRound, 0),
         lat,
         lon
       );
@@ -108,24 +149,23 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
       });
     }
     return pts;
-  }, [month, lat, lon]);
+  }, [YEAR, month, lat, lon]);
 
   useEffect(() => {
+    let cancelled = false;
     const loadData = async () => {
       try {
-        const [kpData, cloudData] = await Promise.all([
-          fetchKp(),
-          fetchCloudCover(lat, lon),
-        ]);
-        setKp(kpData);
-        setCloudCover(cloudData);
+        const { kp: k, clouds } = await fetchLiveConditions(lat, lon);
+        if (cancelled) return;
+        setKp(k);
+        setCloudCover(clouds);
       } catch (err) {
-        console.warn(err);
+        console.warn("live conditions failed:", err?.message || err);
       }
     };
     loadData();
     const interval = setInterval(loadData, 300000);
-    return () => clearInterval(interval);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [lat, lon]);
 
   useEffect(() => {
@@ -133,28 +173,39 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    let animationFrame;
 
     const resize = () => {
       canvas.width  = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
     };
     resize();
-    window.addEventListener("resize", resize);
 
-    const stars = Array.from({ length: 250 }, () => ({
-      x:     Math.random(),
-      y:     Math.random() * 0.68,
-      size:  Math.random() * 1.8 + 0.4,
-      phase: Math.random() * Math.PI * 2,
-    }));
+    /* Debounce: mobiiliselain laukaisee resizen osoiterivin piiloutuessa */
+    let resizeTimer = null;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 150);
+    };
+    window.addEventListener("resize", onResize);
+
+    /* Tähdet luodaan kerran ja säilyvät refissä — muuten ne hyppäisivät
+       uusiin paikkoihin joka kerta kun Kp/pilvet päivittyvät (5 min välein) */
+    if (!starsRef.current) {
+      starsRef.current = Array.from({ length: 250 }, () => ({
+        x:     Math.random(),
+        y:     Math.random() * 0.68,
+        size:  Math.random() * 1.8 + 0.4,
+        phase: Math.random() * Math.PI * 2,
+      }));
+    }
+    const stars = starsRef.current;
 
     const render = (time) => {
       const w = canvas.width;
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      const date = new Date(2025, month, 15, hour, 0, 0);
+      const date = new Date(YEAR, month, 15, hour, 0, 0);
       const pos  = SunCalc.getPosition(date, lat, lon);
       const alt  = pos.altitude * (180 / Math.PI);
       const az   = ((pos.azimuth + Math.PI) / (Math.PI * 2)) * 360;
@@ -195,17 +246,27 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
       drawGround(ctx, w, h, month);
     };
 
+    /* Animaatio pysähtyy kun välilehti on piilossa — canvas-silmukka
+       pyöri aiemmin taustalla ikuisesti ja söi akkua turhaan */
+    let raf = null;
     const animate = (time) => {
       render(time);
-      animationFrame = requestAnimationFrame(animate);
+      raf = requestAnimationFrame(animate);
     };
-    animate(0);
+    const start = () => { if (raf == null) raf = requestAnimationFrame(animate); };
+    const stop  = () => { if (raf != null) { cancelAnimationFrame(raf); raf = null; } };
+
+    const onVisibility = () => (document.hidden ? stop() : start());
+    document.addEventListener("visibilitychange", onVisibility);
+    if (!document.hidden) start();
 
     return () => {
-      cancelAnimationFrame(animationFrame);
-      window.removeEventListener("resize", resize);
+      stop();
+      clearTimeout(resizeTimer);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("resize", onResize);
     };
-  }, [month, hour, kp, cloudCover, showLiveWeather, sunPathPoints, lat, lon]);
+  }, [YEAR, month, hour, kp, cloudCover, showLiveWeather, sunPathPoints, lat, lon]);
 
   return (
     <section className="midnight-v2">
@@ -215,28 +276,30 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
 
       <div className="msv2-hud">
         <span className="msv2-pill">
-          Daylight: <strong>{daylightH.toFixed(1)}h</strong>
+          {trh("sun.daylight", "Päivänvalo", "Daylight")}:{" "}
+          <strong>{daylightH.toFixed(1)} h</strong>
         </span>
         <span className="msv2-pill">
-          Sun: <strong>{hudAlt.toFixed(1)}°</strong>
+          {trh("sun.altitude", "Auringon korkeus", "Sun altitude")}:{" "}
+          <strong>{hudAlt.toFixed(1)}°</strong>
         </span>
         <span className="msv2-pill">
-          Sunrise: <strong>{fmtH(riseH)}</strong>
+          {trh("sun.sunrise", "Auringonnousu", "Sunrise")}: <strong>{fmtH(riseH)}</strong>
         </span>
         <span className="msv2-pill">
-          Sunset: <strong>{fmtH(setH)}</strong>
+          {trh("sun.sunset", "Auringonlasku", "Sunset")}: <strong>{fmtH(setH)}</strong>
         </span>
         {kp !== null && (
           <span className="msv2-pill">
-            Kp:{" "}
-            <strong style={{ color: kp >= 5 ? "#5fffc8" : kp >= 3 ? "#a8ff78" : "#fff" }}>
+            {trh("kp.label", "Kp", "Kp")}:{" "}
+            <strong className={kp >= 5 ? "msv2-kp--high" : kp >= 3 ? "msv2-kp--mid" : ""}>
               {showLiveWeather ? kp.toFixed(1) : "–"}
             </strong>
           </span>
         )}
         {showLiveWeather && (
           <span className="msv2-pill">
-            Clouds: <strong>{cloudCover}%</strong>
+            {trh("popup.clouds", "Pilvisyys", "Cloud cover")}: <strong>{cloudCover}%</strong>
           </span>
         )}
       </div>
@@ -244,35 +307,49 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
       <div className="msv2-info">
         {isPolarNight && (
           <span className="msv2-info-tag">
-            Polar night – sun stays below the horizon
+            {trh(
+              "sun.polarNightInfo",
+              "Kaamos — aurinko ei nouse horisontin yläpuolelle.",
+              "Polar night — the sun stays below the horizon."
+            )}
           </span>
         )}
         {isMidnightSun && (
           <span className="msv2-info-tag">
-            Midnight sun – sun never sets
+            {trh(
+              "sun.midnightSunInfo",
+              "Yötön yö — aurinko ei laske.",
+              "Midnight sun — the sun never sets."
+            )}
           </span>
         )}
-        {(showLiveWeather ? kp >= 2 : [8,9,10,11,0,1,2,3].includes(month)) &&
+        {(showLiveWeather ? kp >= 2 : [8, 9, 10, 11, 0, 1, 2, 3].includes(month)) &&
           !isDay && !isTwilight && (
           <span className="msv2-info-tag msv2-info-tag--aurora">
-            🌌 Good aurora conditions
+            {trh(
+              "sun.auroraInfo",
+              "🌌 Pimeä taivas — hyvät olosuhteet revontulien katseluun!",
+              "🌌 Dark skies — good conditions for northern lights!"
+            )}
           </span>
         )}
       </div>
 
       <div className="msv2-controls">
         <div className="msv2-ctrl-row">
-          <span className="msv2-ctrl-label">Month</span>
+          <span className="msv2-ctrl-label">{trh("sun.month", "Kuukausi", "Month")}</span>
           <input
             type="range" min="0" max="11" value={month}
+            aria-label={trh("sun.month", "Kuukausi", "Month")}
             onChange={(e) => setMonth(Number(e.target.value))}
           />
           <span className="msv2-ctrl-val">{MONTHS[month]}</span>
         </div>
         <div className="msv2-ctrl-row">
-          <span className="msv2-ctrl-label">Time</span>
+          <span className="msv2-ctrl-label">{trh("sun.time", "Aika", "Time")}</span>
           <input
             type="range" min="0" max="23" value={hour}
+            aria-label={trh("sun.time", "Aika", "Time")}
             onChange={(e) => setHour(Number(e.target.value))}
           />
           <span className="msv2-ctrl-val">{String(hour).padStart(2, "0")}:00</span>
