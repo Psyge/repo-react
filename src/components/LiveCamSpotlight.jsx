@@ -32,20 +32,33 @@ export default function LiveCamSpotlight() {
     return currentLanguage === "en" ? en : fi;
   };
 
-  const stream = useMemo(() => {
+  /* Minuutin tikitys: päivittää kuvan, pimeystilanteen ja poimii samalla
+     sijainnin heti kun heron asynkroninen lupakysely on ratkennut. */
+  const [tick, setTick] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setTick(Date.now()), CAM_REFRESH_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  /* Striimi arvotaan kerran mountissa — ei saa vaihtua minuutin välein */
+  const pickedStream = useMemo(() => {
     const active = liveCams.filter((c) => c.active && c.videoId);
     if (!active.length) return null;
     return active[Math.floor(Math.random() * active.length)];
   }, []);
 
-  /* Minuutin tikitys: päivittää kuvan, pimeystilanteen ja poimii samalla
-     sijainnin heti kun heron asynkroninen lupakysely on ratkennut. */
-  const [tick, setTick] = useState(() => Date.now());
-  useEffect(() => {
-    if (stream) return;
-    const id = setInterval(() => setTick(Date.now()), CAM_REFRESH_MS);
-    return () => clearInterval(id);
-  }, [stream]);
+  /* Striimikin näytetään vain kun on pimeää. Jos rivillä on lat/lon,
+     tarkistetaan sen oma sijainti; muuten riittää että jossain
+     kameraverkon asemalla on pimeää (karkea "onko Lapissa yö"). */
+  const stream = useMemo(() => {
+    if (!pickedStream) return null;
+    const now = new Date(tick);
+    const dark =
+      Number.isFinite(pickedStream.lat) && Number.isFinite(pickedStream.lon)
+        ? sunAltitudeAt(pickedStream.lat, pickedStream.lon, now) < CAM_DARK_MAX_DEG
+        : allSkyCams.some((c) => sunAltitudeAt(c.lat, c.lon, now) < CAM_DARK_MAX_DEG);
+    return dark ? pickedStream : null;
+  }, [pickedStream, tick]);
 
   const [failed, setFailed] = useState(() => new Set());
 
