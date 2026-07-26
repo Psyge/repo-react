@@ -63,7 +63,9 @@ export default function SeasonNotice({ lat = DEFAULT_LAT, lon = DEFAULT_LON }) {
         </p>
       )}
 
-      <Link to="/MidNightSunV2" className="ah-season-cta">
+      {/* Karttasivun sun-välilehti, EI suoraa /MidNightSunV2-reittiä —
+          se renderöi komponentin paljaana ilman headeria ja footeria. */}
+      <Link to="/map?view=sun" className="ah-season-cta">
         {trh("season.cta", "Katso auringon kulku →", "Explore the sun's path →")}
       </Link>
     </div>

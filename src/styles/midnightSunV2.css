@@ -156,6 +156,18 @@
 }
 
 /* ----------------------------------------------------------
+   Karttasivulla (.map-sun-panel on position:fixed; inset:0) komponentti
+   alkaa aivan yläreunasta, jolloin HUD ja status jäisivät headerin alle.
+   Samat siirtymät kuin globen .gv-hudbar käyttää.
+   Omalla reitillään /MidNightSunV2 headeria ei ole, joten siellä
+   alkuperäinen top: 14px pätee edelleen.
+   ---------------------------------------------------------- */
+.map-sun-panel .msv2-hud,
+.map-sun-panel .msv2-status {
+  top: 70px;
+}
+
+/* ----------------------------------------------------------
    SeasonNotice — heron kesäkortti (ah-season-*)
    Sama visuaalinen kieli kuin .ah-livecam-panel
    ---------------------------------------------------------- */
@@ -252,5 +264,11 @@
 @media (max-width: 768px) {
   .map-sun-panel {
     padding-bottom: 110px; /* tilaa Globe/2D/Sun-palkille */
+  }
+
+  /* Header on mobiilissa kaksirivinen — sama arvo kuin .gv-hudbar käyttää */
+  .map-sun-panel .msv2-hud,
+  .map-sun-panel .msv2-status {
+    top: 104px;
   }
 }
