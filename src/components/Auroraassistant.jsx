@@ -19,7 +19,7 @@ import { isActive, read, startTrial } from "../lib/premium";
 const BASE = process.env.REACT_APP_API_BASE || "";
 const TIP_ROTATE_MS = 8000;
 
-export default function AuroraAssistant() {
+export default function Auroraassistant() {
   const { lang, currentLanguage } = useTranslation();
   const activeLang = lang || currentLanguage || "fi";
   const fi = activeLang === "fi";
