@@ -1,0 +1,227 @@
+/* ========================================================================
+   AuroraAssistant — aa-*
+   Kelluva chat-widget. z-index 2000: alle headerin (3000) ja modaalin
+   (3200), mutta yli muun tavallisen sivusisällön.
+======================================================================= */
+
+.aa-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2000;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--gradient-aurora, linear-gradient(135deg, #00ffc6, #00c2ff));
+  color: #071018;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 255, 198, 0.35);
+  transition: transform 0.15s ease;
+}
+.aa-fab:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.aa-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 88px;
+  z-index: 2000;
+  width: min(340px, calc(100vw - 40px));
+  max-height: min(480px, calc(100vh - 140px));
+  max-height: min(480px, calc(100dvh - 140px));
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(10, 16, 30, 0.98), rgba(5, 8, 20, 0.99));
+  border: 1px solid rgba(0, 255, 198, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.aa-panel-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+.aa-panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e6e9ef;
+}
+
+.aa-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+}
+
+.aa-empty {
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.aa-msg {
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 8px 11px;
+  border-radius: 10px;
+  max-width: 88%;
+  white-space: pre-wrap;
+}
+.aa-msg--user {
+  align-self: flex-end;
+  background: rgba(0, 255, 198, 0.14);
+  color: #d9fff4;
+}
+.aa-msg--assistant {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e6e9ef;
+}
+.aa-msg--loading {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.aa-error {
+  padding: 6px 14px;
+  font-size: 12px;
+  color: #ff8a8a;
+  flex-shrink: 0;
+}
+
+/* --- Ilmainen tila: vihjelaatikko + CTA:t chatin sijaan --- */
+.aa-free {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aa-tip-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 255, 198, 0.15);
+  border-radius: 10px;
+  padding: 12px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.aa-tip-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e6e9ef;
+}
+
+.aa-tip-loading {
+  font-size: 12.5px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.aa-free-note {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+  text-align: center;
+}
+
+.aa-free-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aa-btn-secondary {
+  background: transparent;
+  border: 1px dashed rgba(0, 255, 198, 0.35);
+  color: #94a3b8;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.aa-btn-secondary:hover {
+  border-color: rgba(0, 255, 198, 0.6);
+  color: #d9fff4;
+}
+.aa-btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.aa-btn-primary {
+  background: var(--gradient-aurora, linear-gradient(135deg, #00ffc6, #00c2ff));
+  color: #071018;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.aa-btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+.aa-input-row {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+.aa-input-row input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #e6e9ef;
+  min-width: 0;
+}
+.aa-input-row input::placeholder {
+  color: #64748b;
+}
+.aa-input-row button {
+  background: var(--accent, #00ffc6);
+  color: #071018;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.aa-input-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .aa-fab {
+    right: 14px;
+    bottom: 14px;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  .aa-panel {
+    right: 10px;
+    left: 10px;
+    width: auto;
+    bottom: 76px;
+  }
+}
