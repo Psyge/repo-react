@@ -22,7 +22,7 @@ function App() {
     <HelmetProvider>
       <BrowserRouter>
       <Premiummodalmanager />
-       <Auroraassistant />
+       
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/map" element={<MapPage />} />
