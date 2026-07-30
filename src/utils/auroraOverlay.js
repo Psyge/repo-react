@@ -1,7 +1,8 @@
 import L from "leaflet";
 
-const SOURCE =
-  "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json";
+const BASE = process.env.REACT_APP_API_BASE || "";
+
+const SOURCE = `${BASE}/api/aurora/ovation`;
 
 const AURORA_CACHE_KEY = "aurora_session_cache:ovation:v1";
 const AURORA_TTL_MS = 60 * 60 * 1000; // 1h
@@ -285,15 +286,19 @@ export async function fetchAuroraData({ force = false } = {}) {
     }
   }
 
-  const res = await fetch(SOURCE, {
-    cache: "default",
-  });
+ const res = await fetch(SOURCE, {
+  cache: "no-store",
+});
 
-  if (!res.ok) {
-    throw new Error("Aurora fetch failed");
-  }
+if (!res.ok) {
+  throw new Error(`Aurora API ${res.status}`);
+}
 
-  const data = await res.json();
+const data = await res.json();
+
+if (!data?.coordinates) {
+  throw new Error("Invalid aurora data");
+}
 
   latestData = data;
   writeSessionCache(AURORA_CACHE_KEY, data);
