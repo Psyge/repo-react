@@ -499,22 +499,26 @@ export default function AuroraHero({ forecast, children }) {
   const skyRef    = useRef(null);
   const probRef   = useRef(null);
 
-  /* Solar data fetch (tuuli + Bz + deltat propagated-feedistä) */
+  /* Aurinkotuuli ja Bz workerin current-lohkosta.
+   *
+   * Aiemmin tämä haki NOAA:n propagated-feedin suoraan selaimesta omalla
+   * vanhenemisvahdillaan. Se rikkoutui kun NOAA jäätyi kesällä 2026 eikä
+   * hyötynyt workerin varalähteistä. Nyt on yksi totuuden lähde. */
   useEffect(() => {
-    let cancelled = false;
-    fetchHeroSolarData()
-      .then((d) => {
-        if (cancelled) return;
-        setWind(d.wind); setBz(d.bz);
-        setWindDelta(d.windDelta ?? null);
-        setBzDelta(d.bzDelta ?? null);
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
+    const c = forecast?.current;
+    if (!c) return;
+    setWind(c.speed ?? null);
+    setBz(c.bz ?? null);
+    // Deltoja ei enää lasketa selaimessa — arvot tulevat sellaisinaan
+    setWindDelta(null);
+    setBzDelta(null);
+  }, [forecast]);
 
-  /* Nykyinen Kp ennustesarjasta (lähin slotti nykyhetkeen) */
+  /* Nykyinen Kp: ensisijaisesti workerin current (GFZ-varalähteineen),
+     varalla lähin ennusteslotti. */
   useEffect(() => {
+    const c = forecast?.current;
+    if (c?.kp != null) { setKp(c.kp); return; }
     if (!slots.length) return;
     const now = Date.now();
     let best = null, bestD = Infinity;
@@ -525,7 +529,17 @@ export default function AuroraHero({ forecast, children }) {
       if (d < bestD) { bestD = d; best = s; }
     }
     if (best?.kp != null) setKp(best.kp);
-  }, [slots]);
+  }, [forecast, slots]);
+
+  /* Vanhentunut aurinkotuulidata näytettäväksi ikämerkinnän kanssa */
+  const staleWind = forecast?.current?.stale ?? null;
+  const staleAgeText = useMemo(() => {
+    const ms = staleWind?.ageMs;
+    if (!ms || !Number.isFinite(ms)) return null;
+    const h = Math.round(ms / 3600000);
+    if (h < 48) return trh("data.ageHours", `${h} h vanha`, `${h} h old`);
+    return trh("data.ageDays", `${Math.round(h / 24)} vrk vanha`, `${Math.round(h / 24)} d old`);
+  }, [staleWind, currentLanguage]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const aurora = useMemo(
     () => calculateAurora({ kp, speed: wind, density: 5, bz, cloudCover: 50, latitude: activePlace?.lat || 66.5 }),
@@ -726,21 +740,32 @@ export default function AuroraHero({ forecast, children }) {
 
             {/* Mittarikortit — samat arvot kaikille (julkista dataa) */}
             <div className="ah-metrics">
+              {/* Kun mittaus on liian vanha laskentaan, näytetään viimeisin
+                  tunnettu arvo ikämerkinnällä viivan sijaan. Arvo EI ole
+                  mukana todennäköisyyslaskennassa. */}
               <MetricCard
                 label={trh("hero.metric.wind", "Aurinkotuuli", "Solar Wind Speed")}
-                value={wind != null ? Math.round(wind) : "–"}
+                value={
+                  wind != null ? Math.round(wind)
+                  : staleWind?.speed != null ? Math.round(staleWind.speed)
+                  : "–"
+                }
                 unit="km/s"
                 delta={windDelta}
                 deltaUnit=""
-                deltaSuffix={vsLastHour}
+                deltaSuffix={wind == null && staleWind?.speed != null ? staleAgeText : vsLastHour}
               />
               <MetricCard
                 label={trh("hero.metric.bz", "Bz-komponentti", "Bz Component")}
-                value={bz != null ? bz.toFixed(1) : "–"}
+                value={
+                  bz != null ? bz.toFixed(1)
+                  : staleWind?.bz != null ? staleWind.bz.toFixed(1)
+                  : "–"
+                }
                 unit="nT"
                 delta={bzDelta}
                 deltaUnit=""
-                deltaSuffix={vsLastHour}
+                deltaSuffix={bz == null && staleWind?.bz != null ? staleAgeText : vsLastHour}
               />
               <MetricCard
                 label={`${trh("hero.metric.clouds", "Pilvisyys", "Cloud Cover")}${activePlace ? ` · ${activePlace.name}` : ""}`}
@@ -857,7 +882,13 @@ export default function AuroraHero({ forecast, children }) {
                   </svg>
                 ) : (
                   <div className="ah-wave-empty">
-                    {trh("forecast.loading", "Ladataan ennustetta…", "Loading forecast…")}
+                    {forecast?.forecastUnavailable
+                      ? trh(
+                          "forecast.unavailableSource",
+                          "Ennuste ei ole juuri nyt saatavilla — NOAA:n lähde ei päivity. Nykytilanne yllä on ajan tasalla.",
+                          "Forecast is unavailable right now — the NOAA source is not updating. Current conditions above are up to date."
+                        )
+                      : trh("forecast.loading", "Ladataan ennustetta…", "Loading forecast…")}
                   </div>
                 )}
               </div>

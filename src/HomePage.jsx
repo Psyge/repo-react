@@ -136,20 +136,28 @@ function parseNoaa3DayKp(text) {
   return series;
 }
 
+/* Ilmaisennuste workerilta, EI suoraan NOAA:lta.
+ *
+ * Aiemmin tämä haki ja jäsensi NOAA:n 3-day-forecast.txt -tiedoston
+ * selaimessa. Se rikkoutui kun NOAA:n feedit jäätyivät kesällä 2026, eikä
+ * hyötynyt workerin varalähteistä. Worker hakee Kp:n GFZ Potsdamilta kun
+ * NOAA on nurin, hoitaa tuoreusvahdin ja kertoo lipulla jos ennuste puuttuu. */
 async function fetchFreeForecast() {
   return sessionCachedJson(FREE_FORECAST_CACHE_KEY, FORECAST_TTL_MS, async () => {
-    const text = await fetchTextSafe(NOAA_3_DAY_FORECAST_URL, "NOAA 3-day forecast");
-    const kpSeries = parseNoaa3DayKp(text);
-    const now    = Date.now();
-    const cutoff = now + 72 * 60 * 60 * 1000;
-    const slots  = kpSeries
-      .filter((s) => s.tsMs >= now - 3 * 60 * 60 * 1000 && s.tsMs <= cutoff)
-      .map((s) => ({
-        tsUtc: new Date(s.tsMs).toISOString(),
-        kp:    s.kp,
-        level: kpToLevel(s.kp),
-      }));
-    return { tier: "free", genAt: new Date(now).toISOString(), slots, current: null };
+    const res = await fetch(`${BASE}/api/aurora/forecast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lat: 67.5, lon: 26 }),
+    });
+    if (!res.ok) throw new Error(`Forecast ${res.status}`);
+    const data = await res.json();
+    return {
+      tier:    data?.tier    || "free",
+      slots:   Array.isArray(data?.slots) ? data.slots : [],
+      genAt:   data?.genAt   || null,
+      current: data?.current || null,
+      forecastUnavailable: data?.forecastUnavailable === true,
+    };
   });
 }
 
@@ -173,6 +181,7 @@ async function fetchPremiumForecast(deviceKey) {
       slots:   Array.isArray(data?.slots) ? data.slots : [],
       genAt:   data?.genAt   || null,
       current: data?.current || null,
+      forecastUnavailable: data?.forecastUnavailable === true,
     };
   });
 }
@@ -189,6 +198,7 @@ function getField(field, lang) {
 export default function HomePage() {
   const [forecast, setForecast] = useState({
     tier: "free", slots: [], genAt: null, current: null,
+    forecastUnavailable: false,
   });
   const [articles, setArticles] = useState([]);
   const { t, currentLanguage } = useTranslation();
@@ -213,6 +223,7 @@ export default function HomePage() {
           slots:   Array.isArray(data?.slots) ? data.slots : [],
           genAt:   data?.genAt   || null,
           current: data?.current || null,
+          forecastUnavailable: data?.forecastUnavailable === true,
         });
       } catch (e) {
         console.error("FORECAST ERROR:", e);
@@ -220,7 +231,7 @@ export default function HomePage() {
         setForecast((prev) =>
           prev.slots.length
             ? prev
-            : { tier: "free", slots: [], genAt: null, current: null }
+            : { tier: "free", slots: [], genAt: null, current: null, forecastUnavailable: true }
         );
       }
     };
@@ -319,7 +330,7 @@ export default function HomePage() {
       </Link>
     </p>
   </div>
- 
+
   {/* 2. Lakilinkit ja copyright omalla rivillään aivan alhaalla */}
   <div className="footer-bottom" style={{ textAlign: "center", opacity: 0.6, fontSize: "0.9rem" }}>
     <p style={{ marginBottom: "0.5rem" }}>© RepoTracker</p>
@@ -330,7 +341,7 @@ export default function HomePage() {
       {" - "}
       <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
     </div>
- 
+
     {/* CC BY 4.0 vaatii tekijän nimen ja linkin lisenssiin — lisenssiehto, ei valinnainen */}
     <p className="footer-attribution" style={{ marginTop: "0.75rem", fontSize: "0.8rem" }}>
       {t("footer.dataSources") || "Data sources"}:{" "}
