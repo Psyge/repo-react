@@ -14,9 +14,8 @@ import { client } from "./lib/contentfulClient";
 
 const BASE = process.env.REACT_APP_API_BASE || "";
 
-const NOAA_3_DAY_FORECAST_URL =
-  "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
-
+/* NOAA-haku ja -jäsennys poistettu: ennuste tulee nyt workerilta, joka
+   hoitaa varalähteet (GFZ) ja tuoreusvahdin. Ks. fetchFreeForecast. */
 const FREE_FORECAST_CACHE_KEY = "aurora_session_cache:home:forecast:free:v1";
 const FORECAST_TTL_MS = 60 * 60 * 1000;
 
@@ -62,78 +61,6 @@ async function sessionCachedJson(key, ttlMs, fetcher) {
   const data = await fetcher();
   writeSessionCache(key, data);
   return data;
-}
-
-async function fetchTextSafe(url, label) {
-  const res = await fetch(url, { cache: "no-store" });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`${label} ${res.status}: ${text.slice(0, 120)}`);
-  if (!text.trim()) throw new Error(`${label}: empty response`);
-  return text;
-}
-
-function kpToLevel(kp) {
-  if (kp == null) return "low";
-  if (kp >= 7) return "veryhigh";
-  if (kp >= 5) return "high";
-  if (kp >= 4) return "medium";
-  return "low";
-}
-
-function parseNoaa3DayKp(text) {
-  const lines = text.split("\n");
-  const startIdx = lines.findIndex((line) =>
-    /NOAA Kp index breakdown/i.test(line)
-  );
-  if (startIdx < 0) return [];
-
-  let headerLine = null;
-  for (let i = startIdx + 1; i < Math.min(startIdx + 6, lines.length); i++) {
-    if (/[A-Z][a-z]{2}\s+\d{1,2}/.test(lines[i])) {
-      headerLine = lines[i];
-      break;
-    }
-  }
-  if (!headerLine) return [];
-
-  const dateMatches = [...headerLine.matchAll(/([A-Z][a-z]{2})\s+(\d{1,2})/g)];
-  if (dateMatches.length < 3) return [];
-
-  const year = new Date().getUTCFullYear();
-  const nowMonth = new Date().getUTCMonth();
-  const monthMap = {
-    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4,  Jun: 5,
-    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
-  };
-
-  const dates = dateMatches.slice(0, 3).map((match) => {
-    const mo = monthMap[match[1]];
-    const d  = parseInt(match[2], 10);
-    let yr   = year;
-    if (mo < nowMonth - 6) yr = year + 1;
-    return { mo, d, yr };
-  });
-
-  const series = [];
-  for (const line of lines) {
-    const match = line.match(
-      /^\s*(\d{2})-(\d{2})UT\s+([\d.]+)(?:\s*\(?[A-Z]?\)?)?\s+([\d.]+)(?:\s*\(?[A-Z]?\)?)?\s+([\d.]+)/
-    );
-    if (!match) continue;
-    const startH = parseInt(match[1], 10);
-    const vals = [
-      parseFloat(match[3]),
-      parseFloat(match[4]),
-      parseFloat(match[5]),
-    ];
-    for (let c = 0; c < 3; c++) {
-      if (Number.isNaN(vals[c])) continue;
-      const tsMs = Date.UTC(dates[c].yr, dates[c].mo, dates[c].d, startH, 0, 0);
-      series.push({ tsMs, kp: Math.round(vals[c] * 10) / 10 });
-    }
-  }
-  series.sort((a, b) => a.tsMs - b.tsMs);
-  return series;
 }
 
 /* Ilmaisennuste workerilta, EI suoraan NOAA:lta.

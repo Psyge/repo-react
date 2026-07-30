@@ -16,14 +16,9 @@ import AdRotator from "./AdRotator";
    Oikea palsta: Paikat (4 satunnaista per sivulataus)
 ======================================================================= */
 
-/* HUOM: NOAA:n vanhat product-feedit (kp/plasma/mag) jäätyivät keväällä 2026.
- * Propagated-feed on elossa ja sisältää plasman + magneettikentän yhdessä.
- * Nykyinen Kp otetaan ennuste-propista (forecast.slots). */
-const NOAA_PROP_URL = "https://services.swpc.noaa.gov/products/geospace/propagated-solar-wind-1-hour.json";
-const SOLAR_MAX_AGE_MS = 3 * 60 * 60 * 1000; // hylkää tätä vanhempi "reaaliaika"
-
-const HERO_SOLAR_CACHE_KEY = "aurora_session_cache:hero:solar:v4";
-const HERO_SOLAR_TTL_MS    = 30 * 60 * 1000;
+/* HUOM: aurinkotuuli, Bz ja Kp tulevat nyt workerin forecast.current-lohkosta,
+ * ei suoraan NOAA:lta. Worker hoitaa varalähteet (GFZ Potsdam), tuoreusvahdin
+ * ja vanhentuneen datan ikämerkinnän. Yksi totuuden lähde. */
 const WEATHER_TTL_MS       = 60 * 60 * 1000;
 const THREE_LOAD_TIMEOUT_MS = 4000;
 
@@ -80,65 +75,6 @@ function writeSessionCache(key, data) {
     sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
   } catch {}
 }
-async function fetchJsonSafe(url, label) {
-  const res = await fetch(url, { cache: "no-store" });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`${label} ${res.status}`);
-  if (!text.trim()) throw new Error(`${label}: empty`);
-  return JSON.parse(text);
-}
-function lastValidRow(rows, colIndex) {
-  if (!Array.isArray(rows)) return null;
-  for (let i = rows.length - 1; i >= 1; i--) {
-    const v = parseFloat(rows[i]?.[colIndex]);
-    if (!Number.isNaN(v)) return rows[i];
-  }
-  return null;
-}
-function firstValidRow(rows, colIndex) {
-  if (!Array.isArray(rows)) return null;
-  for (let i = 1; i < rows.length; i++) {
-    const v = parseFloat(rows[i]?.[colIndex]);
-    if (!Number.isNaN(v)) return rows[i];
-  }
-  return null;
-}
-
-/* Tuuli + Bz propagated-feedistä. Delta = muutos feedin tunnin ikkunan yli. */
-async function fetchHeroSolarData() {
-  const cached = readSessionCache(HERO_SOLAR_CACHE_KEY, HERO_SOLAR_TTL_MS);
-  if (cached) return cached;
-
-  const propData = await fetchJsonSafe(NOAA_PROP_URL, "NOAA propagated").catch(() => null);
-
-  /* Sarakkeet: time_tag, speed, density, temperature, bx, by, bz, bt, ... */
-  let wind = null, bz = null, windDelta = null, bzDelta = null;
-  const last = lastValidRow(propData, 1);
-  if (last) {
-    const ts = Date.parse(last[0]);
-    if (Number.isNaN(ts) || Date.now() - ts <= SOLAR_MAX_AGE_MS) {
-      const w = parseFloat(last[1]);
-      const b = parseFloat(last[6]);
-      wind = Number.isNaN(w) ? null : w;
-      bz = Number.isNaN(b) ? null : b;
-
-      const first = firstValidRow(propData, 1);
-      if (first && first !== last) {
-        const w0 = parseFloat(first[1]);
-        const b0 = parseFloat(first[6]);
-        if (!Number.isNaN(w0) && wind != null) windDelta = Math.round(wind - w0);
-        if (!Number.isNaN(b0) && bz != null) bzDelta = Math.round((bz - b0) * 10) / 10;
-      }
-    } else {
-      console.warn("NOAA propagated data vanhentunut:", last[0]);
-    }
-  }
-
-  const data = { wind, bz, windDelta, bzDelta, fetchedAt: Date.now() };
-  writeSessionCache(HERO_SOLAR_CACHE_KEY, data);
-  return data;
-}
-
 /* ---- paikkakohtainen pilvisyys (Open-Meteo, YKSI batch-kutsu) ---- */
 function placesWeatherCacheKey(places) {
   return `aurora_session_cache:hero:weather-all:${places.length}:v1`;
