@@ -4,9 +4,9 @@ import useTranslation from "../hooks/useTranslation";
 import { calculateAurora } from "../utils/auroraEngine";
 import staticPlaces from "../data/places";
 import { client } from "../lib/contentfulClient";
-import Heroglobe from "./Heroglobe";
-import LiveCamSpotlight from "./LiveCamSpotlight";
-import SeasonNotice from "./SeasonNotice";
+import HeroTop from "./HeroTop";
+import HeroForecast from "./HeroForecast";
+import HeroPlaces from "./HeroPlaces";
 import { saveUserLocation } from "../utils/userLocation";
 import AdRotator from "./AdRotator";
 
@@ -279,7 +279,7 @@ export default function AuroraHero({ forecast, children }) {
   const [windDelta, setWindDelta] = useState(null);
   const [bzDelta, setBzDelta]     = useState(null);
   const [threeReady, setThreeReady] = useState(false);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  
 
   const [contentfulPlaces, setContentfulPlaces] = useState([]);
   const [placeWeather, setPlaceWeather] = useState({}); // { [id]: { clouds, temp } }
@@ -586,363 +586,131 @@ export default function AuroraHero({ forecast, children }) {
   const vsLastHour = trh("hero.vsLastHour", "vs. tunti sitten", "vs last hour");
 
   return (
-    <section className={`aurora-hero-container ah-hero--dash ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
+  <section
+    className={`aurora-hero-container ah-hero--dash ${
+      threeReady ? "three-active" : ""
+    } ${isActive ? "is-active" : ""} kp-step-${kpStep}`}
+  >
+    <div className="ah-sky-wrap">
+      {kpStep > 0 && <div className="ah-sky--css" aria-hidden="true" />}
+      <canvas ref={canvasRef} className="ah-canvas" aria-hidden="true" />
+    </div>
 
-      <div className="ah-sky-wrap">
-        {kpStep > 0 && <div className="ah-sky--css" aria-hidden="true" />}
-        <canvas ref={canvasRef} className="ah-canvas" aria-hidden="true" />
+    <div className="ah-ambient" aria-hidden="true" />
+
+    <div className="ah-dash">
+      <div className="ah-adrotator-slot">
+        <AdRotator />
       </div>
 
-      {/* CSS-revontuliverhot + tähdet (aina näkyvissä, hienovaraiset) */}
-      <div className="ah-ambient" aria-hidden="true" />
+      <HeroTop
+        probability={probability}
+        statusWord={statusWord}
+        storm={storm}
+        kp={kp}
+        headline={headline}
+        nextLine={nextLine}
+        isPremium={isPremium}
+        navigate={navigate}
+        t={t}
+        trh={trh}
+      />
 
-      <div className="ah-dash">
-        <div className="ah-adrotator-slot">
-          <AdRotator />
-        </div>
+      <div className="ah-dash-grid">
+        <div className="ah-dash-main">
+          <div className="ah-metrics">
+            <MetricCard
+              label={trh(
+                "hero.metric.wind",
+                "Aurinkotuuli",
+                "Solar Wind Speed"
+              )}
+              value={
+                wind != null
+                  ? Math.round(wind)
+                  : staleWind?.speed != null
+                  ? Math.round(staleWind.speed)
+                  : "–"
+              }
+              unit="km/s"
+              delta={windDelta}
+              deltaUnit=""
+              deltaSuffix={
+                wind == null && staleWind?.speed != null
+                  ? staleAgeText
+                  : vsLastHour
+              }
+            />
 
-        {/* Ylärivi: iso Kp + tila vasemmalla, globe oikealla */}
-        <div className="ah-dash-top">
-          <div className="ah-dash-headline">
-            <div className="ah-eyebrow">
-              <span className="ah-eyebrow-dot" />
-              {trh("hero.eyebrow", "REVONTULI-AKTIIVISUUS · GEOMAGNEETTINEN INDEKSI", "NORTHERN LIGHTS ACTIVITY · GEOMAGNETIC INDEX")}
-            </div>
+            <MetricCard
+              label={trh(
+                "hero.metric.bz",
+                "Bz-komponentti",
+                "Bz Component"
+              )}
+              value={
+                bz != null
+                  ? bz.toFixed(1)
+                  : staleWind?.bz != null
+                  ? staleWind.bz.toFixed(1)
+                  : "–"
+              }
+              unit="nT"
+              delta={bzDelta}
+              deltaUnit=""
+              deltaSuffix={
+                bz == null && staleWind?.bz != null
+                  ? staleAgeText
+                  : vsLastHour
+              }
+            />
 
-            {/* Pääluku: todennäköisyys-% (helpompi ymmärtää kuin Kp).
-                Lasketaan selaimessa julkisesta datasta → näkyy kaikille. */}
-            <div className="ah-kp-row">
-              <span className="ah-kp-big">
-                {probability != null ? `${probability}%` : "–"}
-              </span>
-              <div className="ah-kp-meta">
-                <span className="ah-kp-label">
-                  {trh("hero.probLabel", "REVONTULITODENNÄKÖISYYS", "AURORA PROBABILITY")}
-                </span>
-                <span className="ah-kp-status">{statusWord}</span>
-                {storm && <span className="ah-kp-storm">{storm}</span>}
-              </div>
-            </div>
-
-            {/* Kp palkkina: 0–9-asteikko, täyttö arvon mukaan,
-                merkki G1-myrskyrajalla (Kp 5) */}
-            <div className="ah-kp-bar">
-              <div className="ah-kp-bar-head">
-                <span className="ah-kp-bar-label">Kp Index</span>
-                <span className="ah-kp-bar-value">{kp != null ? kp.toFixed(1) : "–"}</span>
-              </div>
-              <div className="ah-kp-bar-track">
-                <div
-                  className="ah-kp-bar-fill"
-                  style={{ width: `${Math.min(((kp ?? 0) / 9) * 100, 100)}%` }}
-                />
-                <span
-                  className="ah-kp-bar-storm-mark"
-                  title={trh("hero.stormMark", "Myrskyraja (Kp 5 = G1)", "Storm threshold (Kp 5 = G1)")}
-                />
-              </div>
-              <div className="ah-kp-bar-scale">
-                <span>0</span><span>3</span><span>6</span><span>9</span>
-              </div>
-            </div>
-
-            <h1 className="ah-dash-desc">
-              {headline} {nextLine}
-            </h1>
-
-            {/* Premium-CTA vain free-käyttäjille — premiumilla tieto on jo
-                isossa prosentissa */}
-            {!isPremium && (
-              <div className="ah-probability-box">
-                <div className="ah-premium-cta-container">
-                  <button className="ah-premium-link-btn" onClick={() => navigate('/premium')}>
-                    🔒 {t("forecast.unlock48")}
-                  </button>
-                  <span className="ah-premium-subtext">
-                    {t("premium.teaser.short")}
-                  </span>
-                </div>
-              </div>
-            )}
+            <MetricCard
+              label={`${trh(
+                "hero.metric.clouds",
+                "Pilvisyys",
+                "Cloud Cover"
+              )}${activePlace ? ` · ${activePlace.name}` : ""}`}
+              value={
+                activePlace?.currentClouds != null
+                  ? activePlace.currentClouds
+                  : "–"
+              }
+              unit="%"
+            />
           </div>
 
-          <Heroglobe />
-        </div>
+          <HeroForecast
+            wave={wave}
+            forecast={forecast}
+            effectiveRange={effectiveRange}
+            isPremium={isPremium}
+            selectRange={selectRange}
+            trh={trh}
+            WAVE_W={WAVE_W}
+            WAVE_H={WAVE_H}
+            WAVE_PAD={WAVE_PAD}
+          />
 
-        {/* Alarivi: vasen palsta (mittarit → graafi → toimintarivi),
-            oikea palsta (paikat) */}
-        <div className="ah-dash-grid">
-          <div className="ah-dash-main">
-
-            {/* Mittarikortit — samat arvot kaikille (julkista dataa) */}
-            <div className="ah-metrics">
-              {/* Kun mittaus on liian vanha laskentaan, näytetään viimeisin
-                  tunnettu arvo ikämerkinnällä viivan sijaan. Arvo EI ole
-                  mukana todennäköisyyslaskennassa. */}
-              <MetricCard
-                label={trh("hero.metric.wind", "Aurinkotuuli", "Solar Wind Speed")}
-                value={
-                  wind != null ? Math.round(wind)
-                  : staleWind?.speed != null ? Math.round(staleWind.speed)
-                  : "–"
-                }
-                unit="km/s"
-                delta={windDelta}
-                deltaUnit=""
-                deltaSuffix={wind == null && staleWind?.speed != null ? staleAgeText : vsLastHour}
-              />
-              <MetricCard
-                label={trh("hero.metric.bz", "Bz-komponentti", "Bz Component")}
-                value={
-                  bz != null ? bz.toFixed(1)
-                  : staleWind?.bz != null ? staleWind.bz.toFixed(1)
-                  : "–"
-                }
-                unit="nT"
-                delta={bzDelta}
-                deltaUnit=""
-                deltaSuffix={bz == null && staleWind?.bz != null ? staleAgeText : vsLastHour}
-              />
-              <MetricCard
-                label={`${trh("hero.metric.clouds", "Pilvisyys", "Cloud Cover")}${activePlace ? ` · ${activePlace.name}` : ""}`}
-                value={activePlace?.currentClouds != null ? activePlace.currentClouds : "–"}
-                unit="%"
-                delta={null}
-              />
-            </div>
-
-            {/* Kp-ennustegraafi */}
-            <div className="ah-wave">
-              <div className="ah-wave-panel">
-                <div className="ah-wave-head">
-                  <span className="ah-wave-title">
-                    {effectiveRange === "1d"
-                      ? trh("forecast.waveTitle1d", "Kp-ennuste · seuraavat 24 h", "Kp forecast · next 24 h")
-                      : trh("forecast.waveTitle3d", "Kp-ennuste · seuraavat 3 vrk", "Kp forecast · next 3 days")}
-                  </span>
-
-                  <div className="ah-range">
-                    {[
-                      ["1d", trh("forecast.range1d", "1 vrk", "1 day")],
-                      ["3d", trh("forecast.range3d", "3 vrk", "3 days")],
-                    ].map(([key, label]) => {
-                      const active = effectiveRange === key;
-                      const locked = key === "3d" && !isPremium;
-                      return (
-                        <button
-                          key={key}
-                          className={`ah-range-btn ${active ? "ah-range-btn--active" : ""}`}
-                          onClick={() => selectRange(key)}
-                          title={locked ? trh("forecast.rangeLocked", "Koko 3 vrk ennuste Premiumilla", "Full 3-day forecast with Premium") : undefined}
-                        >
-                          {locked ? "🔒 " : ""}{label}
-                        </button>
-                      );
-                    })}
-                    <span className="ah-wave-source">NOAA</span>
-                  </div>
+          {children && (
+            <div className="ah-see-strip">
+              {!isPremium && (
+                <div className="ah-spin-teaser">
+                  🎰 {t("spin.teaser")}
                 </div>
-
-                {wave ? (
-                  <svg
-                    className="ah-wave-svg"
-                    viewBox={`0 0 ${WAVE_W} ${WAVE_H}`}
-                    role="img"
-                    aria-label={trh("forecast.waveAria", "Revontuliaktiivisuuden Kp-ennuste", "Aurora activity Kp forecast")}
-                  >
-                    <defs>
-                      <linearGradient id="ah-wave-grad" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%"  stopColor="#00ffc6" />
-                        <stop offset="60%" stopColor="#14e0ff" />
-                        <stop offset="100%" stopColor="#7d5fff" />
-                      </linearGradient>
-                      <linearGradient id="ah-wave-area-grad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%"   stopColor="#00ffc6" stopOpacity="0.26" />
-                        <stop offset="100%" stopColor="#00ffc6" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-
-                    {wave.yTicks.map((tick) => (
-                      <g key={tick.kp}>
-                        <line
-                          className="ah-wave-grid"
-                          x1={WAVE_PAD.l} y1={tick.y}
-                          x2={WAVE_W - WAVE_PAD.r} y2={tick.y}
-                        />
-                        <text className="ah-wave-ylabel" x={WAVE_PAD.l - 7} y={tick.y + 3}>
-                          {tick.kp}
-                        </text>
-                      </g>
-                    ))}
-
-                    {wave.dayTicks.map((tick, i) => (
-                      <g key={i}>
-                        <line
-                          className="ah-wave-day-line"
-                          x1={tick.x} y1={WAVE_PAD.t} x2={tick.x} y2={wave.baseY}
-                        />
-                        <text className="ah-wave-xlabel" x={tick.x + 4} y={WAVE_H - 6}>
-                          {tick.label}
-                        </text>
-                      </g>
-                    ))}
-
-                    {wave.areaPath && <path className="ah-wave-area" d={wave.areaPath} />}
-                    <path className="ah-wave-line" d={wave.openPath} />
-
-                    {wave.nowX != null && (
-                      <>
-                        <line
-                          className="ah-wave-now"
-                          x1={wave.nowX} y1={WAVE_PAD.t} x2={wave.nowX} y2={wave.baseY}
-                        />
-                        <text className="ah-wave-now-label" x={wave.nowX + 4} y={WAVE_PAD.t + 9}>
-                          {trh("forecast.now", "nyt", "now")}
-                        </text>
-                      </>
-                    )}
-
-                    {wave.peak && (
-                      <>
-                        <circle className="ah-wave-peak-dot" cx={wave.peak.x} cy={wave.peak.y} r="4" />
-                        <text
-                          className="ah-wave-peak-label"
-                          x={wave.peak.x > WAVE_W - 130 ? wave.peak.x - 8 : wave.peak.x + 8}
-                          y={Math.max(wave.peak.y - 8, WAVE_PAD.t + 10)}
-                          textAnchor={wave.peak.x > WAVE_W - 130 ? "end" : "start"}
-                        >
-                          {trh("forecast.peak", "huippu", "peak")} Kp {wave.peak.kp.toFixed(1)}
-                        </text>
-                      </>
-                    )}
-                  </svg>
-                ) : (
-                  <div className="ah-wave-empty">
-                    {forecast?.forecastUnavailable
-                      ? trh(
-                          "forecast.unavailableSource",
-                          "Ennuste ei ole juuri nyt saatavilla — NOAA:n lähde ei päivity. Nykytilanne yllä on ajan tasalla.",
-                          "Forecast is unavailable right now — the NOAA source is not updating. Current conditions above are up to date."
-                        )
-                      : trh("forecast.loading", "Ladataan ennustetta…", "Loading forecast…")}
-                  </div>
-                )}
-              </div>
+              )}
+              {children}
             </div>
-
-            {/* "Näen revontulia" -toimintarivi — graafin alla, huomiota
-                herättävä (tyylit .ah-see-strip) */}
-            {children && (
-              <div className="ah-see-strip">
-                {!isPremium && (
-                  <div className="ah-spin-teaser">
-                    🎰 {t("spin.teaser") ||
-                      "Spotted the lights? Report a sighting and spin to win free Premium."}
-                  </div>
-                )}
-                {children}
-              </div>
-            )}
-          </div>
-
-          <aside className="ah-dash-side">
-            {/* Kesällä: kertoo miksi revontulia ei näy ja milloin kausi alkaa.
-                Kaudella: ei renderöi mitään ja LiveCam ottaa paikan. */}
-            <SeasonNotice />
-            <LiveCamSpotlight />
-            <div className="ah-places-panel">
-              <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
-              <div className="ah-place-list">
-                {featuredPlaces.map((p) => {
-                  const isSelected = activePlace && p.id === activePlace.id;
-                  const prob = p.currentKp != null ? p.prob : null;
-                  const barColor =
-                    prob == null ? "#475569"
-                    : prob >= 70 ? "#00ffc6"
-                    : prob >= 40 ? "#fee440"
-                    : "#f87171";
-                  return (
-                    <div
-                      key={p.id}
-                      className={`ah-place-row ${isSelected ? "is-active-item" : ""}`}
-                      onClick={() => { setActivePlace(p); setIsPopupOpen(true); }}
-                    >
-                      <div className="ah-place-row-head">
-                        <span className="ah-place-row-name">
-                          <span
-                            className="ah-item-dot-indicator"
-                            style={isSelected ? { background: barColor, boxShadow: `0 0 8px ${barColor}` } : {}}
-                          />
-                          {p.name}
-                        </span>
-                        <span className="ah-place-row-prob" style={{ color: barColor }}>
-                          {prob != null ? `${prob}%` : "–"}
-                        </span>
-                      </div>
-                      <div className="ah-place-row-meta">
-                        <span>Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "–"}</span>
-                        <span>☁ {p.currentClouds != null ? `${p.currentClouds}%` : "–"}</span>
-                      </div>
-                      <div className="ah-place-bar-track">
-                        <div
-                          className="ah-place-bar-fill"
-                          style={{
-                            width: prob != null ? `${prob}%` : "0%",
-                            background: `linear-gradient(to right, ${barColor}80, ${barColor})`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </aside>
+          )}
         </div>
+
+        <HeroPlaces
+          featuredPlaces={featuredPlaces}
+          activePlace={activePlace}
+          setActivePlace={setActivePlace}
+          trh={trh}
+        />
       </div>
-
-      {/* POPUP-MODAALI */}
-      {isPopupOpen && activePlace && (
-        <div className="ah-popup-backdrop" onClick={() => setIsPopupOpen(false)}>
-          <div className="ah-popup-card" onClick={(e) => e.stopPropagation()}>
-            <div className="ah-popup-drag-handle" onClick={() => setIsPopupOpen(false)} />
-            <h3>📍 {activePlace.name}</h3>
-
-            <div className="ah-popup-metrics">
-              <span>Kp {activePlace.currentKp != null ? activePlace.currentKp.toFixed(1) : "--"}</span>
-              <span>☁ {activePlace.currentClouds != null ? `${activePlace.currentClouds}%` : "--"}</span>
-              <span>{activePlace.prob}%</span>
-            </div>
-
-            {activePlace.description ? (
-              <div className="ah-popup-content">
-                <p>{activePlace.description}</p>
-                <button
-                  className="ah-popup-readmore-btn"
-                  onClick={() => {
-                    setIsPopupOpen(false);
-                    navigate(`/places/${activePlace.slug}`);
-                  }}
-                >
-                  ✨ {t("places.readMore")}
-                </button>
-              </div>
-            ) : (
-              <p className="ah-popup-empty">Ei kuvausta saatavilla valitulla kielellä.</p>
-            )}
-
-            <button
-              className="ah-popup-map-btn"
-              onClick={() => {
-                setIsPopupOpen(false);
-                navigate(`/map?lat=${activePlace.lat}&lon=${activePlace.lon}`);
-              }}
-            >
-              {t("places.viewAuroraMap")} 🗺️
-            </button>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
+    </div>
+  </section>
+);
