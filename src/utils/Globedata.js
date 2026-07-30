@@ -8,7 +8,7 @@ export const BASE = process.env.REACT_APP_API_BASE || "";
 export const LOAD_TIMEOUT_MS = 15000;
 export const DEFAULT_CALC_POINT = { lat: 66.5, lng: 26.0 };
 
-const OVATION_URL = "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json";
+const OVATION_URL = `${BASE}/api/aurora/ovation`;
 const BORDERS_URL = "https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson";
 const CITIES_URL = "https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_populated_places_simple.geojson";
 
@@ -110,9 +110,19 @@ export async function loadAuroraPoints() {
 
   const quality = getGlobeQuality();
   const step = quality === "low" ? 3 : 2;
-  const res = await fetch(OVATION_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error("Aurora data not found.");
-  const ovationData = await res.json();
+  const res = await fetch(OVATION_URL, {
+  cache: "no-store",
+});
+
+if (!res.ok) {
+  throw new Error(`Aurora API ${res.status}`);
+}
+
+const ovationData = await res.json();
+
+if (!ovationData?.coordinates) {
+  throw new Error("Invalid aurora data");
+}
   const coords = ovationData?.coordinates || [];
   const pts = [];
 
