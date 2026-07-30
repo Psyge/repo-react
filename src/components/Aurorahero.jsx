@@ -279,7 +279,6 @@ export default function AuroraHero({ forecast, children }) {
   const [windDelta, setWindDelta] = useState(null);
   const [bzDelta, setBzDelta]     = useState(null);
   const [threeReady, setThreeReady] = useState(false);
-  
 
   const [contentfulPlaces, setContentfulPlaces] = useState([]);
   const [placeWeather, setPlaceWeather] = useState({}); // { [id]: { clouds, temp } }
@@ -586,132 +585,115 @@ export default function AuroraHero({ forecast, children }) {
   const vsLastHour = trh("hero.vsLastHour", "vs. tunti sitten", "vs last hour");
 
   return (
-  <section
-    className={`aurora-hero-container ah-hero--dash ${
-      threeReady ? "three-active" : ""
-    } ${isActive ? "is-active" : ""} kp-step-${kpStep}`}
-  >
-    <div className="ah-sky-wrap">
-      {kpStep > 0 && <div className="ah-sky--css" aria-hidden="true" />}
-      <canvas ref={canvasRef} className="ah-canvas" aria-hidden="true" />
-    </div>
+    <section className={`aurora-hero-container ah-hero--dash ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
 
-    <div className="ah-ambient" aria-hidden="true" />
-
-    <div className="ah-dash">
-      <div className="ah-adrotator-slot">
-        <AdRotator />
+      <div className="ah-sky-wrap">
+        {kpStep > 0 && <div className="ah-sky--css" aria-hidden="true" />}
+        <canvas ref={canvasRef} className="ah-canvas" aria-hidden="true" />
       </div>
 
-      <HeroTop
-        probability={probability}
-        statusWord={statusWord}
-        storm={storm}
-        kp={kp}
-        headline={headline}
-        nextLine={nextLine}
-        isPremium={isPremium}
-        navigate={navigate}
-        t={t}
-        trh={trh}
-      />
+      {/* CSS-revontuliverhot + tähdet (aina näkyvissä, hienovaraiset) */}
+      <div className="ah-ambient" aria-hidden="true" />
 
-      <div className="ah-dash-grid">
-        <div className="ah-dash-main">
-          <div className="ah-metrics">
-            <MetricCard
-              label={trh(
-                "hero.metric.wind",
-                "Aurinkotuuli",
-                "Solar Wind Speed"
-              )}
-              value={
-                wind != null
-                  ? Math.round(wind)
-                  : staleWind?.speed != null
-                  ? Math.round(staleWind.speed)
-                  : "–"
-              }
-              unit="km/s"
-              delta={windDelta}
-              deltaUnit=""
-              deltaSuffix={
-                wind == null && staleWind?.speed != null
-                  ? staleAgeText
-                  : vsLastHour
-              }
-            />
-
-            <MetricCard
-              label={trh(
-                "hero.metric.bz",
-                "Bz-komponentti",
-                "Bz Component"
-              )}
-              value={
-                bz != null
-                  ? bz.toFixed(1)
-                  : staleWind?.bz != null
-                  ? staleWind.bz.toFixed(1)
-                  : "–"
-              }
-              unit="nT"
-              delta={bzDelta}
-              deltaUnit=""
-              deltaSuffix={
-                bz == null && staleWind?.bz != null
-                  ? staleAgeText
-                  : vsLastHour
-              }
-            />
-
-            <MetricCard
-              label={`${trh(
-                "hero.metric.clouds",
-                "Pilvisyys",
-                "Cloud Cover"
-              )}${activePlace ? ` · ${activePlace.name}` : ""}`}
-              value={
-                activePlace?.currentClouds != null
-                  ? activePlace.currentClouds
-                  : "–"
-              }
-              unit="%"
-            />
-          </div>
-
-          <HeroForecast
-            wave={wave}
-            forecast={forecast}
-            effectiveRange={effectiveRange}
-            isPremium={isPremium}
-            selectRange={selectRange}
-            trh={trh}
-            WAVE_W={WAVE_W}
-            WAVE_H={WAVE_H}
-            WAVE_PAD={WAVE_PAD}
-          />
-
-          {children && (
-            <div className="ah-see-strip">
-              {!isPremium && (
-                <div className="ah-spin-teaser">
-                  🎰 {t("spin.teaser")}
-                </div>
-              )}
-              {children}
-            </div>
-          )}
+      <div className="ah-dash">
+        <div className="ah-adrotator-slot">
+          <AdRotator />
         </div>
 
-        <HeroPlaces
-          featuredPlaces={featuredPlaces}
-          activePlace={activePlace}
-          setActivePlace={setActivePlace}
+        {/* Ylärivi: iso Kp + tila vasemmalla, globe oikealla */}
+        <HeroTop
+          probability={probability}
+          statusWord={statusWord}
+          storm={storm}
+          kp={kp}
+          headline={headline}
+          nextLine={nextLine}
+          isPremium={isPremium}
+          navigate={navigate}
+          t={t}
           trh={trh}
         />
+
+        {/* Alarivi: vasen palsta (mittarit → graafi → toimintarivi),
+            oikea palsta (paikat) */}
+        <div className="ah-dash-grid">
+          <div className="ah-dash-main">
+
+            {/* Mittarikortit — samat arvot kaikille (julkista dataa) */}
+            <div className="ah-metrics">
+              {/* Kun mittaus on liian vanha laskentaan, näytetään viimeisin
+                  tunnettu arvo ikämerkinnällä viivan sijaan. Arvo EI ole
+                  mukana todennäköisyyslaskennassa. */}
+              <MetricCard
+                label={trh("hero.metric.wind", "Aurinkotuuli", "Solar Wind Speed")}
+                value={
+                  wind != null ? Math.round(wind)
+                  : staleWind?.speed != null ? Math.round(staleWind.speed)
+                  : "–"
+                }
+                unit="km/s"
+                delta={windDelta}
+                deltaUnit=""
+                deltaSuffix={wind == null && staleWind?.speed != null ? staleAgeText : vsLastHour}
+              />
+              <MetricCard
+                label={trh("hero.metric.bz", "Bz-komponentti", "Bz Component")}
+                value={
+                  bz != null ? bz.toFixed(1)
+                  : staleWind?.bz != null ? staleWind.bz.toFixed(1)
+                  : "–"
+                }
+                unit="nT"
+                delta={bzDelta}
+                deltaUnit=""
+                deltaSuffix={bz == null && staleWind?.bz != null ? staleAgeText : vsLastHour}
+              />
+              <MetricCard
+                label={`${trh("hero.metric.clouds", "Pilvisyys", "Cloud Cover")}${activePlace ? ` · ${activePlace.name}` : ""}`}
+                value={activePlace?.currentClouds != null ? activePlace.currentClouds : "–"}
+                unit="%"
+                delta={null}
+              />
+            </div>
+
+            {/* Kp-ennustegraafi */}
+            <HeroForecast
+              wave={wave}
+              forecast={forecast}
+              effectiveRange={effectiveRange}
+              isPremium={isPremium}
+              selectRange={selectRange}
+              trh={trh}
+              WAVE_W={WAVE_W}
+              WAVE_H={WAVE_H}
+              WAVE_PAD={WAVE_PAD}
+            />
+
+            {/* "Näen revontulia" -toimintarivi — graafin alla, huomiota
+                herättävä (tyylit .ah-see-strip) */}
+            {children && (
+              <div className="ah-see-strip">
+                {!isPremium && (
+                  <div className="ah-spin-teaser">
+                    🎰 {t("spin.teaser") ||
+                      "Spotted the lights? Report a sighting and spin to win free Premium."}
+                  </div>
+                )}
+                {children}
+              </div>
+            )}
+          </div>
+
+          {/* Oikea palsta: kesäkortti, kamera, paikkalista ja paikan popup.
+              Popupin tila asuu HeroPlacesissa, koska mikään muu ei tarvitse sitä. */}
+          <HeroPlaces
+            featuredPlaces={featuredPlaces}
+            activePlace={activePlace}
+            setActivePlace={setActivePlace}
+            trh={trh}
+          />
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
 }
