@@ -39,6 +39,32 @@ const ringColor = () => "rgba(0, 255, 198, 0.6)";
 const terminatorColor = () => "rgba(110, 150, 255, 0.6)";
 const heatmapColorFn = () => getAuroraColor;
 
+/* Pisteosumien selainvälimuisti. Worker päivittää datan 15 min välein,
+ * joten tiheämpi haku ei tuo uutta tietoa — vain kuormaa. */
+const POINT_TTL_MS = 15 * 60 * 1000;
+
+function readPointCache(key, ttlMs) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (!o || typeof o.savedAt !== "number") return null;
+    if (Date.now() - o.savedAt > ttlMs) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+    return o.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function writePointCache(key, data) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
+  } catch { /* storage täynnä / privaattitila */ }
+}
+
 /* Ilmaiskäyttäjällä zoom ja kierto ovat lukossa. Täysin liikkumaton pallo luetaan
  * helposti rikkinäiseksi eikä lukituksi, joten pyöritetään sitä hitaasti itsekseen.
  * Kunnioitetaan silti prefers-reduced-motion -asetusta, kuten deviceCanRenderGlobe. */
@@ -122,12 +148,41 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     });
   }, []);
 
-  /* ---- Klikkauslaskenta: free → /calc, premium → /forecast ---- */
+  /* ---- Klikkauslaskenta: free → /calc, premium → /forecast ----
+   *
+   * Vastaus välimuistitetaan sessionStorageen 0,25° ruutuihin pyöristettynä.
+   * Ilman tätä jokainen globe-klikkaus tekisi oman pyynnön workerille —
+   * ja koska data päivittyy vain 15 min välein cronissa, samaa lukua
+   * haettaisiin turhaan kymmeniä kertoja per käyttäjä. */
   const fetchPoint = useCallback(async (lat, lng) => {
     setPopupLoading(true);
     setPopupError(null);
     const deviceKey = readDeviceKey();
     const endpoint = deviceKey ? "/api/aurora/forecast" : "/api/aurora/calc";
+
+    const cacheKey =
+      `aurora_session_cache:globe:point:` +
+      `${(Math.round(lat / 0.25) * 0.25).toFixed(2)}:` +
+      `${(Math.round(lng / 0.25) * 0.25).toFixed(2)}:` +
+      `${deviceKey ? deviceKey.slice(0, 12) : "free"}:v1`;
+
+    try {
+      const cached = readPointCache(cacheKey, POINT_TTL_MS);
+      if (cached) {
+        setPopupData(cached);
+        setHud(cached.tier === "premium"
+          ? {
+              tier: "premium",
+              kp: cached.slots?.[0]?.kp ?? cached.kp ?? null,
+              bz: cached.current?.bz ?? cached.bz ?? null,
+              speed: cached.current?.speed ?? cached.speed ?? null,
+              density: cached.current?.density ?? cached.density ?? null,
+            }
+          : { tier: "free", kp: cached.kp ?? null });
+        setPopupLoading(false);
+        return;
+      }
+    } catch { /* välimuisti ei saa estää hakua */ }
 
     try {
       const res = await fetch(`${BASE}${endpoint}`, {
@@ -137,6 +192,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      writePointCache(cacheKey, data);
       setPopupData(data);
       setHud(data.tier === "premium"
         ? {

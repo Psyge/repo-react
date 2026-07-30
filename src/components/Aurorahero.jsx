@@ -19,6 +19,7 @@ import AdRotator from "./AdRotator";
 /* HUOM: aurinkotuuli, Bz ja Kp tulevat nyt workerin forecast.current-lohkosta,
  * ei suoraan NOAA:lta. Worker hoitaa varalähteet (GFZ Potsdam), tuoreusvahdin
  * ja vanhentuneen datan ikämerkinnän. Yksi totuuden lähde. */
+const BASE = process.env.REACT_APP_API_BASE || "";
 const WEATHER_TTL_MS       = 60 * 60 * 1000;
 const THREE_LOAD_TIMEOUT_MS = 4000;
 
@@ -95,33 +96,14 @@ async function fetchAllPlacesWeather(places) {
 
   inflightWeather = (async () => {
     try {
-      const url = new URL("https://api.open-meteo.com/v1/forecast");
-      url.searchParams.set("latitude",  places.map((p) => p.lat).join(","));
-      url.searchParams.set("longitude", places.map((p) => p.lon).join(","));
-      url.searchParams.set("current",   "temperature_2m,cloud_cover");
-      url.searchParams.set("timezone",  "auto");
+      /* Haetaan omalta workerilta, EI suoraan Open-Meteosta. Worker hakee
+         kaikkien paikkojen säät yhdellä niputetulla kutsulla cronissa —
+         aiemmin jokainen selain teki oman kutsunsa sivulatauksella. */
+      const res = await fetch(`${BASE}/api/places/weather`);
+      if (!res.ok) throw new Error(`places weather ${res.status}`);
 
-      let res;
-      try {
-        res = await fetch(url, { cache: "default" });
-        if (!res.ok) throw new Error(`open-meteo ${res.status}`);
-      } catch {
-        /* yksi uusintayritys 1,5 s päästä — kattaa hetkelliset katkokset */
-        await new Promise((r) => setTimeout(r, 1500));
-        res = await fetch(url, { cache: "default" });
-        if (!res.ok) throw new Error(`open-meteo retry ${res.status}`);
-      }
       const data = await res.json();
-      const arr = Array.isArray(data) ? data : [data];
-
-      const map = {};
-      places.forEach((p, i) => {
-        const c = arr[i]?.current || {};
-        map[p.id] = {
-          temp:   c.temperature_2m != null ? Math.round(c.temperature_2m) : null,
-          clouds: c.cloud_cover    != null ? Math.round(c.cloud_cover)     : null,
-        };
-      });
+      const map = data?.places || {};
 
       /* Älä cachea kokonaan tyhjää tulosta — muuten viivat jäisivät
          näkyviin tunniksi vaikka seuraava yritys onnistuisi */
