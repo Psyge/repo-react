@@ -4,7 +4,7 @@ import useTranslation from "../hooks/useTranslation";
 import LiveCamSpotlight from "./LiveCamSpotlight";
 import SeasonNotice from "./SeasonNotice";
 
-export default function AuroraHeroPlaces({
+export default function HeroPlaces({
   featuredPlaces,
   activePlace,
   setActivePlace,

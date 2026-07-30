@@ -1,6 +1,6 @@
 import Heroglobe from "./Heroglobe";
 
-export default function AuroraHeroTop({
+export default function HeroTop({
   probability,
   statusWord,
   storm,
