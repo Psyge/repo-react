@@ -106,7 +106,7 @@ export default function AuroraHeroPlaces({
         </div>
       </aside>
 
-            </aside>
+            
 
       {isPopupOpen && activePlace && (
         <div
