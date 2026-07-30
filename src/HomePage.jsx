@@ -17,7 +17,7 @@ const BASE = process.env.REACT_APP_API_BASE || "";
 /* NOAA-haku ja -jäsennys poistettu: ennuste tulee nyt workerilta, joka
    hoitaa varalähteet (GFZ) ja tuoreusvahdin. Ks. fetchFreeForecast. */
 const FREE_FORECAST_CACHE_KEY = "aurora_session_cache:home:forecast:free:v1";
-const FORECAST_TTL_MS = 60 * 60 * 1000;
+const FORECAST_TTL_MS = 15 * 60 * 1000;
 
 function readDeviceKey() {
   try {
