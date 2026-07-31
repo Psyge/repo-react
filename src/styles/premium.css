@@ -1,3 +1,63 @@
+/* ---- Premiumin päättymisilmoitus (kerran per istunto) ---- */
+.premium-expired {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(560px, calc(100vw - 24px));
+  padding: 12px 40px 12px 16px;
+  border-radius: 14px;
+  background: rgba(7, 12, 28, 0.96);
+  border: 1px solid rgba(0, 255, 198, 0.3);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+
+.premium-expired-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #e6e9ef;
+}
+
+.premium-expired-cta {
+  flex-shrink: 0;
+  background: #00ffc6;
+  color: #0b0d12;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.premium-expired-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: 0;
+  color: var(--fg-muted, #94a3b8);
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+@media (max-width: 480px) {
+  .premium-expired {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    bottom: 96px; /* Globe/2D/Sun-palkin yläpuolelle */
+  }
+}
+
 .premium-page {
   padding-top: 56px;
   padding-bottom: 72px;

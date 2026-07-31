@@ -12,17 +12,18 @@ import PremiumPage from "./PremiumPage";
 import PremiumSuccessPage from "./PremiumSuccessPage";
 import Contact from "./Contact";
 import MidnightSunV2 from "./components/MidnightSunV2";
+import PremiumExpiredNotice from "./components/PremiumExpiredNotice";
 import CookieBanner from "./components/CookieBanner";
 import PlacePage from "./PlacePage";
 import Premiummodalmanager from "./components/Premiummodalmanager";
-import Auroraassistant from "./components/Auroraassistant";
 
 function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
       <Premiummodalmanager />
-      <Auroraassistant />
+      {/* Näkyy kerran per istunto kun premium on juuri päättynyt */}
+      <PremiumExpiredNotice />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/map" element={<MapPage />} />
