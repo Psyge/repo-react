@@ -73,16 +73,9 @@ export default function HeroTop({
         )}
       </div>
 
-      <div className="ah-globe-slot">
-        <Heroglobe />
-        <button
-          type="button"
-          className="ah-globe-cta"
-          onClick={() => navigate("/map")}
-        >
-          {trh("hero.openGlobe", "Seuraa revontulia kartalla →", "Track the aurora on the map →")}
-        </button>
-      </div>
+      {/* Heroglobe sisältää jo oman linkkinsä (hero.openGlobe-avain),
+          joten tähän EI lisätä toista nappia. */}
+      <Heroglobe />
     </div>
   );
 }
