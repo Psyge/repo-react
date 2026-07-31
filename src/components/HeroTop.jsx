@@ -1,18 +1,24 @@
 import Heroglobe from "./Heroglobe";
 
 /* ========================================================================
-   HeroTop — heron yläosa: iso todennäköisyys, Kp-palkki, otsikko ja globe.
+   HeroTop — heron yläosa.
 
-   Puhdas esityskomponentti, kaikki data tulee propseina AuroraHerolta.
+   Tietohierarkia: SIJAINTI → SANALLINEN TUOMIO → prosentti.
+
+   Käyttäjä kysyy "kannattaako tänä yönä valvoa?", ei "mikä on Kp-indeksi".
+   Siksi iso teksti on vastaus ("Hyvä mahdollisuus nähdä revontulia") ja
+   prosentti on sen alla pienempänä tarkennuksena. Kp-luku ja -palkki
+   siirtyivät mittarikortteihin muiden mittausarvojen joukkoon.
 ======================================================================= */
 
 export default function HeroTop({
+  placeName,
+  verdict,
   probability,
-  statusWord,
-  storm,
-  kp,
+  updatedText,
   headline,
   nextLine,
+  storm,
   isPremium,
   navigate,
   t,
@@ -21,61 +27,35 @@ export default function HeroTop({
   return (
     <div className="ah-dash-top">
       <div className="ah-dash-headline">
-        <div className="ah-eyebrow">
-          <span className="ah-eyebrow-dot" />
-          {trh(
-            "hero.eyebrow",
-            "REVONTULI-AKTIIVISUUS · GEOMAGNEETTINEN INDEKSI",
-            "NORTHERN LIGHTS ACTIVITY · GEOMAGNETIC INDEX"
-          )}
+        {/* Aiemmin tässä oli "REVONTULI-AKTIIVISUUS · GEOMAGNEETTINEN INDEKSI".
+            Päivitysaika on käyttäjälle hyödyllisempi kuin mittaristotermit —
+            varsinkin nyt kun lähteet voivat olla jäässä. */}
+        {updatedText && (
+          <div className="ah-eyebrow">
+            <span className="ah-eyebrow-dot" />
+            {updatedText}
+          </div>
+        )}
+
+        {placeName && (
+          <div className="ah-place-header">
+            <span aria-hidden="true">📍</span> {placeName}
+          </div>
+        )}
+
+        <h1 className="ah-verdict">{verdict}</h1>
+
+        <div className="ah-verdict-sub">
+          {probability != null
+            ? `${probability} % ${trh("hero.probWord", "todennäköisyys", "probability")}`
+            : trh("hero.probUnknown", "Todennäköisyyttä ei saatavilla", "Probability unavailable")}
+          {storm && <span className="ah-kp-storm"> · {storm}</span>}
         </div>
 
-        {/* Pääluku: todennäköisyys-% (helpompi ymmärtää kuin Kp) */}
-        <div className="ah-kp-row">
-          <span className="ah-kp-big">
-            {probability != null ? `${probability}%` : "–"}
-          </span>
-
-          <div className="ah-kp-meta">
-            <span className="ah-kp-label">
-              {trh("hero.probLabel", "REVONTULITODENNÄKÖISYYS", "AURORA PROBABILITY")}
-            </span>
-
-            <span className="ah-kp-status">{statusWord}</span>
-
-            {storm && <span className="ah-kp-storm">{storm}</span>}
-          </div>
-        </div>
-
-        {/* Kp palkkina: 0–9-asteikko, merkki G1-myrskyrajalla (Kp 5) */}
-        <div className="ah-kp-bar">
-          <div className="ah-kp-bar-head">
-            <span className="ah-kp-bar-label">Kp Index</span>
-            <span className="ah-kp-bar-value">{kp != null ? kp.toFixed(1) : "–"}</span>
-          </div>
-
-          <div className="ah-kp-bar-track">
-            <div
-              className="ah-kp-bar-fill"
-              style={{ width: `${Math.min(((kp ?? 0) / 9) * 100, 100)}%` }}
-            />
-            <span
-              className="ah-kp-bar-storm-mark"
-              title={trh("hero.stormMark", "Myrskyraja (Kp 5 = G1)", "Storm threshold (Kp 5 = G1)")}
-            />
-          </div>
-
-          <div className="ah-kp-bar-scale">
-            <span>0</span>
-            <span>3</span>
-            <span>6</span>
-            <span>9</span>
-          </div>
-        </div>
-
-        <h1 className="ah-dash-desc">
+        {/* Tarkentava rivi: mitä taivaalla tapahtuu ja milloin seuraavaksi */}
+        <p className="ah-dash-desc">
           {headline} {nextLine}
-        </h1>
+        </p>
 
         {/* Premium-CTA vain free-käyttäjille */}
         {!isPremium && (
@@ -93,7 +73,16 @@ export default function HeroTop({
         )}
       </div>
 
-      <Heroglobe />
+      <div className="ah-globe-slot">
+        <Heroglobe />
+        <button
+          type="button"
+          className="ah-globe-cta"
+          onClick={() => navigate("/map")}
+        >
+          {trh("hero.openGlobe", "Seuraa revontulia kartalla →", "Track the aurora on the map →")}
+        </button>
+      </div>
     </div>
   );
 }

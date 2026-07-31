@@ -227,8 +227,9 @@ function buildWave(slots, locale, horizonHours) {
   };
 }
 
-/* Mittarikortti (tuuli/Bz/pilvet) delta-indikaattorilla */
-function MetricCard({ label, value, unit, delta, deltaUnit, deltaSuffix }) {
+/* Mittarikortti (aurinkotuuli/pilvet/Kp).
+ * children = vapaa lisäsisältö kortin alaosaan: toinen arvo tai Kp-palkki. */
+function MetricCard({ label, value, unit, delta, deltaUnit, deltaSuffix, children }) {
   const dir = delta == null ? null : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
   return (
     <div className="ah-metric">
@@ -242,6 +243,7 @@ function MetricCard({ label, value, unit, delta, deltaUnit, deltaSuffix }) {
           {delta > 0 ? "▲" : delta < 0 ? "▼" : "•"} {delta > 0 ? "+" : ""}{delta}{deltaUnit} {deltaSuffix}
         </span>
       )}
+      {children}
     </div>
   );
 }
@@ -555,13 +557,30 @@ export default function AuroraHero({ forecast, children }) {
     ? String(t("aurora.next")).replace("{h}", awakening.hours)
     : (!calm ? "" : t("aurora.quiet"));
 
-  /* Iso tilateksti Kp:n mukaan */
-  const statusWord =
-    kp == null ? "–"
-    : kp >= 5   ? trh("hero.status.high", "Korkea aktiivisuus", "High Activity")
-    : kp >= 3.5 ? trh("hero.status.elevated", "Kohonnut aktiivisuus", "Elevated Activity")
-    : kp >= 1.5 ? trh("hero.status.moderate", "Kohtalainen aktiivisuus", "Moderate Activity")
-    :             trh("hero.status.quiet", "Rauhallinen", "Quiet");
+  /* Sanallinen tuomio todennäköisyydestä — sama kynnys kuin workerin
+     computeAurora-funktiolla (75/50/25). Tämä on heron pääviesti: käyttäjä
+     kysyy "kannattaako valvoa", ei "mikä on Kp". */
+  const verdict = useMemo(() => {
+    if (probability == null) {
+      return trh("hero.verdict.unknown", "Tilannetta ei juuri nyt saatavilla", "Conditions unavailable right now");
+    }
+    if (probability >= 75) return trh("hero.verdict.veryhigh", "Erinomainen mahdollisuus nähdä revontulia", "Excellent chance of seeing the northern lights");
+    if (probability >= 50) return trh("hero.verdict.high",     "Hyvä mahdollisuus nähdä revontulia",        "Good chance of seeing the northern lights");
+    if (probability >= 25) return trh("hero.verdict.medium",   "Revontulet ovat mahdollisia",                "The northern lights are possible");
+    return trh("hero.verdict.low", "Revontulia tuskin näkyy tänä yönä", "The northern lights are unlikely tonight");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [probability, currentLanguage]);
+
+  /* Päivitysaika eyebrow'hun — hyödyllisempi kuin mittaristotermit,
+     varsinkin kun lähteet voivat olla jäässä. */
+  const updatedText = useMemo(() => {
+    const ts = Date.parse(forecast?.genAt || "");
+    if (!Number.isFinite(ts)) return null;
+    const min = Math.max(0, Math.round((Date.now() - ts) / 60000));
+    if (min < 1) return trh("hero.updatedNow", "Päivitetty juuri äsken", "Updated just now");
+    return trh("hero.updatedAgo", `Päivitetty ${min} min sitten`, `Updated ${min} min ago`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forecast, currentLanguage]);
 
   const storm = kpStormLabel(kp);
   const vsLastHour = trh("hero.vsLastHour", "vs. tunti sitten", "vs last hour");
@@ -584,12 +603,13 @@ export default function AuroraHero({ forecast, children }) {
 
         {/* Ylärivi: iso Kp + tila vasemmalla, globe oikealla */}
         <HeroTop
+          placeName={activePlace?.name || null}
+          verdict={verdict}
           probability={probability}
-          statusWord={statusWord}
-          storm={storm}
-          kp={kp}
+          updatedText={updatedText}
           headline={headline}
           nextLine={nextLine}
+          storm={storm}
           isPremium={isPremium}
           navigate={navigate}
           t={t}
@@ -603,11 +623,13 @@ export default function AuroraHero({ forecast, children }) {
 
             {/* Mittarikortit — samat arvot kaikille (julkista dataa) */}
             <div className="ah-metrics">
-              {/* Kun mittaus on liian vanha laskentaan, näytetään viimeisin
+              {/* Aurinkotuuli ja Bz ovat saman mittauksen kaksi puolta eivätkä
+                  kumpikaan kerro maallikolle mitään yksinään → yksi kortti.
+                  Kun mittaus on liian vanha laskentaan, näytetään viimeisin
                   tunnettu arvo ikämerkinnällä viivan sijaan. Arvo EI ole
                   mukana todennäköisyyslaskennassa. */}
               <MetricCard
-                label={trh("hero.metric.wind", "Aurinkotuuli", "Solar Wind Speed")}
+                label={trh("hero.metric.solarwind", "Aurinkotuuli", "Solar wind")}
                 value={
                   wind != null ? Math.round(wind)
                   : staleWind?.speed != null ? Math.round(staleWind.speed)
@@ -617,25 +639,50 @@ export default function AuroraHero({ forecast, children }) {
                 delta={windDelta}
                 deltaUnit=""
                 deltaSuffix={wind == null && staleWind?.speed != null ? staleAgeText : vsLastHour}
-              />
-              <MetricCard
-                label={trh("hero.metric.bz", "Bz-komponentti", "Bz Component")}
-                value={
-                  bz != null ? bz.toFixed(1)
-                  : staleWind?.bz != null ? staleWind.bz.toFixed(1)
-                  : "–"
-                }
-                unit="nT"
-                delta={bzDelta}
-                deltaUnit=""
-                deltaSuffix={bz == null && staleWind?.bz != null ? staleAgeText : vsLastHour}
-              />
+              >
+                <span className="ah-metric-second">
+                  Bz{" "}
+                  <strong>
+                    {bz != null ? bz.toFixed(1)
+                     : staleWind?.bz != null ? staleWind.bz.toFixed(1)
+                     : "–"}
+                  </strong>
+                  <small> nT</small>
+                  {bz == null && staleWind?.bz != null && staleAgeText && (
+                    <em className="ah-metric-age"> · {staleAgeText}</em>
+                  )}
+                </span>
+              </MetricCard>
               <MetricCard
                 label={`${trh("hero.metric.clouds", "Pilvisyys", "Cloud Cover")}${activePlace ? ` · ${activePlace.name}` : ""}`}
                 value={activePlace?.currentClouds != null ? activePlace.currentClouds : "–"}
                 unit="%"
                 delta={null}
               />
+
+              {/* Kp siirtyi tänne heron pääpaikalta: se on mittausarvo siinä
+                  missä tuuli ja pilvetkin, ei se mitä käyttäjä haluaa tietää. */}
+              <MetricCard
+                label={trh("hero.metric.kp", "Kp-indeksi", "Kp index")}
+                value={kp != null ? kp.toFixed(1) : "–"}
+                delta={null}
+              >
+                <div className="ah-kp-bar ah-kp-bar--compact">
+                  <div className="ah-kp-bar-track">
+                    <div
+                      className="ah-kp-bar-fill"
+                      style={{ width: `${Math.min(((kp ?? 0) / 9) * 100, 100)}%` }}
+                    />
+                    <span
+                      className="ah-kp-bar-storm-mark"
+                      title={trh("hero.stormMark", "Myrskyraja (Kp 5 = G1)", "Storm threshold (Kp 5 = G1)")}
+                    />
+                  </div>
+                  <div className="ah-kp-bar-scale">
+                    <span>0</span><span>3</span><span>6</span><span>9</span>
+                  </div>
+                </div>
+              </MetricCard>
             </div>
 
             {/* Kp-ennustegraafi */}

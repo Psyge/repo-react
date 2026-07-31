@@ -324,6 +324,80 @@
 .ah-mountain-svg { width: 100%; height: auto; fill: #02040a; }
 
 /* ========================================================================
+   HERON TIETOHIERARKIA: sijainti → sanallinen tuomio → prosentti
+   Kp-luku ja -palkki siirtyivät mittarikortteihin.
+======================================================================== */
+.ah-place-header {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--fg-muted, #94a3b8);
+  margin-bottom: 0.35rem;
+}
+
+.ah-verdict {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #e6e9ef;
+}
+
+.ah-verdict-sub {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #00ffc6;
+  margin-bottom: 0.8rem;
+}
+
+/* Aiempi pääotsikko on nyt tarkentava rivi, ei h1-kokoinen */
+.ah-dash-desc {
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--fg-muted, #94a3b8);
+  margin: 0 0 1rem;
+}
+
+.ah-globe-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ah-globe-cta {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #00ffc6;
+  cursor: pointer;
+}
+
+.ah-globe-cta:hover { text-decoration: underline; }
+
+/* Mittarikortin toinen arvo (Bz aurinkotuulen alla) */
+.ah-metric-second {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--fg-muted, #94a3b8);
+}
+
+.ah-metric-second strong { color: #e6e9ef; }
+
+.ah-metric-age {
+  font-style: normal;
+  opacity: 0.7;
+}
+
+/* Kp-palkki mittarikortin sisällä — kapeampi kuin heron alkuperäinen */
+.ah-kp-bar--compact { margin-top: 0.45rem; }
+.ah-kp-bar--compact .ah-kp-bar-scale { font-size: 0.65rem; }
+
+/* ========================================================================
    Kp-ENNUSTEGRAAFI + 1 vrk / 3 vrk -VALITSIN
 ======================================================================== */
 .ah-wave {
