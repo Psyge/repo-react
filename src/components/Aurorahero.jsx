@@ -635,6 +635,27 @@ export default function AuroraHero({ forecast, children }) {
                   Kun mittaus on liian vanha laskentaan, näytetään viimeisin
                   tunnettu arvo ikämerkinnällä viivan sijaan. Arvo EI ole
                   mukana todennäköisyyslaskennassa. */}
+                  <MetricCard
+                label={trh("hero.metric.kp", "Kp-indeksi", "Kp index")}
+                value={kp != null ? kp.toFixed(1) : "–"}
+                delta={null}
+              >
+                <div className="ah-kp-bar ah-kp-bar--compact">
+                  <div className="ah-kp-bar-track">
+                    <div
+                      className="ah-kp-bar-fill"
+                      style={{ width: `${Math.min(((kp ?? 0) / 9) * 100, 100)}%` }}
+                    />
+                    <span
+                      className="ah-kp-bar-storm-mark"
+                      title={trh("hero.stormMark", "Myrskyraja (Kp 5 = G1)", "Storm threshold (Kp 5 = G1)")}
+                    />
+                  </div>
+                  <div className="ah-kp-bar-scale">
+                    <span>0</span><span>3</span><span>6</span><span>9</span>
+                  </div>
+                </div>
+              </MetricCard>
               <MetricCard
                 label={trh("hero.metric.solarwind", "Aurinkotuuli", "Solar wind")}
                 value={
@@ -667,27 +688,7 @@ export default function AuroraHero({ forecast, children }) {
 
               {/* Kp siirtyi tänne heron pääpaikalta: se on mittausarvo siinä
                   missä tuuli ja pilvetkin, ei se mitä käyttäjä haluaa tietää. */}
-              <MetricCard
-                label={trh("hero.metric.kp", "Kp-indeksi", "Kp index")}
-                value={kp != null ? kp.toFixed(1) : "–"}
-                delta={null}
-              >
-                <div className="ah-kp-bar ah-kp-bar--compact">
-                  <div className="ah-kp-bar-track">
-                    <div
-                      className="ah-kp-bar-fill"
-                      style={{ width: `${Math.min(((kp ?? 0) / 9) * 100, 100)}%` }}
-                    />
-                    <span
-                      className="ah-kp-bar-storm-mark"
-                      title={trh("hero.stormMark", "Myrskyraja (Kp 5 = G1)", "Storm threshold (Kp 5 = G1)")}
-                    />
-                  </div>
-                  <div className="ah-kp-bar-scale">
-                    <span>0</span><span>3</span><span>6</span><span>9</span>
-                  </div>
-                </div>
-              </MetricCard>
+              
             </div>
 
             {/* Kp-ennustegraafi */}
