@@ -231,6 +231,10 @@ function buildWave(slots, locale, horizonHours) {
  * children = vapaa lisäsisältö kortin alaosaan: toinen arvo tai Kp-palkki. */
 function MetricCard({ label, value, unit, delta, deltaUnit, deltaSuffix, children }) {
   const dir = delta == null ? null : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+  /* Alarivi näytetään myös ilman delta-arvoa, koska se kantaa nykyään
+     ikämerkinnän ("15 vrk vanha"). Aiemmin ehto oli pelkkä delta != null,
+     jolloin merkintä jäi näkymättä kun worker lakkasi palauttamasta deltoja. */
+  const showFooter = delta != null || !!deltaSuffix;
   return (
     <div className="ah-metric">
       <span className="ah-metric-label">{label}</span>
@@ -238,9 +242,14 @@ function MetricCard({ label, value, unit, delta, deltaUnit, deltaSuffix, childre
         {value}
         {unit && <small>{unit}</small>}
       </span>
-      {delta != null && (
-        <span className={`ah-metric-delta ah-metric-delta--${dir}`}>
-          {delta > 0 ? "▲" : delta < 0 ? "▼" : "•"} {delta > 0 ? "+" : ""}{delta}{deltaUnit} {deltaSuffix}
+      {showFooter && (
+        <span className={`ah-metric-delta ${dir ? `ah-metric-delta--${dir}` : "ah-metric-delta--none"}`}>
+          {delta != null && (
+            <>
+              {delta > 0 ? "▲" : delta < 0 ? "▼" : "•"} {delta > 0 ? "+" : ""}{delta}{deltaUnit}{" "}
+            </>
+          )}
+          {deltaSuffix}
         </span>
       )}
       {children}
@@ -260,8 +269,10 @@ export default function AuroraHero({ forecast, children }) {
   const [kp, setKp]     = useState(null);
   const [wind, setWind] = useState(null);
   const [bz, setBz]     = useState(null);
-  const [windDelta, setWindDelta] = useState(null);
-  const [bzDelta, setBzDelta]     = useState(null);
+  /* Delta-arvot (muutos tunnin yli) poistettu: ne laskettiin aiemmin
+     selaimessa NOAA:n feedistä, ja worker ei palauta niitä. Jos haluat ne
+     takaisin, worker voisi laskea ne propagated-feedin ikkunasta ja
+     palauttaa current.speedDelta / current.bzDelta. */
   const [threeReady, setThreeReady] = useState(false);
 
   const [contentfulPlaces, setContentfulPlaces] = useState([]);
@@ -428,9 +439,6 @@ export default function AuroraHero({ forecast, children }) {
     if (!c) return;
     setWind(c.speed ?? null);
     setBz(c.bz ?? null);
-    // Deltoja ei enää lasketa selaimessa — arvot tulevat sellaisinaan
-    setWindDelta(null);
-    setBzDelta(null);
   }, [forecast]);
 
   /* Nykyinen Kp: ensisijaisesti workerin current (GFZ-varalähteineen),
@@ -583,7 +591,6 @@ export default function AuroraHero({ forecast, children }) {
   }, [forecast, currentLanguage]);
 
   const storm = kpStormLabel(kp);
-  const vsLastHour = trh("hero.vsLastHour", "vs. tunti sitten", "vs last hour");
 
   return (
     <section className={`aurora-hero-container ah-hero--dash ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
@@ -636,9 +643,7 @@ export default function AuroraHero({ forecast, children }) {
                   : "–"
                 }
                 unit="km/s"
-                delta={windDelta}
-                deltaUnit=""
-                deltaSuffix={wind == null && staleWind?.speed != null ? staleAgeText : vsLastHour}
+                deltaSuffix={wind == null && staleWind?.speed != null ? staleAgeText : null}
               >
                 <span className="ah-metric-second">
                   Bz{" "}
