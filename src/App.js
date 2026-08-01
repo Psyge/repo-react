@@ -17,6 +17,7 @@ import CookieBanner from "./components/CookieBanner";
 import PlacePage from "./PlacePage";
 import Premiummodalmanager from "./components/Premiummodalmanager";
 
+
 function App() {
   return (
     <HelmetProvider>
@@ -37,6 +38,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/MidNightSunV2" element={<MidnightSunV2 />} />
           <Route path="/places/:slug" element={<PlacePage />} />
+          <Route path="/about" element={<AboutPage />} />
         </Routes>
 
         

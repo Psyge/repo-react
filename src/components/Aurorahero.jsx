@@ -444,19 +444,40 @@ export default function AuroraHero({ forecast, children }) {
   /* Nykyinen Kp: ensisijaisesti workerin current (GFZ-varalähteineen),
      varalla lähin ennusteslotti. */
   useEffect(() => {
-    const c = forecast?.current;
-    if (c?.kp != null) { setKp(c.kp); return; }
-    if (!slots.length) return;
-    const now = Date.now();
-    let best = null, bestD = Infinity;
-    for (const s of slots) {
-      const ms = Date.parse(s.tsUtc);
-      if (Number.isNaN(ms)) continue;
-      const d = Math.abs(ms - now);
-      if (d < bestD) { bestD = d; best = s; }
+  const c = forecast?.current;
+
+  // 1. Jos current.kp on olemassa JA se on suurempi kuin 0, käytetään sitä!
+  if (c?.kp != null && c.kp > 0) {
+    setKp(c.kp);
+    return;
+  }
+
+  // 2. Jos current.kp on 0, null tai puuttuu, haetaan nykyhetkeä lähin slotti:
+  if (!slots.length) {
+    // Jos slottejakin ei ole, hyväksytään c.kp vaikka se olisi 0
+    if (c?.kp != null) setKp(c.kp);
+    return;
+  }
+
+  const now = Date.now();
+  let best = null, bestD = Infinity;
+  for (const s of slots) {
+    const ms = Date.parse(s.tsUtc);
+    if (Number.isNaN(ms)) continue;
+    const d = Math.abs(ms - now);
+    if (d < bestD) { 
+      bestD = d; 
+      best = s; 
     }
-    if (best?.kp != null) setKp(best.kp);
-  }, [forecast, slots]);
+  }
+
+  // Asetetaan lähimmän slotin Kp (esim. 3.3 tai 4.3) nollan sijaan!
+  if (best?.kp != null) {
+    setKp(best.kp);
+  } else if (c?.kp != null) {
+    setKp(c.kp);
+  }
+}, [forecast, slots]);
 
   /* Vanhentunut aurinkotuulidata näytettäväksi ikämerkinnän kanssa */
   const staleWind = forecast?.current?.stale ?? null;

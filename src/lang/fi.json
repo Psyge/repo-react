@@ -374,5 +374,16 @@
   "premium.trial.cta": "Et ole vielä kokeillut? Kokeile 6 h ilmaiseksi ensin →",
   "premium.trial.used": "Olet jo käyttänyt ilmaisen kokeilun tällä laitteella.",
   "premium.trial.limit": "Kokeilurajoitus saavutettu tälle laitteelle/verkolle.",
-  "premium.trial.error": "Kokeilun käynnistys epäonnistui."
+  "premium.trial.error": "Kokeilun käynnistys epäonnistui.",
+
+  "about.title": "Tietoa RepoTrackerista",
+  "about.intro": "Revontulien seuranta tehty selkeäksi — Lapista, Lapin ihmisille ja sen vierailijoille.",
+  "about.q.story": "Mistä kaikki alkoi",
+  "about.a.story1": "RepoTracker sai alkunsa yksinkertaisesta turhautumisesta: revontulien ennustaminen oli hajallaan kymmenissä eri lähteissä — Kp-indeksi yhdessä paikassa, pilvisyys toisessa, aurinkotuulidata jossain kolmannessa. Kukaan ei kertonut suoraan sitä mitä oikeasti halusi tietää: kannattaako juuri nyt mennä ulos, ja mihin suuntaan katsoa.",
+  "about.a.story2": "Niinpä päätin rakentaa sivuston joka tekee sen työn puolestasi — yhdistää NOAA:n avaruussäädatan, Ilmatieteen laitoksen paikallisen sääennusteen ja käyttäjien omat havainnot yhdeksi selkeäksi näkymäksi.",
+  "about.q.whatwedo": "Mitä RepoTracker tekee",
+  "about.a.whatwedo1": "Sivustolta löydät reaaliaikaisen Kp-indeksin, 24 tunnin ilmaisennusteen ja interaktiivisen kartan jossa näkyvät muiden käyttäjien havainnot lähes suorassa lähetyksessä. Premium-käyttäjät saavat lisäksi koko 3 vuorokauden ennusteen, tarkan paikkakohtaisen todennäköisyyden, henkilökohtaiset Telegram- tai sähköpostihälytykset, ja voivat kysyä suoraan sivuston omalta tekoälyavustajalta. Kaikki data haetaan luotettavista lähteistä — ei koskaan keksittyjä lukuja.",
+  "about.q.who": "Kuka tämän tekee",
+  "about.a.who1": "RepoTracker on yhden kehittäjän ylläpitämä projekti, joka on kasvanut henkilökohtaisesta harrastuksesta oikeaksi palveluksi. Rakennan ja päivitän sivustoa jatkuvasti — jos jokin ei toimi tai sinulla on idea jota haluaisit nähdä toteutettuna, kuulen mielelläni siitä.",
+  "about.cta.contact": "Ota yhteyttä →"
 }
