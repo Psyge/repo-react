@@ -39,7 +39,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/MidNightSunV2" element={<MidnightSunV2 />} />
           <Route path="/places/:slug" element={<PlacePage />} />
-          <Route path="/about" element={<AboutPage />} />
+          <Route path="/about" element={<Aboutpage />} />
         </Routes>
 
         
