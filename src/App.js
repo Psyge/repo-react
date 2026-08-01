@@ -16,6 +16,7 @@ import PremiumExpiredNotice from "./components/PremiumExpiredNotice";
 import CookieBanner from "./components/CookieBanner";
 import PlacePage from "./PlacePage";
 import Premiummodalmanager from "./components/Premiummodalmanager";
+import Aboutpage from "./Aboutpage";
 
 
 function App() {
