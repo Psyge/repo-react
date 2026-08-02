@@ -739,6 +739,7 @@ export default function AuroraHero({ forecast, children }) {
             featuredPlaces={featuredPlaces}
             activePlace={activePlace}
             setActivePlace={setActivePlace}
+            currentKp={kp}
             trh={trh}
           />
         </div>

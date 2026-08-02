@@ -359,24 +359,11 @@
   margin: 0 0 1rem;
 }
 
-.ah-globe-slot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+/* Alarivi ilman delta-nuolta (kantaa nyt ikämerkinnän) */
+.ah-metric-delta--none {
+  color: var(--fg-muted, #94a3b8);
+  opacity: 0.75;
 }
-
-.ah-globe-cta {
-  background: none;
-  border: 0;
-  padding: 0;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #00ffc6;
-  cursor: pointer;
-}
-
-.ah-globe-cta:hover { text-decoration: underline; }
 
 /* Mittarikortin toinen arvo (Bz aurinkotuulen alla) */
 .ah-metric-second {
@@ -1090,6 +1077,35 @@
   text-transform: uppercase;
   color: #ffffff;
   margin: 0 0 0.6rem;
+}
+
+/* Otsikkorivi: "PAIKAT" vasemmalla, globaali Kp oikealla.
+   Kp on planetaarinen indeksi, joten se kuuluu tähän kerran eikä
+   jokaiselle paikkariville erikseen. */
+.ah-places-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.ah-places-head .ah-places-title {
+  margin: 0;
+}
+
+.ah-places-kp {
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #9fb3c8;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+  cursor: help;
 }
 
 /* Dashboardin mobiili */

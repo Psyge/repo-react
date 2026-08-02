@@ -16,6 +16,7 @@ export default function HeroPlaces({
   featuredPlaces,
   activePlace,
   setActivePlace,
+  currentKp = null,
   trh,
 }) {
   const navigate = useNavigate();
@@ -32,7 +33,25 @@ export default function HeroPlaces({
         <LiveCamSpotlight />
 
         <div className="ah-places-panel">
-          <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
+          {/* Kp näytetään kerran otsikkorivillä, ei joka paikan kohdalla:
+              se on planetaarinen indeksi eli sama luku koko maapallolle.
+              Riveillä toistettuna se näytti paikkakohtaiselta mittaukselta,
+              vaikka paikkojen ero syntyy pilvistä ja leveysasteesta. */}
+          <div className="ah-places-head">
+            <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
+            {currentKp != null && (
+              <span
+                className="ah-places-kp"
+                title={trh(
+                  "hero.kpGlobalHint",
+                  "Kp on planetaarinen indeksi — sama arvo kaikkialla",
+                  "Kp is a planetary index — the same value everywhere"
+                )}
+              >
+                Kp {currentKp.toFixed(1)}
+              </span>
+            )}
+          </div>
 
           <div className="ah-place-list">
             {featuredPlaces.map((p) => {
