@@ -453,9 +453,16 @@ export default function AuroraHero({ forecast, children }) {
    * Nolla on myös kelvollinen Kp-arvo (täysin rauhallinen), joten sitä ei
    * kohdella puuttuvana. */
   useEffect(() => {
-    const c = forecast?.current;
-    setKp(c?.kp != null ? c.kp : null);
+    const v = forecast?.current?.kp;
+    /* Kp on aina 0–9. Asteikon ulkopuolinen luku (esim. -1 = puuttuva arvo)
+     * on virhe, ei mittaus — näytetään mieluummin viiva kuin väärä luku. */
+    const valid = typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 9;
+    setKp(valid ? v : null);
   }, [forecast]);
+
+  /* Mistä näytettävä Kp on peräisin: 'gfz' = mitattu, 'noaa' = ennustesarjasta
+   * otettu vara-arvo. Null kun arvoa ei näytetä lainkaan. */
+  const kpSource = kp != null ? (forecast?.current?.kpSource ?? null) : null;
 
   /* Vanhentunut aurinkotuulidata näytettäväksi ikämerkinnän kanssa */
   const staleWind = forecast?.current?.stale ?? null;
@@ -635,7 +642,15 @@ export default function AuroraHero({ forecast, children }) {
                   tunnettu arvo ikämerkinnällä viivan sijaan. Arvo EI ole
                   mukana todennäköisyyslaskennassa. */}
                   <MetricCard
-                label={trh("hero.metric.kp", "Kp-indeksi", "Kp index")}
+                label={
+                  trh("hero.metric.kp", "Kp-indeksi", "Kp index") +
+                  /* Kun GFZ ei vastaa, worker ottaa arvon NOAA:n 3 vrk
+                     -ennustesarjasta. Se on ENNUSTE, ei mittaus — merkitään
+                     näkyviin, ettei lukua luulla havainnoksi. */
+                  (kpSource === "noaa"
+                    ? ` (${trh("hero.metric.kpForecast", "ennuste", "forecast")})`
+                    : "")
+                }
                 value={kp != null ? kp.toFixed(1) : "–"}
                 delta={null}
               >

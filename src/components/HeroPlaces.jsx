@@ -72,9 +72,15 @@ export default function HeroPlaces({
                     </span>
                   </div>
 
+                  {/* Kp on planetaarinen indeksi — sama luku joka paikassa.
+                      Sen toistaminen jokaisella rivillä ei kerro paikoista
+                      mitään; se näkyy kerran heron mittarikortissa. Rivillä
+                      näytetään vain se mikä oikeasti vaihtelee. */}
                   <div className="ah-place-row-meta">
-                    <span>Kp {p.currentKp != null ? p.currentKp.toFixed(1) : "–"}</span>
                     <span>☁ {p.currentClouds != null ? `${p.currentClouds}%` : "–"}</span>
+                    <span>
+                      {p.currentTemp != null ? `${Math.round(p.currentTemp)}°C` : "–"}
+                    </span>
                   </div>
 
                   <div className="ah-place-bar-track">
@@ -102,10 +108,12 @@ export default function HeroPlaces({
 
             <div className="ah-popup-metrics">
               <span>
-                Kp {activePlace.currentKp != null ? activePlace.currentKp.toFixed(1) : "--"}
+                ☁ {activePlace.currentClouds != null ? `${activePlace.currentClouds}%` : "--"}
               </span>
               <span>
-                ☁ {activePlace.currentClouds != null ? `${activePlace.currentClouds}%` : "--"}
+                {activePlace.currentTemp != null
+                  ? `${Math.round(activePlace.currentTemp)}°C`
+                  : "--"}
               </span>
               <span>{activePlace.prob}%</span>
             </div>
