@@ -1,8 +1,9 @@
 import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
 import { useEffect } from 'react';
-import { Link } from "react-router-dom";
+
 import SEO from "./components/SEO";
+import Footer from "./components/Footer"
 
 const QUESTIONS = [
   { q: 'faq.q.about', body: ['faq.a.about1', 'faq.a.about2', 'faq.a.about3'] },
@@ -68,25 +69,7 @@ export default function FaqPage() {
         ))}
       </section>
     </main>
-    <footer className="footer">
-      <p>© RepoTracker</p>
-    
-      <Link to="/privacy">
-        {t("footer.privacy")}
-      </Link>
-    
-      {" - "}
-    
-      <Link to="/terms">
-        {t("privacy.q.terms")}
-      </Link>
-    
-      {" - "}
-    
-      <Link to="/contact">
-        {t("footer.contact") || "Contact"}
-      </Link>
-    </footer>
+    <Footer />
     </div>
   );
 }

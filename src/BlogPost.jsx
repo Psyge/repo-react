@@ -6,6 +6,7 @@ import SEO from "./components/SEO";
 import { client } from "./lib/contentfulClient";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
+import Footer from "./components/Footer"
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -113,14 +114,7 @@ export default function BlogPost() {
         </div>
       </main>
 
-      <footer className="footer">
-        <p>© RepoTracker</p>
-        <Link to="/privacy">{t("footer.privacy")}</Link>
-        {" - "}
-        <Link to="/terms">{t("footer.terms")}</Link>
-        {" - "}
-        <Link to="/contact">{t("footer.contact")}</Link>
-      </footer>
+      <Footer />
     </div>
   );
 }

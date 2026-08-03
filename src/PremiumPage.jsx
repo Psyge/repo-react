@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import useTranslation from "./hooks/useTranslation";
 import { isActive, read, openCheckout } from "./lib/premium";
 import Header from "./components/Header";
-import { Link } from "react-router-dom";
+import Footer from "./components/Footer"
 import SEO from "./components/SEO";
 
 const CONSENT_TEXT_VERSION = "v1";
@@ -183,14 +183,7 @@ export default function PremiumPage() {
         </section>
       </main>
 
-      <footer className="footer">
-        <p>© RepoTracker</p>
-        <Link to="/privacy">{t("footer.privacy")}</Link>
-        {" - "}
-        <Link to="/terms">{t("privacy.q.terms")}</Link>
-        {" - "}
-        <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
-      </footer>
+      <Footer />
     </div>
   );
 }
