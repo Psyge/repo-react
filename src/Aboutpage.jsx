@@ -1,6 +1,7 @@
 import useTranslation from "./hooks/useTranslation";
 import { useEffect } from "react";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import { Link } from "react-router-dom";
 import SEO from "./components/SEO";
 
@@ -83,19 +84,7 @@ export default function AboutPage() {
         </section>
       </main>
 
-      <footer className="footer">
-        <p>© RepoTracker</p>
-
-        <Link to="/privacy">{t("footer.privacy")}</Link>
-
-        {" - "}
-
-        <Link to="/terms">{t("privacy.q.terms")}</Link>
-
-        {" - "}
-
-        <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
-      </footer>
+      <Footer />
     </div>
   );
 }

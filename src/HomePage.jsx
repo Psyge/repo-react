@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import Aurorahero from "./components/Aurorahero";
 import Sightings from "./components/Sightings";
 
@@ -244,55 +245,7 @@ export default function HomePage() {
         </section>
       </main>
 
-   <footer className="footer">
-  {/* 1. Yhteistyöosio siististi ylhäällä */}
-  <div className="footer-coop" style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-    <p className="footer-coop-title" style={{ fontWeight: "600", marginBottom: "0.25rem" }}>
-      🤝 {t("coop_title")}
-    </p>
-    <p className="footer-coop-text">
-      {t("coop_text")}{" "}
-      <Link to="/contact" className="footer-coop-link" style={{ color: "#00ffc6", textDecoration: "underline" }}>
-        {t("footer.contact") || "Contact"}
-      </Link>
-    </p>
-  </div>
-
-  {/* 2. Lakilinkit ja copyright omalla rivillään aivan alhaalla */}
-  <div className="footer-bottom" style={{ textAlign: "center", opacity: 0.6, fontSize: "0.9rem" }}>
-    <p style={{ marginBottom: "0.5rem" }}>© RepoTracker</p>
-    <div className="footer-links">
-      <Link to="/privacy">{t("footer.privacy")}</Link>
-      {" - "}
-      <Link to="/terms">{t("privacy.q.terms")}</Link>
-      {" - "}
-      <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
-    </div>
-
-    {/* CC BY 4.0 vaatii tekijän nimen ja linkin lisenssiin — lisenssiehto, ei valinnainen */}
-    <p className="footer-attribution" style={{ marginTop: "0.75rem", fontSize: "0.8rem" }}>
-      {t("footer.dataSources") || "Data sources"}:{" "}
-      <a
-        href="https://en.ilmatieteenlaitos.fi/open-data"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ color: "inherit" }}
-      >
-        Ilmatieteen laitos
-      </a>{" "}
-      (
-      <a
-        href="https://creativecommons.org/licenses/by/4.0/"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ color: "inherit" }}
-      >
-        CC BY 4.0
-      </a>
-      ) · NOAA SWPC · OpenStreetMap
-    </p>
-  </div>
-</footer>
+   <Footer showCoop />
     </div>
   );
 }
