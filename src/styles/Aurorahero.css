@@ -850,24 +850,10 @@
 .ah-metric-delta--down { color: #f87171; }
 .ah-metric-delta--flat { color: #7d8aa0; }
 
-/* Paikat-paneeli oikeassa palstassa */
-.ah-places-panel {
-  background: rgba(8, 14, 26, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 1rem;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.ah-places-title {
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #ffffff;
-  margin: 0 0 0.8rem;
-}
+/* HUOM: .ah-places-panel ja .ah-places-title määriteltiin aiemmin tässä
+   kohtaa TOISEEN kertaan. Myöhempi määrittely (ks. "Paikat-paneeli
+   (4 satunnaista per sivulataus)" alempana) voitti kaskadissa, joten tämän
+   muokkaaminen ei näkynyt missään. Duplikaatti poistettu — muokkaa alempaa. */
 
 /* Vertical place list — Space Weather -tyylinen allekkaisasettelu */
 .ah-place-list {

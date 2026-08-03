@@ -464,15 +464,43 @@ export default function AuroraHero({ forecast, children }) {
    * otettu vara-arvo. Null kun arvoa ei näytetä lainkaan. */
   const kpSource = kp != null ? (forecast?.current?.kpSource ?? null) : null;
 
+  /* Muotoilee iän tunneista tekstiksi.
+   *
+   * HUOM paikkamerkeistä: kielitiedostoissa arvot ovat "{h} h vanha" ja
+   * "{d} vrk vanha", mutta trh palauttaa käännöksen SELLAISENAAN eikä osaa
+   * korvata paikkamerkkejä. Ilman replacea ruudulle tuli kirjaimellisesti
+   * "{h} h vanha". Fallback-teksteissä luku on jo valmiina, joten replace
+   * on niiden kohdalla harmiton no-op. */
+  const ageText = (hours) => {
+    if (hours < 48) {
+      return trh("data.ageHours", `${hours} h vanha`, `${hours} h old`)
+        .replace("{h}", hours);
+    }
+    const d = Math.round(hours / 24);
+    return trh("data.ageDays", `${d} vrk vanha`, `${d} d old`).replace("{d}", d);
+  };
+
   /* Vanhentunut aurinkotuulidata näytettäväksi ikämerkinnän kanssa */
   const staleWind = forecast?.current?.stale ?? null;
   const staleAgeText = useMemo(() => {
     const ms = staleWind?.ageMs;
     if (!ms || !Number.isFinite(ms)) return null;
-    const h = Math.round(ms / 3600000);
-    if (h < 48) return trh("data.ageHours", `${h} h vanha`, `${h} h old`);
-    return trh("data.ageDays", `${Math.round(h / 24)} vrk vanha`, `${Math.round(h / 24)} d old`);
+    return ageText(Math.round(ms / 3600000));
   }, [staleWind, currentLanguage]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Kp:n ikä. Kp on kolmen tunnin indeksi, joten tuorekin arvo on lähes
+   * aina 0–3 h vanha — se on normaalia eikä sitä kannata korostaa. Merkintä
+   * näytetään vasta kun arvo on yli 3 h vanha, jolloin jokin on pielessä.
+   *
+   * Tämä on suora vastaus 8/2026 vikaan: sivu näytti yli vuorokauden vanhaa
+   * Kp-arvoa, eikä sitä voinut mitenkään huomata itse sivulta katsomalla. */
+  const kpAgeText = useMemo(() => {
+    const ts = forecast?.current?.kpTs;
+    if (kp == null || !ts || !Number.isFinite(ts)) return null;
+    const h = Math.round((Date.now() - ts) / 3600000);
+    if (h <= 3) return null;
+    return ageText(h);
+  }, [forecast, kp, currentLanguage]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const aurora = useMemo(
     () => calculateAurora({ kp, speed: wind, density: 5, bz, cloudCover: 50, latitude: activePlace?.lat || 66.5 }),
@@ -653,6 +681,7 @@ export default function AuroraHero({ forecast, children }) {
                 }
                 value={kp != null ? kp.toFixed(1) : "–"}
                 delta={null}
+                deltaSuffix={kpAgeText}
               >
                 <div className="ah-kp-bar ah-kp-bar--compact">
                   <div className="ah-kp-bar-track">
