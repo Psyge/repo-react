@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
 import SEO from "./components/SEO";
+import Footer from "./components/Footer"
 
-import { Link } from "react-router-dom";
+
 
 const BASE = process.env.REACT_APP_API_BASE || "";
 
@@ -35,7 +36,7 @@ export default function Contact() {
     if (!turnstileRef.current || !window.turnstile) return;
     if (widgetId.current != null) return;
     widgetId.current = window.turnstile.render(turnstileRef.current, {
-      sitekey: "YOUR_SITE_KEY",
+      sitekey: "0x4AAAAAADF29-_iSqwRQWf2",
       callback: (token) => setTurnstileToken(token),
       "expired-callback": () => setTurnstileToken(""),
     });
@@ -208,25 +209,7 @@ export default function Contact() {
       </div>
     </div>
 
-    <footer className="footer">
-  <p>© RepoTracker</p>
-
-  <Link to="/privacy">
-    {t("footer.privacy")}
-  </Link>
-
-  {" - "}
-
-  <Link to="/terms">
-    {t("privacy.q.terms")}
-  </Link>
-
-  {" - "}
-
-  <Link to="/contact">
-    {t("footer.contact") || "Contact"}
-  </Link>
-</footer>
+  <Footer />
   </div>
 );
 }
