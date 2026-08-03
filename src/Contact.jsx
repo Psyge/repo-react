@@ -4,7 +4,7 @@ import Header from "./components/Header";
 import SEO from "./components/SEO";
 import Footer from "./components/Footer"
 
-
+import {Link } from "react-router-dom";
 
 const BASE = process.env.REACT_APP_API_BASE || "";
 
