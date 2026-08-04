@@ -23,7 +23,7 @@ const adRotator = [
     lang: "all",
   },
   {
-    html: '<a href="https://www.anrdoezrs.net/click-101584868-15877142" target="_top" rel="sponsored nofollow"><img src="https://www.tqlkg.com/image-101584868-15877142" alt="Advertisement" /></a>',
+    html: '<a href="https://www.jdoqocy.com/click-101584868-15640646" target="_top" rel="sponsored nofollow"><img src="https://www.ftjcfx.com/image-101584868-15640646" alt="Advertisement" /></a>',
     lang: "all",
   },
   {
