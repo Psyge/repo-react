@@ -46,7 +46,15 @@ export default function AuroraPopup({
 
   const isPremium = data?.tier === "premium";
   const currentSlot = isPremium ? (data?.slots?.[0] ?? null) : null;
-  const kp = isPremium ? (currentSlot?.kp ?? null) : (data?.kp ?? null);
+
+  /* Mitattu Kp on julkista dataa ja tulee workerin current-lohkosta.
+   *
+   * HUOM: tässä luettiin aiemmin data.kp ja data.level, mutta workerin
+   * vastauksessa ei ole kumpaakaan ylimmällä tasolla — Kp siirtyi
+   * current-lohkoon kun haku siirrettiin frontendistä workeriin. Siksi
+   * ilmaisnäkymän popup näytti "Kp –" ja aina "Low". */
+  const currentKp = data?.current?.kp ?? null;
+  const kp = isPremium ? (currentSlot?.kp ?? null) : currentKp;
   const probability = isPremium ? (currentSlot?.probability ?? null) : null;
   const clouds = isPremium ? (currentSlot?.clouds ?? null) : (data?.clouds ?? null);
   const bz = data?.current?.bz ?? null;
@@ -54,7 +62,7 @@ export default function AuroraPopup({
   const density = data?.current?.density ?? null;
   const level = isPremium
     ? (currentSlot?.level ?? probabilityToLevel(probability))
-    : (data?.level ?? probabilityToLevel(null));
+    : kpLevel(currentKp);
   const color = levelColor(level);
   const levelLabel = t(`probability.${level}`, level);
 
@@ -67,7 +75,7 @@ export default function AuroraPopup({
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
           <div style={{ fontSize: 12, opacity: 0.7 }}>{t("kp.label", "Kp")}</div>
           <div style={{ fontSize: 28, fontWeight: 700, color }}>
-            {data?.kp != null ? fmt(data.kp) : "–"}
+            {kp != null ? fmt(kp) : "–"}
           </div>
         </div>
         <div style={{ fontSize: 13, color, marginTop: 2 }}>{levelLabel}</div>
@@ -270,6 +278,16 @@ function formatWindowRange(startIso, endIso) {
   const today = start.toDateString() === new Date().toDateString();
   const day = today ? "" : start.toLocaleDateString([], { weekday: "short" }) + " ";
   return `${day}${formatLocalHour(startIso)}–${formatLocalHour(endIso)}`;
+}
+
+/* Kp → taso. Samat rajat kuin workerin kpToLevel-funktiossa, jotta kartta
+ * ja backend eivät kerro eri tarinaa samasta luvusta. */
+function kpLevel(kp) {
+  if (kp == null || isNaN(kp)) return "low";
+  if (kp >= 7) return "veryhigh";
+  if (kp >= 5) return "high";
+  if (kp >= 4) return "medium";
+  return "low";
 }
 
 function probabilityToLevel(probability) {
