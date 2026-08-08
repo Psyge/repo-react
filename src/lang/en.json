@@ -28,6 +28,11 @@
 "premium.error": "Could not start checkout.",
 "premium.cta": "Buy",
 "premium.popular": "Popular",
+"premium.included.title": "Included in every plan",
+"premium.included.f1": "Full forecast",
+"premium.included.f2": "Cloud cover and Bz",
+"premium.included.f3": "3 devices",
+"premium.perDay": "/ day",
 "premium.tier.1d.title": "1 Day",
 "premium.tier.1d.meta": "24 hours premium",
 "premium.tier.1d.f1": "Full forecast",
@@ -347,7 +352,10 @@
   "hero.updatedNow": "Updated just now",
   "hero.metric.solarwind": "Solar wind",
   "hero.metric.kp": "Kp index",
+  "hero.metric.kpForecast": "forecast",
   "hero.openGlobe": "Track the aurora on the map",
+  "hero.places": "Places",
+  "hero.kpGlobalHint": "Kp is a planetary index — the same value everywhere",
   "data.ageHours": "{h} h old",
   "data.ageDays": "{d} d old",
 
@@ -380,16 +388,5 @@
   "premium.trial.cta": "Haven't tried it yet? Try free for 6 hours first →",
   "premium.trial.used": "You've already used the free trial on this device.",
   "premium.trial.limit": "Trial limit reached for this device/network.",
-  "premium.trial.error": "Could not start trial.",
-
-  "about.title": "About RepoTracker",
-  "about.intro": "Aurora tracking made clear — from Lapland, for Lapland's visitors and its people.",
-  "about.q.story": "Where it started",
-  "about.a.story1": "RepoTracker started from a simple frustration: aurora forecasting was scattered across dozens of different sources — the Kp-index in one place, cloud cover in another, solar wind data somewhere else entirely. Nobody told you the one thing you actually wanted to know: is it worth going outside right now, and which way should you look.",
-  "about.a.story2": "So I decided to build a site that does that work for you — combining NOAA's space weather data, the Finnish Meteorological Institute's local forecasts, and real user-reported sightings into one clear view.",
-  "about.q.whatwedo": "What RepoTracker does",
-  "about.a.whatwedo1": "On the site you'll find a live Kp-index, a free 24-hour forecast, and an interactive map showing other users' sightings in near real time. Premium users additionally get the full 3-day forecast, exact location-based probability, personal Telegram or email alerts, and can ask questions directly to the site's own AI assistant. All data comes from trusted sources — never invented numbers.",
-  "about.q.who": "Who's behind this",
-  "about.a.who1": "RepoTracker is maintained by a single developer, grown from a personal hobby project into a real service. I build and update the site continuously — if something isn't working, or you have an idea you'd like to see, I'd love to hear about it.",
-  "about.cta.contact": "Get in touch →"
+  "premium.trial.error": "Could not start trial."
 }
