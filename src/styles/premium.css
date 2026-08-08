@@ -58,8 +58,10 @@
   }
 }
 
+/* Yläreunan tila tulee .page-main-luokasta (layout.css), joka laskee sen
+   headerin korkeudesta. Täällä oli kiinteä 56px / mobiilissa 36px, mikä
+   jäi headerin alle. */
 .premium-page {
-  padding-top: 56px;
   padding-bottom: 72px;
 }
 
@@ -108,6 +110,40 @@
 }
 
 /* --- HINNOITTELURUUDUKKO --- */
+/* Yhteiset ominaisuudet — näkyy kerran pakettien yläpuolella.
+   Korvaa kolme identtistä ✓-listaa korttien sisällä. */
+.premium-included {
+  margin: 0 auto 28px;
+  max-width: 640px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: rgba(0, 255, 204, 0.06);
+  border: 1px solid rgba(0, 255, 204, 0.16);
+}
+
+.premium-included h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.premium-included ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.premium-included li {
+  font-size: 15px;
+  color: var(--fg);
+}
+
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -522,7 +558,6 @@
 
 @media (max-width: 768px) {
   .premium-page {
-    padding-top: 36px;
     padding-bottom: 56px;
   }
 
@@ -552,19 +587,65 @@
     margin-top: 16px;
   }
 
-  .pricing-grid {
-    grid-template-columns: 1fr;
-    gap: 18px;
+  .premium-included {
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    border-radius: 14px;
   }
 
+  .premium-included li {
+    font-size: 13.5px;
+  }
+
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Tiiviimmät kortit: nimi ja hinta samalle riville, jotta kaikki kolme
+     pakettia mahtuvat ruudulle kerralla. Aiemmin yksi kortti täytti lähes
+     koko näytön eikä paketteja voinut vertailla selaamatta. */
   .pricing-card {
-    padding: 24px 18px;
-    border-radius: 20px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 2px 12px;
   }
 
   .pricing-card h3 {
-    font-size: 21px;
-    margin-bottom: 10px;
+    font-size: 17px;
+    margin: 0;
+  }
+
+  .pricing-card .price {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    font-size: 22px;
+  }
+
+  .pricing-card .price span {
+    font-size: 22px;
+  }
+
+  .pricing-card .meta {
+    grid-column: 1 / -1;
+    margin: 2px 0 10px;
+    font-size: 12.5px;
+  }
+
+  .pricing-card .buy-btn {
+    grid-column: 1 / -1;
+  }
+
+  .pricing-card .badge {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    position: static;
+    justify-self: start;
+    margin-bottom: 4px;
   }
 
   .price {

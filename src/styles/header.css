@@ -1,3 +1,16 @@
+/* Headerin korkeus muuttujana, jotta sivut osaavat jättää sille tilaa.
+ * Header on position: fixed, joten se ei vie tilaa normaalissa virtauksessa —
+ * ilman tätä sivun otsikko jää sen alle (näkyi Premium-sivulla). */
+:root {
+  --header-h: 69px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-h: 88px;   /* kaksi riviä: logo + navi */
+  }
+}
+
 header {
   position: fixed;
 
@@ -186,42 +199,40 @@ nav a:hover {
 @media (max-width: 768px) {
 
   header {
-    min-height: 96px;
-
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
 
+  /* KORJATTU: aiemmin grid-area oli .header-socials- ja .lang-switcher
+     -luokilla, mutta ne ovat .header-actions-divin sisällä eivätkä siis
+     gridin lapsia — grid-area ei tehnyt niille mitään ja asettelu jäi
+     satunnaisen sijoittelun varaan. Grid-alue kuuluu .header-actionsille. */
   .header-inner {
     display: grid;
 
     grid-template-columns: 1fr auto;
 
     grid-template-areas:
-      "brand socials"
-      "nav nav";
+      "brand actions"
+      "nav   nav";
 
     align-items: center;
 
-    gap: 10px;
+    gap: 8px 10px;
 
-    padding: 10px 14px;
+    padding: 8px 14px;
   }
 
-  /* TOP ROW */
+  /* YLÄRIVI */
 
- .brand {
+  .brand {
     grid-area: brand;
 
-    font-size: 1.2rem;
+    font-size: 1.15rem;
   }
 
-   .header-socials {
-    grid-area: socials;
-
-    display: flex;
-
-    align-items: center;
+  .header-actions {
+    grid-area: actions;
 
     gap: 8px;
   }
@@ -231,35 +242,40 @@ nav a:hover {
     height: 30px;
   }
 
-  .lang-switcher {
-    display: flex;
-
-    gap: 6px;
-  }
-
   .lang-switcher button {
     padding: 3px 8px;
 
     font-size: 10px;
   }
 
-  /* SECOND ROW NAV */
+  /* ALARIVI: NAVIGAATIO */
 
- nav {
+  .main-nav {
     grid-area: nav;
 
     display: flex;
 
-    justify-content: center;
+    justify-content: space-between;
 
-    gap: 14px;
+    gap: 10px;
 
     width: 100%;
   }
 
-  nav a {
+  .main-nav a {
     font-size: 0.82rem;
 
     white-space: nowrap;
+  }
+}
+
+/* Kapeimmat puhelimet: viisi navilinkkiä alkaa olla ahdas */
+@media (max-width: 380px) {
+  .main-nav a {
+    font-size: 0.76rem;
+  }
+
+  .brand {
+    font-size: 1.05rem;
   }
 }

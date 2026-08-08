@@ -9,6 +9,7 @@ const places = [
   { id: "pallas",      slug: "pallas",      name: "Pallas",      lat: 68.05, lon: 24.06 },
   { id: "utsjoki",     slug: "utsjoki",     name: "Utsjoki",     lat: 69.90, lon: 27.02 },
   { id: "pyha",        slug: "pyha",        name: "Pyhä",        lat: 67.02, lon: 27.22 },
+  { id: "yllas",       slug: "yllas",       name: "Ylläs",       lat: 67.57, lon: 24.20 },
 ];
 
 export default places;
