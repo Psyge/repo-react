@@ -1,14 +1,26 @@
 import { Helmet } from "react-helmet-async";
 
+const SITE_NAME = "RepoTracker";
+const DEFAULT_IMAGE =
+  "https://repotracker.fi/images/reposet.png";
+
 export default function SEO({
-  title,
-  description,
+  title = "RepoTracker | Revontuliennuste ja avaruussää",
+  description = "Seuraa revontulia, avaruussäätä, pilvisyyttä ja revontuliennusteita reaaliajassa Suomessa.",
   keywords,
-  image = "https://repotracker.fi/images/reposet.png",
+  image = DEFAULT_IMAGE,
   canonical,
+  locale = "fi_FI",
+  language = "fi",
+  type = "website",
+  noIndex = false,
+  schema,
 }) {
   return (
     <Helmet>
+      {/* Sivun kieli */}
+      <html lang={language} />
+
       {/* Basic SEO */}
       <title>{title}</title>
 
@@ -17,21 +29,24 @@ export default function SEO({
         content={description}
       />
 
-      <meta
-        name="keywords"
-        content={keywords}
-      />
+      {keywords && (
+        <meta
+          name="keywords"
+          content={keywords}
+        />
+      )}
 
       <meta
         name="robots"
-        content="index,follow"
+        content={
+          noIndex
+            ? "noindex, nofollow"
+            : "index, follow"
+        }
       />
 
       {canonical && (
-        <link
-          rel="canonical"
-          href={canonical}
-        />
+        {canonical}
       )}
 
       {/* Open Graph */}
@@ -51,23 +66,30 @@ export default function SEO({
       />
 
       <meta
-        property="og:url"
-        content={canonical}
+        property="og:image:alt"
+        content={title}
       />
+
+      {canonical && (
+        <meta
+          property="og:url"
+          content={canonical}
+        />
+      )}
 
       <meta
         property="og:type"
-        content="website"
+        content={type}
       />
 
       <meta
         property="og:site_name"
-        content="RepoTracker"
+        content={SITE_NAME}
       />
 
       <meta
         property="og:locale"
-        content="en_US"
+        content={locale}
       />
 
       {/* Twitter / X */}
@@ -90,6 +112,18 @@ export default function SEO({
         name="twitter:image"
         content={image}
       />
+
+      <meta
+        name="twitter:image:alt"
+        content={title}
+      />
+
+      {/* Schema.org JSON-LD */}
+      {schema && (
+        <script type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      )}
     </Helmet>
   );
 }
