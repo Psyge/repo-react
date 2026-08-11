@@ -628,7 +628,11 @@ export default function AuroraHero({ forecast, children }) {
 
   return (
     <section className={`aurora-hero-container ah-hero--dash ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
-
+   <h1 className="sr-only">
+  {currentLanguage === "en"
+    ? "Northern Lights Forecast Finland"
+    : "Suomen revontuliennuste"}
+</h1>
       <div className="ah-sky-wrap">
         {kpStep > 0 && <div className="ah-sky--css" aria-hidden="true" />}
         <canvas ref={canvasRef} className="ah-canvas" aria-hidden="true" />

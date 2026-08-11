@@ -363,14 +363,27 @@ export default function MapPage() {
   return (
     <div className="map-page">
       <SEO
-        title="Northern Lights Map Finland | RepoTracker"
-        description="Interactive Northern Lights map showing current northern lights conditions across Finland."
-        keywords="aurora map, northern lights map Finland"
-        canonical="https://repotracker.fi/map"
-      />
+  title="Northern Lights Map Finland | RepoTracker"
+  description="Explore current northern lights conditions across Finland with RepoTracker's interactive aurora forecast map."
+  keywords="northern lights map Finland, aurora map Finland, aurora forecast Finland"
+  canonical="https://repotracker.fi/map"
+  image="https://repotracker.fi/images/reposet.png"
+  language="en"
+  locale="en_US"
+/>
 
       <Header />
+      <div className="map-seo-intro">
 
+<h1>Northern Lights Map Finland</h1>
+
+<p>
+
+Explore current aurora conditions across Finland using theinteractive 2D map or globe.
+
+</p>
+
+</div>
       {view === "map" && (
         <div className="map-search-wrap">
           <SearchBox onSelect={handleSearchSelect} />

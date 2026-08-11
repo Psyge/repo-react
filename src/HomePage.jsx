@@ -199,11 +199,26 @@ export default function HomePage() {
   return (
     <div>
       <SEO
-        title="Northern Lights Forecast Finland | RepoTracker"
-        description="Live Northern Lights forecast, KP index, solar wind and northern lights map for Finland and Lapland."
-        keywords="northern lights, aurora forecast, Finland, Lapland, KP index"
-        canonical="https://repotracker.fi/"
-      />
+  title={
+    currentLanguage === "en"
+      ? "Northern Lights Forecast Finland | RepoTracker"
+      : "Revontuliennuste Suomeen | RepoTracker"
+  }
+  description={
+    currentLanguage === "en"
+      ? "Live Northern Lights forecast, KP index, solar wind and aurora map for Finland and Lapland."
+      : "Seuraa Suomen ja Lapin revontuliennustetta, KP-indeksiä, aurinkotuulta ja reaaliaikaista revontulikarttaa."
+  }
+  keywords={
+    currentLanguage === "en"
+      ? "northern lights forecast Finland, aurora forecast Finland, Lapland, KP index"
+      : "revontuliennuste Suomi, revontulet Lappi, KP-indeksi, revontulikartta"
+  }
+  canonical="https://repotracker.fi/"
+  image="https://repotracker.fi/images/reposet.png"
+  language={currentLanguage === "en" ? "en" : "fi"}
+  locale={currentLanguage === "en" ? "en_US" : "fi_FI"}
+/>
 
       <Header />
       
