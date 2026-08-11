@@ -17,6 +17,7 @@ import CookieBanner from "./components/CookieBanner";
 import PlacePage from "./PlacePage";
 import Premiummodalmanager from "./components/Premiummodalmanager";
 import Aboutpage from "./Aboutpage";
+import AuroraAssistant from "./components/AuroraAssistant";
 
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
     <HelmetProvider>
       <BrowserRouter>
       <Premiummodalmanager />
+      <AuroraAssistant />
       {/* Näkyy kerran per istunto kun premium on juuri päättynyt */}
       <PremiumExpiredNotice />
         <Routes>
