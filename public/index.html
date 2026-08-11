@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
 
@@ -10,7 +10,6 @@
 
     <meta name="theme-color" content="#000000" />
 
-    <!-- Yhteyksien muodostamisen nopeuttaminen -->
     <link
       rel="preconnect"
       href="https://server.arcgisonline.com"
@@ -35,19 +34,17 @@
       crossorigin
     />
 
-    <!-- Kuvakkeet ja manifest -->
     %PUBLIC_URL%/iconi.png
 
     %PUBLIC_URL%/logo192.png
 
     %PUBLIC_URL%/manifest.json
 
-    <!-- Oletusarvoinen SEO ennen Reactin latautumista -->
-    <title>RepoTracker – Revontuliennuste ja avaruussää</title>
+    <title>RepoTracker | Northern Lights Forecast Finland</title>
 
     <meta
       name="description"
-      content="Seuraa revontulia, avaruussäätä, pilvisyyttä ja revontuliennusteita reaaliajassa Suomessa."
+      content="Live Northern Lights forecast, KP index, solar wind and aurora map for Finland and Lapland."
     />
 
     <!-- Google Consent Mode -->
@@ -55,7 +52,7 @@
       window.dataLayer = window.dataLayer || [];
 
       function gtag() {
-        dataLayer.push(arguments);
+        window.dataLayer.push(arguments);
       }
 
       gtag("consent", "default", {
@@ -116,7 +113,7 @@
     <!-- End Google Tag Manager (noscript) -->
 
     <noscript>
-      RepoTracker tarvitsee JavaScriptin toimiakseen.
+      You need to enable JavaScript to run this app.
     </noscript>
 
     <div id="root"></div>
