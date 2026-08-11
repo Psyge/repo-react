@@ -2,49 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
 
-    <link
-      rel="preconnect"
-      href="https://server.arcgisonline.com"
-      crossorigin
-    />
+    <!--
+      HUOM: nämä kolme OVAT link-tageja, eivät pelkkiä osoitteita.
+      Jos tagit poistaa ja jättää pelkän "%PUBLIC_URL%/iconi.png" -rivin,
+      selain tulkitsee sen tekstisisällöksi, sulkee <head>:n siihen kohtaan
+      ja aloittaa <body>:n — jolloin title, meta-kuvaus ja skriptit valuvat
+      bodyyn ja favicon, apple-touch-icon sekä manifest katoavat.
+    -->
+    <link rel="icon" href="%PUBLIC_URL%/iconi.png" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
-    <link
-      rel="preconnect"
-      href="https://services.swpc.noaa.gov"
-      crossorigin
-    />
-
-    <link
-      rel="preconnect"
-      href="https://unpkg.com"
-      crossorigin
-    />
-
-    <link
-      rel="preconnect"
-      href="https://raw.githubusercontent.com"
-      crossorigin
-    />
-
-    %PUBLIC_URL%/iconi.png
-
-    %PUBLIC_URL%/logo192.png
-
-    %PUBLIC_URL%/manifest.json
+    <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin />
+    <link rel="preconnect" href="https://services.swpc.noaa.gov" crossorigin />
+    <link rel="preconnect" href="https://unpkg.com" crossorigin />
+    <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
 
     <title>RepoTracker | Northern Lights Forecast Finland</title>
 
     <meta
       name="description"
-      content="Live Northern Lights forecast, KP index, solar wind and aurora map for Finland and Lapland."
+      content="Live Northern Lights forecast, Kp index, solar wind and aurora map for Finland and Lapland."
     />
 
     <!-- Google Consent Mode -->
@@ -83,18 +64,10 @@
 
         j.async = true;
         j.src =
-          "https://www.googletagmanager.com/gtm.js?id=" +
-          i +
-          dl;
+          "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
 
         f.parentNode.insertBefore(j, f);
-      })(
-        window,
-        document,
-        "script",
-        "dataLayer",
-        "GTM-5TL6KCK2"
-      );
+      })(window, document, "script", "dataLayer", "GTM-5TL6KCK2");
     </script>
     <!-- End Google Tag Manager -->
   </head>
@@ -112,9 +85,7 @@
     </noscript>
     <!-- End Google Tag Manager (noscript) -->
 
-    <noscript>
-      You need to enable JavaScript to run this app.
-    </noscript>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
 
     <div id="root"></div>
 
