@@ -98,6 +98,24 @@
   flex-shrink: 0;
 }
 
+/* Botin vastauksissa olevat linkit. Erottuvat tekstistä selvästi, koska
+   ne ovat toimintakehotteita ("Aseta hälytys", "Avaa kartta") eivät
+   pelkkiä viittauksia — käyttäjän pitää huomata että niitä voi klikata. */
+.aa-link {
+  color: #00ffc6;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  word-break: break-word;
+}
+
+.aa-link:hover,
+.aa-link:focus-visible {
+  color: #7dffe0;
+  text-decoration-thickness: 2px;
+}
+
 /* --- Ilmainen tila: vihjelaatikko + CTA:t chatin sijaan --- */
 .aa-free {
   padding: 14px;

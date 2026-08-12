@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { isKnownPath } from "../lib/routes";
 import useTranslation from "../hooks/useTranslation";
 import { isActive, read, startTrial } from "../lib/premium";
 
@@ -18,6 +19,68 @@ import { isActive, read, startTrial } from "../lib/premium";
 
 const BASE = process.env.REACT_APP_API_BASE || "";
 const TIP_ROTATE_MS = 8000;
+
+/* Botin vastausten Markdown-linkit klikattaviksi.
+ *
+ * Dify-agentin ohje käskee sen kirjoittamaan viittaukset muodossa
+ * [teksti](/polku). Aiemmin viesti renderöitiin sellaisenaan, joten
+ * käyttäjä näki kirjaimellisesti "[Aseta hälytys](/alerts)" — linkki
+ * oli olemassa mutta ei toiminut.
+ *
+ * Kolme tapausta:
+ *   - tunnettu sisäinen polku → react-routerin Link (ei sivun uudelleen-
+ *     latausta, widget pysyy auki)
+ *   - ulkoinen https-osoite → tavallinen <a>, uuteen välilehteen
+ *   - tuntematon polku → PELKKÄ TEKSTI. Agentti voi keksiä polun jota ei
+ *     ole; sisäinen linkki sinne veisi tyhjälle sivulle ilman virhettä.
+ *     Mieluummin turha sana kuin rikkinäinen linkki.
+ */
+const MD_LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+
+export function renderMessageContent(text) {
+  if (typeof text !== "string" || !text) return text;
+
+  const parts = [];
+  let lastIndex = 0;
+  let key = 0;
+  let match;
+
+  MD_LINK.lastIndex = 0;   // regex on moduulitasolla → nollaa tila
+
+  while ((match = MD_LINK.exec(text)) !== null) {
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
+
+    const [full, label, url] = match;
+
+    if (isKnownPath(url)) {
+      parts.push(
+        <Link key={`k${key++}`} to={url} className="aa-link">
+          {label}
+        </Link>
+      );
+    } else if (/^https?:\/\//i.test(url)) {
+      parts.push(
+        <a
+          key={`k${key++}`}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="aa-link"
+        >
+          {label}
+        </a>
+      );
+    } else {
+      parts.push(label);   // tuntematon polku → pelkkä teksti
+    }
+
+    lastIndex = match.index + full.length;
+  }
+
+  if (!parts.length) return text;
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+  return parts;
+}
 
 export default function Auroraassistant() {
   const { lang, currentLanguage } = useTranslation();
@@ -209,7 +272,9 @@ export default function Auroraassistant() {
                 )}
                 {messages.map((m, i) => (
                   <div key={i} className={`aa-msg aa-msg--${m.role}`}>
-                    {m.content}
+                    {m.role === "assistant"
+                      ? renderMessageContent(m.content)
+                      : m.content}
                   </div>
                 ))}
                 {loading && (
