@@ -24,6 +24,31 @@
   transform: translateY(-2px) scale(1.03);
 }
 
+/* Karttasivu, KAPEA NÄYTTÖ: alareunassa on kiinteä näkymänvalitsin
+   (.map-view-toggle) joka on keskitetty mutta levenee kolmella napilla
+   noin 340 pikseliin. Kun näyttö kapenee, sen oikea reuna työntyy
+   kelluvan napin alle — molemmat ovat position: fixed, ja nappi on
+   z-indexillä päällimmäisenä, joten se peittää "Sun & night" -napin.
+
+   Leveällä näytöllä keskitetty palkki ei yllä nurkkaan asti, joten
+   siellä nappi saa jäädä normaaliin paikkaansa. Raja 700px antaa
+   varmuusvaraa: törmäys alkaa noin 560 pikselissä.
+
+   Paneeli seuraa mukana: 96 + 56 (napin korkeus) + 12 (väli) = 164. */
+@media (max-width: 700px) {
+  .aa-fab--raised {
+    bottom: 96px;
+  }
+
+  .aa-panel--raised {
+    bottom: 164px;
+    /* Vähemmän pystytilaa kun paneeli alkaa korkeammalta — muuten se
+       ylittäisi näytön yläreunan pienimmillä puhelimilla. */
+    max-height: min(480px, calc(100vh - 216px));
+    max-height: min(480px, calc(100dvh - 216px));
+  }
+}
+
 .aa-panel {
   position: fixed;
   right: 20px;
