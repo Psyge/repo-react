@@ -13,6 +13,44 @@
  * olivat eri suuria ja osa liian pieniä — Premium-sivun otsikko jäi
  * headerin alle mobiilissa. Tämä luokka laskee tilan --header-h:sta,
  * joten se pysyy oikeana kun headerin korkeus muuttuu. */
+/* Visuaalisesti piilotettu, mutta ruudunlukijalle ja hakukoneelle näkyvä.
+ *
+ * Käytetään sivuilla joilla ei ole näkyvää otsikkoa — esim. karttasivu on
+ * kokoruudun kartta, mutta se tarvitsee silti h1:n. Vakiintunut "sr-only"
+ * / "visually-hidden" -kaava.
+ *
+ * Miksi juuri nämä säännöt eikä display:none tai visibility:hidden:
+ * ne poistaisivat elementin myös saavutettavuuspuusta. Tässä elementti
+ * jää olemassa olevaksi, mutta kutistetaan yhteen pikseliin ja leikataan
+ * näkymättömiin. white-space: nowrap estää tekstiä rivittymästä ja
+ * kasvattamasta korkeutta ennen leikkausta. */
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Näppäimistöllä tarkennettava elementti (esim. "hyppää sisältöön"
+   -linkki) palautetaan näkyviin kun se saa fokuksen. */
+.sr-only-focusable:focus,
+.sr-only-focusable:focus-visible {
+  position: static !important;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+}
+
 .page-main {
   padding-top: calc(var(--header-h) + 28px);
   padding-bottom: 64px;

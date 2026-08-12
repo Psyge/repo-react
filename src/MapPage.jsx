@@ -373,17 +373,21 @@ export default function MapPage() {
 />
 
       <Header />
-      <div className="map-seo-intro">
+      {/* Otsikko ja kuvaus ovat DOM:issa mutta eivät vie tilaa ruudulla.
+          Karttasivu on kokoruudun kartta, jolla ei ole näkyvää otsikkoa —
+          näin sekä hakukone että ruudunlukija saavat sivulle nimen ilman
+          että kartan päälle ilmestyy tekstilohko.
 
-<h1>Northern Lights Map Finland</h1>
-
-<p>
-
-Explore current aurora conditions across Finland using theinteractive 2D map or globe.
-
-</p>
-
-</div>
+          EI display:none — se piilottaisi otsikon myös ruudunlukijalta ja
+          hakukoneet painottavat sillä piilotettua tekstiä vähemmän.
+          .sr-only pitää elementin saavutettavuuspuussa. */}
+      <div className="map-seo-intro sr-only">
+        <h1>Northern Lights Map Finland</h1>
+        <p>
+          Explore current aurora conditions across Finland using the
+          interactive 2D map or globe.
+        </p>
+      </div>
       {view === "map" && (
         <div className="map-search-wrap">
           <SearchBox onSelect={handleSearchSelect} />
