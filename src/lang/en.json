@@ -57,6 +57,8 @@
   "common.ok": "OK",
 "common.loading": "Loading…",
 "sightings.thanks_daylight": "Thanks! It's too bright for northern lights right now, so this report isn't shown on the map.",
+"sightings.report_none": "I didn't see anything",
+"sightings.thanks_negative": "Thanks! Knowing the lights weren't visible helps us make the forecast more accurate.",
 
 "spin.days.1d": "1 day",
 "spin.days.3d": "3 days",

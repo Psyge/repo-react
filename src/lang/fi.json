@@ -58,6 +58,8 @@
   "common.ok": "OK",
 "common.loading": "Ladataan…",
 "sightings.thanks_daylight": "Kiitos! Nyt on liian valoisaa revontulille, joten raporttia ei näytetä kartalla.",
+"sightings.report_none": "En nähnyt mitään",
+"sightings.thanks_negative": "Kiitos! Tieto siitä ettei revontulia näkynyt auttaa meitä tarkentamaan ennustetta.",
 
 "spin.days.1d": "1 päivä",
 "spin.days.3d": "3 päivää",
