@@ -27,6 +27,21 @@
   .out.err { display:block; background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.4); color:var(--err); }
   .note { font-size:0.72rem; color:var(--muted); margin-top:0.6rem; line-height:1.4; }
   #panelView { display:none; }
+  /* Kalibraatiotaulukko. Wrap on 520px leveä, joten viisi saraketta on
+     tiukassa — pieni fontti ja tarvittaessa vaakavieritys. */
+  .tbl-wrap { overflow-x:auto; margin-top:0.9rem; }
+  table.calib { width:100%; border-collapse:collapse; font-size:0.78rem; }
+  table.calib th { text-align:left; padding:0.4rem 0.5rem; color:var(--muted);
+                   font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em;
+                   font-weight:600; white-space:nowrap; }
+  table.calib td { padding:0.45rem 0.5rem; border-top:1px solid var(--border); white-space:nowrap; }
+  .stats-row { display:flex; gap:1.1rem; flex-wrap:wrap; margin-bottom:0.4rem; }
+  .stat-lbl { font-size:0.66rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+  .stat-val { font-size:1.25rem; font-weight:700; }
+  .fb-item { border-left:2px solid var(--err); padding:0.5rem 0.7rem; margin-top:0.5rem;
+             background:rgba(255,255,255,0.02); border-radius:0 8px 8px 0; }
+  .fb-q { font-size:0.8rem; }
+  .fb-a { font-size:0.75rem; color:var(--muted); margin-top:0.3rem; }
 </style>
 </head>
 <body>
@@ -98,6 +113,52 @@
       <input id="grantReason" type="text" placeholder="esim. tuplaoston hyvitys, Stripe pi_xxx">
       <button id="grantBtn">Myönnä aika ja lähetä maili</button>
       <div class="out" id="grantOut"></div>
+    </div>
+    <!-- ENNUSTEEN OSUVUUS -->
+    <div class="card">
+      <h2>Ennusteen osuvuus</h2>
+
+      <div style="display:flex; gap:0.6rem; align-items:flex-end;">
+        <div style="flex:1">
+          <label for="calibClouds">Pilvisyys enintään %</label>
+          <input id="calibClouds" type="number" min="0" max="100" value="30">
+        </div>
+        <div style="flex:1">
+          <label for="calibMinN">Väh. havaintoja</label>
+          <input id="calibMinN" type="number" min="1" value="10">
+        </div>
+      </div>
+
+      <button class="secondary" id="calibBtn">Hae kalibraatio</button>
+
+      <div id="calibStats" style="display:none; margin-top:1rem;"></div>
+      <div id="calibTable"></div>
+      <div class="out" id="calibOut"></div>
+
+      <p class="note">
+        Mukana vain selkeä ja pimeä taivas. Pilvisellä "en nähnyt" kertoo
+        pilvistä eikä ennusteen osuvuudesta.
+      </p>
+    </div>
+
+    <!-- AVUSTAJAN PALAUTE -->
+    <div class="card">
+      <h2>Avustajan palaute</h2>
+
+      <div style="display:flex; align-items:center; gap:0.6rem;">
+        <div style="flex:1; font-size:0.9rem;">
+          24 h: <strong id="fbUp" style="color:var(--accent)">–</strong> ylös ·
+          <strong id="fbDown" style="color:var(--err)">–</strong> alas
+        </div>
+        <button class="small secondary" id="fbBtn">Hae</button>
+      </div>
+
+      <div id="fbList"></div>
+      <div class="out" id="fbOut"></div>
+
+      <p class="note">
+        Alaspeukut kertovat mitä agentin ohjeessa kannattaa korjata.
+      </p>
     </div>
   </div>
 
@@ -339,6 +400,115 @@
   const hasSession = !!(session.key && session.base);
   setView(hasSession);
   if (hasSession) refreshFlags();
+  /* ---------- Kalibraatio ---------- */
+
+  function statBlock(label, value, hint) {
+    return '<div><div class="stat-lbl">' + label + '</div>'
+      + '<div class="stat-val">' + value + '</div>'
+      + (hint ? '<div class="stat-lbl" style="text-transform:none">' + hint + '</div>' : '')
+      + '</div>';
+  }
+
+  $("calibBtn").addEventListener("click", async () => {
+    const btn = $("calibBtn");
+    btn.disabled = true;
+    $("calibOut").className = "out";
+    $("calibTable").innerHTML = "";
+    $("calibStats").style.display = "none";
+
+    try {
+      const clouds = $("calibClouds").value || 30;
+      const minN   = $("calibMinN").value || 10;
+      const d = await api("/api/admin/calibration?maxClouds=" + clouds + "&minN=" + minN);
+
+      const t = d.totals || {};
+      const share = d.negativeShare ?? 0;
+
+      $("calibStats").innerHTML =
+        '<div class="stats-row">'
+        + statBlock("Havaintoja", t.total ?? 0)
+        + statBlock("Näki", t.positives ?? 0)
+        + statBlock("Ei nähnyt", t.negatives ?? 0)
+        + statBlock("Negatiivisia", share + " %",
+            share < 15 ? "Liian vähän mittaamiseen" : "")
+        + '</div>';
+      $("calibStats").style.display = "block";
+
+      if (!d.buckets || !d.buckets.length) {
+        show($("calibOut"), "ok",
+          "Ei vielä tarpeeksi havaintoja yhteenkään luokkaan (raja " + minN + ").\n"
+          + "Tyhjä tulos on tässä vaiheessa oikea, ei virhe.");
+        return;
+      }
+
+      let html = '<div class="tbl-wrap"><table class="calib"><thead><tr>'
+        + '<th>Luokka</th><th>n</th><th>Luvattu</th><th>Toteutui</th><th>Ero</th>'
+        + '</tr></thead><tbody>';
+
+      for (const b of d.buckets) {
+        const diff = Math.round((b.actual_pct - b.predicted_pct) * 10) / 10;
+        /* Yli 15 prosenttiyksikköä on merkittävä poikkeama, alle 8 kohinaa. */
+        const col = Math.abs(diff) >= 15 ? "var(--err)"
+                  : Math.abs(diff) >= 8  ? "#fbbf24"
+                  : "var(--accent)";
+        html += '<tr>'
+          + '<td>' + b.bucket + '–' + (b.bucket + 9) + ' %</td>'
+          + '<td>' + b.n + '</td>'
+          + '<td>' + b.predicted_pct + ' %</td>'
+          + '<td>' + b.actual_pct + ' %</td>'
+          + '<td style="color:' + col + '; font-weight:700">'
+          + (diff > 0 ? "+" : "") + diff + '</td></tr>';
+      }
+      html += '</tbody></table></div>'
+        + '<p class="note">Negatiivinen ero = laskenta lupaa enemmän kuin toteutuu.</p>';
+
+      $("calibTable").innerHTML = html;
+    } catch (e) {
+      if (e.message !== "Unauthorized") show($("calibOut"), "err", e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* ---------- Avustajan palaute ---------- */
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[c]);
+  }
+
+  $("fbBtn").addEventListener("click", async () => {
+    const btn = $("fbBtn");
+    btn.disabled = true;
+    $("fbOut").className = "out";
+    $("fbList").innerHTML = "";
+
+    try {
+      const d = await api("/api/admin/assistant-feedback");
+      const l = d.last24h || {};
+      $("fbUp").textContent = l.up ?? 0;
+      $("fbDown").textContent = l.down ?? 0;
+
+      const down = (d.entries || []).filter((e) => e.rating === "down").slice(0, 15);
+      if (!down.length) {
+        show($("fbOut"), "ok", "Ei alaspeukkuja. Hyvä merkki.");
+        return;
+      }
+
+      let html = '';
+      for (const e of down) {
+        html += '<div class="fb-item">'
+          + '<div class="fb-q">' + esc(e.question || "(ei kysymystä)") + '</div>'
+          + '<div class="fb-a">' + esc(e.answer || "") + '</div></div>';
+      }
+      $("fbList").innerHTML = html;
+    } catch (e) {
+      if (e.message !== "Unauthorized") show($("fbOut"), "err", e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 </script>
 </body>
 </html>
