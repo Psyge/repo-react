@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 import Header from "../components/Header";
 import { client } from "../lib/contentfulClient";
+import SEO from "../components/SEO";
 
 export default function BlogPage() {
   const [articles, setArticles] = useState([]);
@@ -66,13 +67,35 @@ export default function BlogPage() {
     );
   }
 
+  const fi = currentLanguage !== "en";
+
   return (
     <div>
+      {/* Artikkelilistalta puuttui SEO kokonaan: sivu oli sitemapissa mutta
+          sai otsikokseen index.html:n oletuksen eikä kertonut itsestään
+          mitään hakukoneelle. */}
+      <SEO
+        title={
+          fi
+            ? "Revontuliartikkelit ja oppaat | RepoTracker"
+            : "Northern Lights Articles and Guides | RepoTracker"
+        }
+        description={
+          fi
+            ? "Oppaat revontulien katseluun Lapissa: paras aika, kuvausvinkit, Kp-indeksin lukeminen ja varustautuminen."
+            : "Guides for seeing the northern lights in Lapland: best time to go, photography tips, reading the Kp index and what to wear."
+        }
+        keywords={
+          fi
+            ? "revontulet, revontuliopas, revontulien kuvaus, Kp-indeksi, Lappi"
+            : "northern lights guide, aurora photography, Kp index, Lapland"
+        }
+        canonical="https://repotracker.fi/blog"
+        language={fi ? "fi" : "en"}
+        locale={fi ? "fi_FI" : "en_US"}
+      />
       <Header />
-      <main
-        className="container"
-        style={{ padding: "var(--space-lg) var(--space-md)" }}
-      >
+      <main className="container page-main">
         <h1>{currentLanguage === "en" ? "Blog" : "Blogi"}</h1>
 
         {articles.length === 0 ? (

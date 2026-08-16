@@ -1,51 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<urlset
- xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://repotracker.fi/</loc>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
   </url>
-
   <url>
     <loc>https://repotracker.fi/map</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url>
-
   <url>
     <loc>https://repotracker.fi/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
-
-  <url>
-  <loc>https://repotracker.fi/blog/photography</loc>
-</url>
-
-<url>
-  <loc>https://repotracker.fi/blog/forecast</loc>
-</url>
-
-<url>
-  <loc>https://repotracker.fi/blog/best-time</loc>
-</url>
-
   <url>
     <loc>https://repotracker.fi/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
-
   <url>
     <loc>https://repotracker.fi/premium</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
-
+  <url>
+    <loc>https://repotracker.fi/about</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
   <url>
     <loc>https://repotracker.fi/contact</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
   </url>
-
   <url>
     <loc>https://repotracker.fi/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
-  
   <url>
     <loc>https://repotracker.fi/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
-
-
+  <url>
+    <loc>https://repotracker.fi/places/rovaniemi</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/places/levi</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/places/saariselka</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/places/inari</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/places/kilpisjarvi</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/places/pallas</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/places/utsjoki</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/places/pyha</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/places/yllas</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/blog/photography</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/blog/forecast</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://repotracker.fi/blog/best-time</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
