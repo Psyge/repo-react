@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { isKnownPath } from "../lib/routes";
 import useTranslation from "../hooks/useTranslation";
 import { isActive, read, startTrial } from "../lib/premium";
@@ -19,6 +19,10 @@ import { isActive, read, startTrial } from "../lib/premium";
 
 const BASE = process.env.REACT_APP_API_BASE || "";
 const TIP_ROTATE_MS = 8000;
+
+/* Tervehdyskuplan kuittaus. localStorage eikä sessionStorage: kuittauksen
+   pitää päteä myös seuraavalla käynnillä, ei vain tässä välilehdessä. */
+const GREETING_KEY = "aurora_assistant_greeted";
 
 /* Botin vastausten Markdown-linkit klikattaviksi.
  *
@@ -88,6 +92,12 @@ export default function Auroraassistant() {
   const fi = activeLang === "fi";
   const navigate = useNavigate();
 
+  /* Karttasivulla on alareunassa kiinteä näkymänvalitsin (.map-view-toggle,
+     keskitetty, kolme nappia). Kapealla näytöllä se ulottuu nurkkaan asti
+     ja jäi kelluvan napin alle — molemmat ovat position: fixed. Nostetaan
+     nappi ja paneeli palkin yläpuolelle vain tällä sivulla. */
+  const onMapPage = useLocation().pathname === "/map";
+
   const [open, setOpen] = useState(false);
   const [premium, setPremium] = useState(null); // { deviceKey, expiresAt, tier } | null
 
@@ -100,6 +110,45 @@ export default function Auroraassistant() {
   const [coords, setCoords] = useState(null);
   const askedLocationRef = useRef(false);
   const scrollRef = useRef(null);
+
+  /* Mihin vastauksiin on jo annettu peukku. Indeksi kelpaa avaimeksi,
+     koska messages on append-only — vanhoja viestejä ei koskaan poisteta
+     eikä järjestetä uudelleen. */
+  const [rated, setRated] = useState(() => new Set());
+
+  /* Tervehdyskupla. Näytetään vain premium-käyttäjälle, jolle avustaja on
+     ostettu ominaisuus — ilmaiskäyttäjälle sama kupla olisi mainos.
+     Hylkäys tallennetaan localStorageen PYSYVÄSTI: joka sivulatauksella
+     ponnahtava tervehdys muuttuu ärsyttäväksi noin kolmannella kerralla,
+     ja juuri maksanut asiakas on huonoin mahdollinen kohde ärsyttää. */
+  const [greeting, setGreeting] = useState(false);
+  const greetingTimerRef = useRef(null);
+
+  function dismissGreeting() {
+    setGreeting(false);
+    try { localStorage.setItem(GREETING_KEY, "1"); } catch {}
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    try {
+      if (localStorage.getItem(GREETING_KEY)) return;
+    } catch {
+      return;   // yksityinen selaustila tms. — ei näytetä, jottei toistu
+    }
+    if (!isActive()) return;
+
+    /* Pieni viive: heti latauksen päälle ilmestyvä kupla jää huomaamatta
+       kun sivu vielä asettuu paikoilleen. */
+    greetingTimerRef.current = setTimeout(() => {
+      if (!cancelled) setGreeting(true);
+    }, 2500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(greetingTimerRef.current);
+    };
+  }, []);
 
   // --- Ilmainen: vihjelaatikon tila ---
   const [tips, setTips] = useState([]);
@@ -155,6 +204,7 @@ export default function Auroraassistant() {
     setOpen((v) => {
       const next = !v;
       if (next) {
+        dismissGreeting();       // avaaminen on itsessään kuittaus
         const p = isActive() ? read() : null;
         setPremium(p);
         if (p) {
@@ -165,6 +215,31 @@ export default function Auroraassistant() {
       }
       return next;
     });
+  }
+
+  /* Peukku vastaukselle. Merkitään heti annetuksi eikä odoteta palvelimen
+     vastausta: palaute on mukavuusominaisuus, eikä sen epäonnistuminen saa
+     näkyä käyttäjälle virheenä keskellä keskustelua. */
+  async function handleFeedback(index, rating) {
+    if (rated.has(index) || !premium) return;
+    setRated((prev) => new Set(prev).add(index));
+
+    const msg = messages[index];
+    try {
+      await fetch(`${BASE}/api/assistant/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceKey: premium.deviceKey,
+          rating,
+          question: msg?.question || "",
+          answer: msg?.content || "",
+          conversationId,
+        }),
+      });
+    } catch {
+      // hiljainen epäonnistuminen — tarkoituksella
+    }
   }
 
   async function handleSend() {
@@ -200,7 +275,12 @@ export default function Auroraassistant() {
       }
 
       if (data.conversationId) setConversationId(data.conversationId);
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer }]);
+      // question talteen, jotta palaute kertoo MIHIN kysymykseen vastaus
+      // liittyi — pelkkä vastaus ilman kysymystä on lokissa arvoton
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.answer, question: text },
+      ]);
     } catch {
       setError(fi ? "Yhteysvirhe. Yritä hetken kuluttua uudelleen." : "Connection error. Try again shortly.");
     } finally {
@@ -243,9 +323,27 @@ export default function Auroraassistant() {
 
   return (
     <>
+      {greeting && !open && (
+        <div className={`aa-greeting${onMapPage ? " aa-greeting--raised" : ""}`}>
+          <span className="aa-greeting-text">
+            {fi
+              ? "Hei! Kysy minulta revontulista — kerron mitä taivaalla juuri nyt tapahtuu."
+              : "Hi! Ask me about the northern lights — I'll tell you what's happening right now."}
+          </span>
+          <button
+            type="button"
+            className="aa-greeting-close"
+            onClick={dismissGreeting}
+            aria-label={fi ? "Sulje tervehdys" : "Dismiss"}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <button
         type="button"
-        className="aa-fab"
+        className={`aa-fab${onMapPage ? " aa-fab--raised" : ""}`}
         onClick={toggleOpen}
         aria-label={fi ? (open ? "Sulje revontuliavustaja" : "Avaa revontuliavustaja") : (open ? "Close aurora assistant" : "Open aurora assistant")}
       >
@@ -253,7 +351,11 @@ export default function Auroraassistant() {
       </button>
 
       {open && (
-        <div className="aa-panel" role="dialog" aria-label={fi ? "Revontuliavustaja" : "Aurora assistant"}>
+        <div
+          className={`aa-panel${onMapPage ? " aa-panel--raised" : ""}`}
+          role="dialog"
+          aria-label={fi ? "Revontuliavustaja" : "Aurora assistant"}
+        >
           <div className="aa-panel-head">
             <span className="aa-panel-title">
               🌌 {fi ? "Revontuliavustaja" : "Aurora Assistant"}
@@ -275,6 +377,37 @@ export default function Auroraassistant() {
                     {m.role === "assistant"
                       ? renderMessageContent(m.content)
                       : m.content}
+
+                    {m.role === "assistant" && (
+                      <div className="aa-feedback">
+                        {rated.has(i) ? (
+                          <span className="aa-feedback-thanks">
+                            {fi ? "Kiitos palautteesta" : "Thanks for the feedback"}
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="aa-feedback-btn"
+                              onClick={() => handleFeedback(i, "up")}
+                              aria-label={fi ? "Hyödyllinen vastaus" : "Helpful answer"}
+                              title={fi ? "Hyödyllinen" : "Helpful"}
+                            >
+                              👍
+                            </button>
+                            <button
+                              type="button"
+                              className="aa-feedback-btn"
+                              onClick={() => handleFeedback(i, "down")}
+                              aria-label={fi ? "Ei hyödyllinen vastaus" : "Not helpful"}
+                              title={fi ? "Ei hyödyllinen" : "Not helpful"}
+                            >
+                              👎
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
                 {loading && (
