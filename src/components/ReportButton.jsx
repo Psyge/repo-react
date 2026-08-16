@@ -44,7 +44,17 @@ export default function ReportButton() {
     });
   };
 
-  const report = async () => {
+  /* saw = false: "olin ulkona enkä nähnyt mitään".
+   *
+   * Nämä ovat kalibroinnin kannalta arvokkaampia kuin positiiviset
+   * havainnot — ilman niitä voi vain todeta millaiset olosuhteet olivat
+   * kun joku näki, ei sitä kuinka usein ennuste osui oikeaan. Ihmiset
+   * raportoivat luonnostaan vain onnistumiset, joten tämä pitää kysyä
+   * erikseen.
+   *
+   * Negatiivinen ei päädy kartalle eikä avaa onnenpyörää, joten sitä ei
+   * kannata klikata turhaan. */
+  const report = async (saw = true) => {
     if (loading) return;
     if (!navigator.geolocation) {
       alert(t("sightings.geo_denied"));
@@ -61,6 +71,7 @@ export default function ReportButton() {
             lon:     Number(pos.coords.longitude),
             createdAt: Date.now(),
             source:  "web",
+            saw,
             turnstileToken,
           };
 
@@ -85,6 +96,10 @@ export default function ReportButton() {
             setSpinResults(null);
             setAlreadySpun(false);
             setShowSpin(true);
+          } else if (!saw) {
+            // Negatiivinen raportti: kiitos ilman pyörää
+            alert(t("sightings.thanks_negative") ||
+              "Kiitos! Tieto siitä ettei revontulia näkynyt auttaa meitä tarkentamaan ennustetta.");
           } else {
             alert(t("sightings.thanks_daylight") || t("sightings.thanks") ||
               "Thanks! It's too bright for auroras right now, so this report isn't shown on the map.");
@@ -136,9 +151,21 @@ export default function ReportButton() {
     <>
       <div id="turnstile-container" style={{ display: "none" }} />
 
-      <button onClick={report} className="btn-primary" disabled={loading}>
-        {loading ? (t("common.loading") || "Loading...") : t("sightings.report_btn")}
-      </button>
+      <div className="report-actions">
+        <button onClick={() => report(true)} className="btn-primary" disabled={loading}>
+          {loading ? (t("common.loading") || "Loading...") : t("sightings.report_btn")}
+        </button>
+
+        {/* Toissijainen ja hillitty tarkoituksella: tämä ei ole toiminto
+            jota halutaan korostaa, mutta sen pitää olla tarjolla. */}
+        <button
+          onClick={() => report(false)}
+          className="report-negative-btn"
+          disabled={loading}
+        >
+          {t("sightings.report_none") || "En nähnyt mitään"}
+        </button>
+      </div>
 
       {showSpin && (
         <SpinModal
