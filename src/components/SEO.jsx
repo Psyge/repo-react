@@ -1,7 +1,11 @@
 import { Helmet } from "react-helmet-async";
 
 const SITE_NAME = "RepoTracker";
-const DEFAULT_IMAGE = "https://repotracker.fi/images/reposet.png";
+/* reposet.png ei ole palvelimella — se palautti HTML-sivun eikä kuvaa,
+   joten jakojen esikatselut jäivät ilman kuvaa. hero-bg.jpg on oma
+   revontulikuva ja toimii. Pidä tämä samana kuin middleware.js:n
+   DEFAULT_IMAGE, muuten robotti ja selain näkevät eri kuvan. */
+const DEFAULT_IMAGE = "https://repotracker.fi/images/hero-bg.jpg";
 
 export default function SEO({
   title = "RepoTracker | Revontuliennuste ja avaruussää",
