@@ -43,7 +43,7 @@ const SITE = "https://repotracker.fi";
    kuitenkin iso, ja osa roboteista ohittaa raskaat kuvat. Kun ehdit,
    tee siitä 1200x630 kokoinen kopio nimellä og-default.jpg ja vaihda
    tämä osoittamaan siihen. */
-const DEFAULT_IMAGE = `${SITE}/images/hero-bg.jpg`;
+const DEFAULT_IMAGE = `${SITE}/images/og-default.jpg`;
 
 const PLACES = {
   rovaniemi:   "Rovaniemi",
