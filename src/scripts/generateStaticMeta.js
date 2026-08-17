@@ -31,7 +31,7 @@ const fs = require("fs");
 const path = require("path");
 
 const SITE = "https://repotracker.fi";
-const IMAGE = `${SITE}/images/hero-bg.jpg`;
+const IMAGE = `${SITE}/images/og-default.jpg`;
 
 const BUILD = path.join(__dirname, "..", "..", "build");
 
