@@ -43,7 +43,7 @@ const SITE = "https://repotracker.fi";
    kuitenkin iso, ja osa roboteista ohittaa raskaat kuvat. Kun ehdit,
    tee siitä 1200x630 kokoinen kopio nimellä og-default.jpg ja vaihda
    tämä osoittamaan siihen. */
-const DEFAULT_IMAGE = `${SITE}/images/og-default.jpg`;
+const DEFAULT_IMAGE = `${SITE}/images/hero-bg.jpg`;
 
 const PLACES = {
   rovaniemi:   "Rovaniemi",
@@ -211,16 +211,36 @@ export default async function middleware(request) {
   if (!meta) return;
 
   /* Haetaan sovelluksen oma index.html. Tämä EI palaa middlewareen,
-     koska matcher jättää pisteen sisältävät polut ulkopuolelle. */
+     koska matcher jättää pisteen sisältävät polut ulkopuolelle.
+
+     accept-encoding: identity on PAKOLLINEN. Ilman sitä vastaus tulee
+     brotli- tai gzip-pakattuna, res.text() tulkitsee pakatut tavut
+     tekstinä ja lopputulos on lukukelvotonta roskaa — sivu näytti
+     selaimessa rikkinäiseltä. */
   let res;
   try {
-    res = await fetch(`${url.origin}/index.html`);
+    res = await fetch(`${url.origin}/index.html`, {
+      headers: {
+        "accept": "text/html",
+        "accept-encoding": "identity",
+      },
+    });
   } catch {
     return;   // jos haku epäonnistuu, annetaan alkuperäisen pyynnön mennä
   }
   if (!res.ok) return;
 
   let html = await res.text();
+
+  /* Järkevyystarkistus ennen kuin mitään tarjoillaan.
+   *
+   * Jos runko ei näytä HTML:ltä — pakkaus purkamatta, tyhjä vastaus,
+   * virhesivu — palataan tyhjin käsin, jolloin pyyntö menee normaalisti
+   * läpi ilman injektiota. Metatiedot jäävät silloin geneerisiksi, mikä
+   * on huomattavasti parempi kuin rikkinäinen sivu. */
+  if (!html || !html.includes("</head>") || !html.includes("<title>")) {
+    return;
+  }
 
   html = html
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${esc(meta.title)}</title>`)
