@@ -25,8 +25,9 @@
   },
   "scripts": {
     "prebuild": "node src/scripts/generateSitemap.js",
-    "start": "react-scripts start",
     "build": "react-scripts build",
+    "postbuild": "node src/scripts/generateStaticMeta.js",
+    "start": "react-scripts start",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
