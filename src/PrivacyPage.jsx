@@ -25,6 +25,20 @@ const SECTIONS = [
     after: ['privacy.a.data5']
   },
 
+  /* Sijaintitiedot ja havainnot. Tämä osio lisättiin kun kalibraatioloki
+     otettiin käyttöön: käyttäjän lähettämä sijainti on henkilötietoa, ja
+     sen kerääminen pitää kertoa vaikka se olisi karkeistettu. */
+  {
+    q: 'privacy.q.location',
+    body: ['privacy.a.location1'],
+    list: [
+      'privacy.a.location2',
+      'privacy.a.location3',
+      'privacy.a.location4'
+    ],
+    after: ['privacy.a.location5', 'privacy.a.location6']
+  },
+
   {
     q: 'privacy.q.email',
     body: [
