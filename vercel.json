@@ -1,8 +1,13 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "proxy": {
+    "entrypoint": "middleware.js",
+    "matcher": "/((?!_vercel|api/|.*\\.).*)"
+  },
   "redirects": [
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "repo-react-sepia.vercel.app/" }],
+      "has": [{ "type": "host", "value": "repo-react-sepia.vercel.app" }],
       "destination": "https://repotracker.fi/$1",
       "permanent": true
     }
