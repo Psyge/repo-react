@@ -156,7 +156,20 @@ async function getRoutes() {
 
   for (const item of places) {
     const f = item.fields || {};
-    const slug = text(f.slug, "en-US");
+
+    /* Slug pienaakkosiksi.
+     *
+     * Contentfulissa paikkojen slugit ovat isolla alkukirjaimella
+     * ("Rovaniemi"), mutta sovelluksen linkit tulevat data/places.js:stä
+     * pienellä ("rovaniemi"). Ilman normalisointia metatiedostot
+     * kirjoitettiin polkuun build/places/Rovaniemi/, kun käyttäjä menee
+     * osoitteeseen /places/rovaniemi — tiedostoa ei löytynyt ja Vercel
+     * putosi takaisin juuren index.html:ään.
+     *
+     * HUOM: artikkelien slugeja EI normalisoida, koska niiden linkit
+     * rakennetaan suoraan Contentfulin arvosta. Siellä ei ole toista
+     * lähdettä jonka kanssa voisi tulla ristiriita. */
+    const slug = text(f.slug, "en-US").toLowerCase();
     if (!slug) continue;
 
     const name = text(f.name, "en-US") || text(f.title, "en-US") || slug;
