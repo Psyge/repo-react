@@ -1,0 +1,20 @@
+# RepoTracker — security contact (RFC 9116)
+#
+# Jos löysit tietoturvaongelman, ota yhteyttä alla olevaan osoitteeseen
+# äläkä julkaise sitä ennen kuin se on korjattu. Vastaan niin pian kuin
+# ehdin — tämä on yhden hengen projekti, joten se voi kestää muutaman
+# päivän.
+#
+# If you found a security issue, please contact the address below and
+# do not disclose it publicly until it has been fixed. This is a
+# one-person project, so a reply may take a few days.
+
+Contact: mailto:info.repotracker@gmail.com
+
+# Expires on PAKOLLINEN kenttä. Kun tämä päivä menee ohi, tiedosto
+# katsotaan vanhentuneeksi eivätkä työkalut luota siihen enää.
+# Muista päivittää vuosittain.
+Expires: 2027-08-31T23:59:59.000Z
+
+Preferred-Languages: fi, en
+Canonical: https://repotracker.fi/.well-known/security.txt
