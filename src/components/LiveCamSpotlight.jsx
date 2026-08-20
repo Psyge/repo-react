@@ -20,8 +20,21 @@ import liveCams from "../data/liveCams";
    3. Ilman sijaintia valitaan pimein asema.
    4. Jos yksikään ei ole pimeä → ei renderöidä mitään.
 
+   TUOREUSTARKISTUS
+   Pimeys ei yksin riitä. FMI:n osoitteet ovat muotoa latest_MUO.jpg —
+   sama tiedostonimi jonka sisältö vaihtuu. Kun kamera on pois päältä,
+   tiedosto jää viimeiseen kuvaan, ja sivusto näytti huhtikuista kuvaa
+   otsikolla "Live nyt".
+
+   Aikaleima on poltettu kuvan pikseleihin eikä sitä voi lukea täältä,
+   eikä HTTP-otsakkeita voi tarkistaa selaimesta ilman CORS-lupaa jota
+   FMI ei anna. Siksi worker tekee tarkistuksen puolestamme ja kertoo
+   /api/cams/status -osoitteessa mitkä kamerat oikeasti päivittyvät.
+
    Ei omia kameroita eikä laitteistoa: pelkkiä julkisia, pysyviä osoitteita.
 ======================================================================= */
+
+const BASE = process.env.REACT_APP_API_BASE || "";
 
 export default function LiveCamSpotlight() {
   const { currentLanguage, t } = useTranslation();
@@ -38,6 +51,30 @@ export default function LiveCamSpotlight() {
   useEffect(() => {
     const id = setInterval(() => setTick(Date.now()), CAM_REFRESH_MS);
     return () => clearInterval(id);
+  }, []);
+
+  /* Workerin tuoreustieto: { KEV: { fresh: true, ts }, ... }
+   *
+   * null = ei vielä haettu tai haku epäonnistui. Silloin kameroita EI
+   * näytetä lainkaan — pysähtyneen kuvan esittäminen "livenä" on
+   * huonompi lopputulos kuin tyhjä paikka sivulla.
+   *
+   * Haetaan kerran mountissa. Kysymys "onko kamera käynnissä" muuttuu
+   * hitaasti, joten minuutin tikitys ei koske tätä. */
+  const [camStatus, setCamStatus] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${BASE}/api/cams/status`);
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled) setCamStatus(data?.cams || {});
+      } catch {
+        if (!cancelled) setCamStatus({});   // tyhjä = ei näytetä mitään
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   /* Striimi arvotaan kerran mountissa — ei saa vaihtua minuutin välein */
@@ -65,11 +102,18 @@ export default function LiveCamSpotlight() {
   const cam = useMemo(() => {
     if (stream) return null;
 
+    /* Ei näytetä mitään ennen kuin tiedetään mitkä kamerat päivittyvät.
+       Pimeys yksin ei riitä: pysähtynyt kamera on pimeässäkin pysähtynyt. */
+    if (!camStatus) return null;
+
     const userLoc = readUserLocation();
     const now = new Date(tick);
 
     const dark = allSkyCams
       .filter((c) => c.enabled && !failed.has(c.id))
+      /* Vain kamerat jotka worker on todennut tuoreiksi. Tuntematon
+         id = ei tuore, koska emme voi väittää sitä liveksi. */
+      .filter((c) => camStatus[c.id]?.fresh === true)
       .map((c) => ({ ...c, alt: sunAltitudeAt(c.lat, c.lon, now) }))
       .filter((c) => c.alt < CAM_DARK_MAX_DEG);
 
@@ -86,7 +130,7 @@ export default function LiveCamSpotlight() {
     }
 
     return dark.sort((a, b) => a.alt - b.alt)[0];
-  }, [stream, tick, failed]);
+  }, [stream, tick, failed, camStatus]);
 
   if (stream) {
     return (

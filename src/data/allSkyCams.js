@@ -27,7 +27,11 @@ const allSkyCams = [
     lon: 27.01,
     url: "https://space.fmi.fi/MIRACLE/RWC/latest_KEV.jpg",
     operator: "Ilmatieteen laitos",
-    enabled: true,
+    /* Pois käytöstä 8/2026: kamerat eivät ole vielä käynnistyneet kaudelle,
+       ja osoite tarjoili huhtikuista kuvaa otsikolla "Live nyt". Kytke
+       takaisin päälle kun workerin tuoreustarkistus on käytössä — se
+       piilottaa pysähtyneet kamerat automaattisesti. */
+    enabled: false,
   },
   {
     id: "KIL",
@@ -36,7 +40,11 @@ const allSkyCams = [
     lon: 20.79,
     url: "https://space.fmi.fi/MIRACLE/RWC/latest_KIL.jpg",
     operator: "Ilmatieteen laitos",
-    enabled: true,
+    /* Pois käytöstä 8/2026: kamerat eivät ole vielä käynnistyneet kaudelle,
+       ja osoite tarjoili huhtikuista kuvaa otsikolla "Live nyt". Kytke
+       takaisin päälle kun workerin tuoreustarkistus on käytössä — se
+       piilottaa pysähtyneet kamerat automaattisesti. */
+    enabled: false,
   },
   {
     id: "MUO",
@@ -45,7 +53,11 @@ const allSkyCams = [
     lon: 23.53,
     url: "https://space.fmi.fi/MIRACLE/RWC/latest_MUO.jpg",
     operator: "Ilmatieteen laitos",
-    enabled: true,
+    /* Pois käytöstä 8/2026: kamerat eivät ole vielä käynnistyneet kaudelle,
+       ja osoite tarjoili huhtikuista kuvaa otsikolla "Live nyt". Kytke
+       takaisin päälle kun workerin tuoreustarkistus on käytössä — se
+       piilottaa pysähtyneet kamerat automaattisesti. */
+    enabled: false,
   },
 
   /* --- Etelä-Suomi: laajentaisi kattavuuden 60°N asti, mutta eri
