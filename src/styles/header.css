@@ -6,8 +6,13 @@
 }
 
 @media (max-width: 768px) {
+  /* Kaksi riviä: logo + navi. Mitattu korkeus on noin 90 px, mutta
+     arvo on tarkoituksella hieman suurempi — fonttikoot vaihtelevat
+     laitteittain ja käyttäjän omat selainasetukset voivat kasvattaa
+     riviä. Liian pieni arvo leikkaa otsikon, liian suuri jättää vain
+     hieman ilmaa. */
   :root {
-    --header-h: 88px;   /* kaksi riviä: logo + navi */
+    --header-h: 96px;
   }
 }
 

@@ -56,6 +56,14 @@
   padding-bottom: 64px;
 }
 
+/* Ankkurilinkit ja selaimen palautus edelliseen kohtaan eivät tiedä
+   kiinteästä headerista mitään — ilman tätä kohde jää sen alle.
+   Koskee otsikoita, joihin sisällysluettelot ja hakukoneiden
+   "hyppää kohtaan" -linkit osoittavat. */
+:where(h1, h2, h3, [id]) {
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
 @media (max-width: 768px) {
   /* Sivureunat hieman .containerin oletusta väljemmiksi. Kortit ylsivät
      lähes ruudun reunaan asti, mikä sai sisällön näyttämään ahtaalta.
