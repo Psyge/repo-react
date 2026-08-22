@@ -2,6 +2,7 @@
 // Nimet, short ja description tulevat Contentfulista.
 const places = [
   { id: "rovaniemi",   slug: "rovaniemi",   name: "Rovaniemi",   lat: 66.50, lon: 25.72 },
+  { id: "santa-claus-village",   slug: "santa-claus-village",   name: "Santa Claus Village",   lat: 66.54, lon: 25.85 },
   { id: "levi",        slug: "levi",        name: "Levi",        lat: 67.80, lon: 24.80 },
   { id: "saariselka",  slug: "saariselka",  name: "Saariselkä",  lat: 68.42, lon: 27.41 },
   { id: "inari",       slug: "inari",       name: "Inari",       lat: 68.90, lon: 27.02 },
