@@ -106,9 +106,12 @@ export default function PlacePage() {
       />
       <Header />
 
+      {/* page-main hoitaa yläreunan tilan headerin korkeudesta laskettuna.
+          Tämä luokka oli täällä jo kertaalleen mutta katosi tiedostoa
+          kopioitaessa, jolloin otsikko jäi kiinteän headerin alle. */}
       <main
-        className="container article"
-        style={{ padding: "var(--space-lg) var(--space-md)", maxWidth: "760px" }}
+        className="container article page-main"
+        style={{ maxWidth: "760px" }}
       >
         <p className="article-back">
           <Link to="/">← {t("places.backHome") || "Back"}</Link>
@@ -122,27 +125,17 @@ export default function PlacePage() {
           </p>
         )}
 
-        {/* Karttanappi */}
+        {/* Karttanappi. Tyylit CSS:ssä eikä inlinenä, jotta kapea näyttö
+            voidaan huomioida — inline-tyyleillä ei voi käyttää
+            mediakyselyitä, ja nappi rivittyi mobiilissa keskitettynä. */}
         {lat && lon && (
           <button
+            type="button"
+            className="place-map-btn"
             onClick={() => navigate(`/map?lat=${lat}&lon=${lon}`)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              marginTop: 20,
-              marginBottom: 28,
-              padding: "10px 20px",
-              background: "rgba(0,255,136,0.1)",
-              border: "1px solid rgba(0,255,136,0.35)",
-              borderRadius: 8,
-              color: "#00ff88",
-              fontWeight: 600,
-              cursor: "pointer",
-              fontSize: 14,
-            }}
           >
-            🗺 {t("places.viewAuroraMap") || "View aurora conditions on map"}
+            <span aria-hidden="true">🗺</span>
+            <span>{t("places.viewAuroraMap") || "View aurora conditions on map"}</span>
           </button>
         )}
 
