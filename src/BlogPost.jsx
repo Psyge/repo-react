@@ -45,9 +45,12 @@ export default function BlogPost() {
       });
   }, [slug, currentLanguage]); // ← reagoi myös kielen vaihtoon
 
+  /* Myös lataus- ja virhetilat tarvitsevat page-mainin: nekin
+     renderöivät otsikkotason sisältöä kiinteän headerin alle.
+     Lataustilassa ei ole Headeriä, mutta luokka ei haittaa siellä. */
   if (loading) {
     return (
-      <div className="container" style={{ padding: "var(--space-lg)" }}>
+      <div className="container page-main">
         <p>Loading...</p>
       </div>
     );
@@ -57,10 +60,7 @@ export default function BlogPost() {
     return (
       <div>
         <Header />
-        <div
-          className="container"
-          style={{ padding: "var(--space-lg) var(--space-md)" }}
-        >
+        <div className="container page-main">
           <h1>Article not found</h1>
           <p>
             <Link to="/blog">Back to blog</Link>
@@ -93,12 +93,11 @@ export default function BlogPost() {
       />
       <Header />
 
+      {/* page-main varaa tilan kiinteän headerin alta --header-h:n
+          perusteella. Ilman sitä otsikko jää headerin alle mobiilissa. */}
       <main
-        className="container article"
-        style={{
-          padding: "var(--space-lg) var(--space-md)",
-          maxWidth: "760px",
-        }}
+        className="container article page-main"
+        style={{ maxWidth: "760px" }}
       >
         <p className="article-back">
           <Link to="/blog">{t("blog.back")}</Link>

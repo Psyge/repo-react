@@ -1,4 +1,3 @@
-
 import useTranslation from "./hooks/useTranslation";
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
@@ -93,12 +92,8 @@ export default function TermsPage() {
       <Header />
 
       <main
-        className="container"
-        style={{
-          padding: "32px 16px",
-          maxWidth: 860,
-          margin: "0 auto",
-        }}
+        className="container page-main"
+        style={{ maxWidth: 860, margin: "0 auto" }}
       >
         <section
           className="hero"
@@ -152,4 +147,3 @@ export default function TermsPage() {
     </div>
   );
 }
-

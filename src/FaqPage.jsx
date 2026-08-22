@@ -34,7 +34,7 @@ export default function FaqPage() {
   canonical="https://repotracker.fi/faq"
 />
       <Header />
-    <main className="container" style={{ padding: '32px 16px', maxWidth: 860, margin: '0 auto' }}>
+    <main className="container page-main" style={{ maxWidth: 860, margin: '0 auto' }}>
       <section className="hero" style={{ padding: '24px 0 16px' }}>
         <h1>{t('faq.title')}</h1>
         <p className="tagline">{t('faq.intro')}</p>

@@ -37,12 +37,8 @@ export default function AboutPage() {
       <Header />
 
       <main
-        className="container"
-        style={{
-          padding: "32px 16px",
-          maxWidth: 860,
-          margin: "0 auto",
-        }}
+        className="container page-main"
+        style={{ maxWidth: 860, margin: "0 auto" }}
       >
         <section className="hero" style={{ padding: "24px 0 16px" }}>
           <h1>{t("about.title")}</h1>
