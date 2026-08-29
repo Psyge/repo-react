@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import SunCalc from "suncalc";
+import usePolling from "../hooks/usePolling";
 
 import useTranslation from "../hooks/useTranslation";
 import "../styles/midnightSunV2.css";
@@ -151,22 +152,25 @@ export default function MidnightSunV2({ lat: propLat, lon: propLon }) {
     return pts;
   }, [YEAR, month, lat, lon]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadData = async () => {
-      try {
-        const { kp: k, clouds } = await fetchLiveConditions(lat, lon);
-        if (cancelled) return;
-        setKp(k);
-        setCloudCover(clouds);
-      } catch (err) {
-        console.warn("live conditions failed:", err?.message || err);
-      }
-    };
-    loadData();
-    const interval = setInterval(loadData, 300000);
-    return () => { cancelled = true; clearInterval(interval); };
+  /* Päivitysväli 5 min → 30 min.
+   *
+   * Tämä hakee Kp:n ja pilvisyyden. Kp on kolmen tunnin indeksi ja
+   * pilvisyys päivittyy lähteessä kerran tunnissa, joten viiden
+   * minuutin haku kysyi samaa lukua kuusi kertaa turhaan.
+   *
+   * usePolling pysäyttää haun kun välilehti ei ole näkyvissä ja
+   * hakee tuoreen heti kun käyttäjä palaa. */
+  const loadConditions = useCallback(async () => {
+    try {
+      const { kp: k, clouds } = await fetchLiveConditions(lat, lon);
+      setKp(k);
+      setCloudCover(clouds);
+    } catch (err) {
+      console.warn("live conditions failed:", err?.message || err);
+    }
   }, [lat, lon]);
+
+  usePolling(loadConditions, 30 * 60 * 1000, [lat, lon]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

@@ -303,12 +303,49 @@ export default function MapPage() {
     const premium = readPremium();
     const sightingsLayer = L.layerGroup().addTo(map);
     let sightingsInterval = null;
+    let onSightingsVisibility = null;
+
     if (premium) {
       loadSightingsLayer(sightingsLayer);
-      sightingsInterval = setInterval(
-        () => loadSightingsLayer(sightingsLayer),
-        SIGHTINGS_REFRESH_MS
-      );
+
+      /* Päivitys vain kun välilehti on näkyvissä.
+       *
+       * Aiemmin tämä haki havainnot 10 min välein niin kauan kuin sivu
+       * oli auki — myös taustavälilehdessä jota kukaan ei katso. Hyvänä
+       * revontuliyönä kartta jätetään auki tunneiksi, ja yksi käyttäjä
+       * ehti kuluttaa merkittävän osan päivän pyyntökiintiöstä. */
+      let lastLoad = Date.now();
+
+      const refresh = () => {
+        lastLoad = Date.now();
+        loadSightingsLayer(sightingsLayer);
+      };
+
+      const startTimer = () => {
+        if (sightingsInterval == null) {
+          sightingsInterval = setInterval(refresh, SIGHTINGS_REFRESH_MS);
+        }
+      };
+
+      const stopTimer = () => {
+        if (sightingsInterval != null) {
+          clearInterval(sightingsInterval);
+          sightingsInterval = null;
+        }
+      };
+
+      onSightingsVisibility = () => {
+        if (document.visibilityState === "visible") {
+          // Haetaan heti vain jos data ehti vanhentua piilossa ollessa
+          if (Date.now() - lastLoad >= SIGHTINGS_REFRESH_MS) refresh();
+          startTimer();
+        } else {
+          stopTimer();
+        }
+      };
+
+      if (document.visibilityState === "visible") startTimer();
+      document.addEventListener("visibilitychange", onSightingsVisibility);
     }
 
     map.on("click", (e) => {
@@ -337,6 +374,9 @@ export default function MapPage() {
     return () => {
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
       if (sightingsInterval) clearInterval(sightingsInterval);
+      if (onSightingsVisibility) {
+        document.removeEventListener("visibilitychange", onSightingsVisibility);
+      }
       if (popupRootRef.current) {
         try { popupRootRef.current.unmount(); } catch { /* ignore */ }
       }

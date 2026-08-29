@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useTranslation from "../hooks/useTranslation";
+import usePolling from "../hooks/usePolling";
 import ReportButton from "./ReportButton";
 
 /* ========================================================================
@@ -93,16 +94,24 @@ export default function SightingsBar() {
     [premium]
   );
 
+  /* Havaintoklusterit. usePolling pysäyttää haun kun välilehti ei ole
+     näkyvissä — aiemmin tämä haki 10 min välein niin kauan kuin sivu
+     oli auki, myös taustalla. */
+  const refreshClusters = useCallback(() => {
+    if (!premium) return;
+    loadClusters({ force: true });
+  }, [loadClusters, premium]);
+
+  usePolling(refreshClusters, SIGHTINGS_TTL_MS, [premium, loadClusters]);
+
   useEffect(() => {
     if (!premium) {
       setClusters([]);
       return;
     }
-    loadClusters();
-    const interval = setInterval(() => loadClusters({ force: true }), SIGHTINGS_TTL_MS);
+    /* Manuaalinen päivitys havaintoraportin jälkeen — ei ajastettu. */
     window.__refreshSightings = () => loadClusters({ force: true });
     return () => {
-      clearInterval(interval);
       delete window.__refreshSightings;
     };
   }, [loadClusters, premium]);
