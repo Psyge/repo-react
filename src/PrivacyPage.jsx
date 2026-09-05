@@ -65,6 +65,34 @@ const SECTIONS = [
     ]
   },
 
+  /* Ulkopuoliset palvelut. Selaste lupasi aiemmin ettei selailusta kerätä
+     henkilötietoja, mutta pelkkä sivun avaaminen saa selaimen ottamaan
+     yhteyden karttalaattojen, kuvien ja mainosten palvelimiin — ne näkevät
+     IP-osoitteen, joka on GDPR:ssä henkilötietoa. Emme kerää sitä itse,
+     mutta lupaus oli silti liian laaja.
+
+     Jos lisäät sivustolle uuden ulkopuolisen palvelun josta ladataan jotain
+     selaimeen, lisää se myös tähän listaan. */
+  {
+    q: 'privacy.q.thirdparty',
+    body: ['privacy.a.thirdparty1'],
+    list: [
+      'privacy.a.thirdparty2',
+      'privacy.a.thirdparty3',
+      'privacy.a.thirdparty4',
+      'privacy.a.thirdparty5',
+      'privacy.a.thirdparty6',
+      'privacy.a.thirdparty7',
+      'privacy.a.thirdparty8',
+      'privacy.a.thirdparty9',
+      'privacy.a.thirdparty10'
+    ],
+    after: [
+      'privacy.a.thirdparty11',
+      'privacy.a.thirdparty12'
+    ]
+  },
+
   {
     q: 'privacy.q.retention',
     body: [
