@@ -4,6 +4,10 @@
 
   --fg: #f0f0f5;
   --fg-muted: #8a8aa3;
+  /* Oli käytössä popup.css:ssä ja footer.css:ssä mutta jäi määrittelemättä,
+     jolloin var(--fg-dim) ei ratkennut miksikään ja "himmeät" selitetekstit
+     renderöityivät perusvärillä. */
+  --fg-dim: #5f5f7a;
 
   --accent: #00ffcc;
   --accent-2: #7d5fff;

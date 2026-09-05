@@ -12,6 +12,58 @@ function CloseBtn({ onClose }) {
   );
 }
 
+const MINUTE = 60 * 1000;
+const HOUR = 60 * MINUTE;
+
+/* "12 min" / "3 h" — pelkkä kesto ilman sanamuotoa, jotta sama apuri
+   kelpaa sekä "mitattu X sitten" että "aurinkotuuli X vanha" -riveille. */
+function ageSpan(ms) {
+  if (ms == null || !isFinite(ms) || ms < 0) return null;
+  if (ms < HOUR) return `${Math.max(1, Math.round(ms / MINUTE))} min`;
+  return `${Math.floor(ms / HOUR)} h`;
+}
+
+/* Ikämerkintä.
+ *
+ * Worker palauttaa current.kpTs:n ja current.stale-lohkon nimenomaan tätä
+ * varten. Sen oma kommentti kertoo miksi: Kp on kolmen tunnin indeksi, joten
+ * tuorekin arvo on aina hieman vanha, eikä jäätynyttä arvoa erota tuoreesta
+ * ilman merkintää. Sivusto näytti kerran yli vuorokauden vanhaa Kp:tä eikä
+ * mikään kertonut siitä — worker korjattiin silloin, käyttöliittymä ei.
+ *
+ * stale tarkoittaa että aurinkotuulen arvot (nopeus, tiheys, Bz) ovat vanhoja.
+ * Worker EI syötä niitä laskentaan, mutta näyttää ne ikämerkinnän kanssa —
+ * sama sääntö pätee täällä: arvo saa näkyä, kunhan sen ikä näkyy myös.
+ *
+ * Kentät tulevat vain /api/aurora/forecast -vastauksesta. Litteä
+ * /api/aurora/calc ei sisällä aikaleimoja, jolloin merkintä jää pois.
+ * Ikää ei arvata. */
+function DataAge({ ts, stale, t }) {
+  let measured = null;
+  if (ts != null) {
+    const ms = Date.now() - new Date(ts).getTime();
+    if (isFinite(ms) && ms >= 0) {
+      measured = ms < 2 * MINUTE
+        ? t("age.justnow", "just now")
+        : `${ageSpan(ms)} ${t("age.ago", "ago")}`;
+    }
+  }
+
+  const windAge = stale ? ageSpan(stale.ageMs) : null;
+  if (!measured && !windAge) return null;
+
+  return (
+    <div className={"ap-age" + (windAge ? " ap-age--stale" : "")}>
+      {measured && <span>{t("age.measured", "Measured")} {measured}</span>}
+      {windAge && (
+        <span>
+          ⚠ {t("age.wind", "solar wind")} {windAge} {t("age.old", "old")}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export default function AuroraPopup({
   lat,
   lng,
@@ -26,20 +78,20 @@ export default function AuroraPopup({
 
   if (!data && !error) {
     return (
-      <div style={{ minWidth: 220, color: "#fff", position: "relative" }}>
+      <div className="aurora-popup aurora-popup--compact">
         <CloseBtn onClose={onClose} />
         <Loc lat={lat} lng={lng} />
-        <div style={{ marginTop: 8, opacity: 0.7 }}>{t("loading", "Loading…")}</div>
+        <div className="ap-desc">{t("loading", "Loading…")}</div>
       </div>
     );
   }
 
   if (error && !data) {
     return (
-      <div style={{ minWidth: 220, color: "#fff", position: "relative" }}>
+      <div className="aurora-popup aurora-popup--compact">
         <CloseBtn onClose={onClose} />
         <Loc lat={lat} lng={lng} />
-        <div style={{ marginTop: 8, color: "#ff6b6b" }}>{t("error.fetch", "Failed to load data")}</div>
+        <div className="ap-desc ap-desc--error">{t("error.fetch", "Failed to load data")}</div>
       </div>
     );
   }
@@ -72,41 +124,36 @@ export default function AuroraPopup({
   const levelLabel = t(`probability.${level}`, level);
 
   // --- FREE ---
+  /* Käyttää samoja popup.css-luokkia kuin premium-haara. Aiemmin tämä oli
+     kokonaan inline-tyyleillä — mukaan lukien upsell-nappi kymmenellä
+     tyyliattribuutilla — ja näytti vierekkäin premiumin kanssa eri tuotteelta.
+     Se on huono paikka näyttää keskeneräiseltä, koska juuri tässä myydään. */
   if (!isPremium) {
     return (
-      <div style={{ minWidth: 240, color: "#fff", position: "relative" }}>
+      <div className="aurora-popup aurora-popup--free">
         <CloseBtn onClose={onClose} />
         <Loc lat={lat} lng={lng} />
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
-          <div style={{ fontSize: 12, opacity: 0.7 }}>{t("kp.label", "Kp")}</div>
-          <div style={{ fontSize: 28, fontWeight: 700, color }}>
-            {kp != null ? fmt(kp) : "–"}
+
+        <div className="ap-status">
+          <div className="ap-status-level" style={{ color }}>{levelLabel}</div>
+        </div>
+
+        <div className="ap-quick ap-quick--two">
+          <div>
+            <span>{t("kp.label", "Kp")}</span>
+            <strong>{kp != null ? fmt(kp) : "–"}</strong>
+          </div>
+          <div>
+            <span>{t("row.clouds", "Clouds")}</span>
+            <strong>{clouds != null ? `${clouds}%` : "–"}</strong>
           </div>
         </div>
-        <div style={{ fontSize: 13, color, marginTop: 2 }}>{levelLabel}</div>
-        {clouds != null && (
-          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
-            {t("row.clouds", "Clouds")}: <strong>{clouds}%</strong>
-          </div>
-        )}
-        {loading && (
-          <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>{t("loading", "Loading…")}</div>
-        )}
 
-        <a href="/premium"
-          style={{
-            display: "block",
-            marginTop: 12,
-            padding: "9px 10px",
-            textAlign: "center",
-            background: "linear-gradient(135deg,#ff3b7f,#ffe600)",
-            color: "#000",
-            fontWeight: 700,
-            borderRadius: 6,
-            textDecoration: "none",
-            fontSize: 12,
-          }}
-        >
+        <DataAge ts={data?.current?.kpTs} stale={data?.current?.stale} t={t} />
+
+        {loading && <div className="ap-desc">{t("loading", "Loading…")}</div>}
+
+        <a className="ap-toggle" href="/premium">
           {t("forecast.popup_full", "Unlock full forecast — from 2,99 €")}
         </a>
       </div>
@@ -156,6 +203,8 @@ export default function AuroraPopup({
               {probability != null ? `${probability}%` : "–"}
             </div>
           </div>
+
+          <DataAge ts={data?.current?.kpTs} stale={data?.current?.stale} t={t} />
 
           {/* Paras ikkuna */}
           {bestWindow && (

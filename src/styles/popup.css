@@ -159,8 +159,38 @@
 }
 
 /* ========================================
+   IKÄMERKINTÄ
+======================================== */
+
+/* Kp on kolmen tunnin indeksi ja aurinkotuulidata voi olla tuntikausia vanhaa.
+   Ilman ikämerkintää jäätynyttä arvoa ei erota tuoreesta — hillitty rivi
+   riittää, kun taas vanhentunut aurinkotuuli nostetaan varoitusväriin. */
+.ap-age {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: -8px 0 14px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-dim);
+}
+
+.ap-age--stale {
+  color: #ffb84d;
+}
+
+/* ========================================
    BUTTON
 ======================================== */
+
+/* Upsell on <a>, ei <button>: inline-elementti ei kunnioita width:100%:a
+   ilman tätä. */
+a.ap-toggle {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
 
 .ap-toggle {
   width: 100%;
@@ -210,9 +240,23 @@
   font-weight: 700;
 }
 
+/* Ilmaisnäkymässä on kaksi lukua kolmen sijaan. */
+.ap-quick--two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Lataus- ja virhetila: sama kehys, vähemmän sisältöä. */
+.aurora-popup--compact {
+  min-width: 200px;
+}
+
 /* ========================================
    DESCRIPTION
 ======================================== */
+
+.ap-desc--error {
+  color: #ff6b6b;
+}
 
 .ap-desc {
   margin-top: 14px;
@@ -285,6 +329,7 @@
   .ap-details { margin-top: 14px; gap: 8px; }
   .ap-details > div { font-size: 12px; }
   .ap-desc { font-size: 12px; margin-top: 12px; }
+  .ap-age { font-size: 9px; margin-bottom: 12px; }
   .leaflet-popup-close-button { top: 8px !important; right: 8px !important; font-size: 16px !important; }
 }
 
