@@ -8,7 +8,27 @@ const AURORA_CACHE_KEY = "aurora_session_cache:ovation:v1";
 const AURORA_TTL_MS = 60 * 60 * 1000; // 1h
 
 let latestData = null;
-let sprites = { r: 0, green: null, yellow: null, red: null };
+let sprites = { green: null, yellow: null, red: null };
+
+/* Hehkun säde asteina. Revontuliovaali on maantieteellinen ilmiö, joten
+   sen koon pitää seurata kartan mittakaavaa — pikselisäde lasketaan tästä
+   ja nykyisestä zoomista, ei zoomin numerosta suoraan. */
+const BLOB_DEG = 1.6;
+
+/* OVATION-ruudukko on 1° × 1°. */
+const GRID_DEG = 1;
+
+/* Datan leveysasteet siirretään pohjoisemmaksi piirrettäessä. Sama vakio
+   tarvitaan myös näytteenotossa, jotta ruudulta luettu arvo vastaa sitä
+   mitä samassa kohdassa näytetään. */
+const LAT_SHIFT = 1.4;
+
+/* Sprite on kiinteän kokoinen tekstuuri, jota skaalataan piirtovaiheessa.
+   Aiemmin sprite luotiin kokoon radius*4 ja radius oli zoom*100 yli zoomin
+   10 — zoomilla 16 se tarkoitti 6400 × 6400 pikselin canvasia, yli 160 Mt
+   per sprite ja kolme spriteä. Selain lakkasi varaamasta niitä ja kerros
+   jäi tyhjäksi. */
+const SPRITE_R = 256;
 
 function readSessionCache(key, ttlMs) {
   if (typeof window === "undefined") return null;
@@ -51,20 +71,18 @@ function writeSessionCache(key, data) {
   }
 }
 
-// 🔥 sprite builder
-function buildSprites(radius) {
-  if (radius === sprites.r) return;
-
-  sprites.r = radius;
+// 🔥 sprite builder — luodaan kerran, koko ei riipu zoomista
+function buildSprites() {
+  if (sprites.green) return;
 
   const make = (rgb) => {
     const s = document.createElement("canvas");
-    s.width = s.height = radius * 4;
+    s.width = s.height = SPRITE_R * 2;
 
     const c = s.getContext("2d");
     const cx = s.width / 2;
 
-    const g = c.createRadialGradient(cx, cx, 0, cx, cx, radius);
+    const g = c.createRadialGradient(cx, cx, 0, cx, cx, SPRITE_R);
     g.addColorStop(0, `rgba(${rgb}, 0.9)`);
     g.addColorStop(0.4, `rgba(${rgb}, 0.22)`);
     g.addColorStop(1, `rgba(${rgb}, 0)`);
@@ -130,7 +148,21 @@ function createLayer() {
 
     setData(data) {
       latestData = data;
+      this._sampleCenter();
       this._draw();
+    },
+
+    /* Näkymän keskipisteen intensiteetti lähimmästä ruudukkopisteestä.
+       Haku on lineaarinen 65 000 pisteen yli, joten se ei kuulu 10 kertaa
+       sekunnissa pyörivään piirtosilmukkaan — arvo muuttuu vasta kun kartta
+       liikkuu tai data päivittyy, ja se päivitetään niissä kohdissa. */
+    _sampleCenter() {
+      if (!this._map || !latestData) {
+        this._sample = 0;
+        return;
+      }
+      const c = this._map.getCenter();
+      this._sample = getAuroraIntensity(c.lat - LAT_SHIFT, c.lng);
     },
 
     _reset() {
@@ -149,6 +181,7 @@ function createLayer() {
 
       this._canvas.style.filter = `blur(${blur}px)`;
 
+      this._sampleCenter();
       this._draw();
     },
 
@@ -195,17 +228,65 @@ function createLayer() {
       const zoom = map.getZoom();
       const t = Date.now() * 0.001;
 
-      const latShift = 1.4;
-
-      let radius = zoom * 10;
-      if (zoom > 7) radius = zoom * 50;
-      if (zoom > 10) radius = zoom * 100;
-
-      buildSprites(Math.round(radius));
-
+      buildSprites();
       ctx.globalCompositeOperation = "screen";
 
-      const bounds = map.getBounds().pad(0.4);
+      // Pikseliä per pituusaste nykyisellä zoomilla.
+      const pxPerDeg = (256 * Math.pow(2, zoom)) / 360;
+
+      /* Kun yksi ruudukkoaste vie yli puolet ruudun leveydestä, koko näkymä
+         on yhden 1° × 1° solun sisällä eikä yhdenkään pisteen keskus osu
+         enää lähellekään ruutua. Vanha rajaus (getBounds().pad(0.4)) pudotti
+         silloin kaikki pisteet ja kerros katosi kokonaan — juuri tämä näkyi
+         käyttäjälle revontulien häviämisenä lähemmäksi zoomatessa.
+
+         Solun sisällä ei ole mielekästä piirtää erillisiä pisteitä: oikea
+         esitys on yksi tasainen hehku, jonka voimakkuus luetaan näkymän
+         keskipisteestä. Kustannus on samalla vakio zoomista riippumatta. */
+      if (pxPerDeg * GRID_DEG > cv.width / 2) {
+        const intensity = this._sample || 0;
+        if (intensity < 4) {
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = "source-over";
+          return;
+        }
+
+        const sprite = pickSprite(intensity);
+        if (!sprite) return;
+
+        const r = Math.max(cv.width, cv.height) * 1.4;
+        const pulse = 0.9 + Math.sin(t) * 0.1;
+
+        ctx.globalAlpha = Math.min(0.6, intensity / 100) * pulse;
+        ctx.drawImage(
+          sprite,
+          cv.width / 2 - r,
+          cv.height / 2 - r,
+          r * 2,
+          r * 2
+        );
+
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = "source-over";
+        return;
+      }
+
+      /* Hehkun säde pikseleinä. Kasvaa mittakaavan mukana, joten piste
+         näkyy yhtä isona alueena riippumatta siitä miten lähelle on
+         zoomattu. Sprite on kiinteä tekstuuri, joka venytetään tähän
+         kokoon — muistinkulutus ei riipu zoomista. */
+      const drawR = Math.max(24, BLOB_DEG * pxPerDeg);
+
+      /* Rajaus padataan hehkun säteellä, ei näkymän suhteellisella osuudella.
+         Ruudun ulkopuolella oleva piste hehkuu yhä sisään, jos sen säde
+         yltää ruudulle — se on koko syy siihen että kerros pysyy näkyvissä
+         kun näkymä kaventuu. */
+      const b = map.getBounds();
+      const pad = BLOB_DEG + 0.5;
+      const bounds = L.latLngBounds(
+        [b.getSouth() - pad, b.getWest() - pad],
+        [b.getNorth() + pad, b.getEast() + pad]
+      );
 
       latestData.coordinates.forEach((p, i) => {
         const lat = p[1];
@@ -219,20 +300,14 @@ function createLayer() {
         const oLat = Math.sin(t + i) * 0.18;
         const oLon = Math.cos(t * 0.8 + i) * 0.18;
 
-        const ll = L.latLng(lat + oLat + latShift, lon + oLon);
+        const ll = L.latLng(lat + oLat + LAT_SHIFT, lon + oLon);
 
         if (!bounds.contains(ll)) return;
 
         const pos = map.latLngToContainerPoint(ll);
         const sprite = pickSprite(intensity);
 
-        if (
-          !sprite ||
-          sprite.width === 0 ||
-          sprite.height === 0
-        ) {
-          return;
-        }
+        if (!sprite) return;
 
         const baseAlpha = zoom > 8 ? 0.6 : 0.45;
 
@@ -240,22 +315,19 @@ function createLayer() {
 
         ctx.drawImage(
           sprite,
-          pos.x - sprite.width / 2,
-          pos.y - sprite.height / 2
+          pos.x - drawR,
+          pos.y - drawR,
+          drawR * 2,
+          drawR * 2
         );
 
         if (zoom > 8) {
           ctx.globalAlpha *= 0.4;
 
           const pulse = Math.sin(t * 2 + i) * 0.1 + 1;
+          const wide = drawR * 1.8 * pulse;
 
-          ctx.drawImage(
-            sprite,
-            pos.x - (sprite.width * 1.8 * pulse) / 2,
-            pos.y - (sprite.height * 1.8 * pulse) / 2,
-            sprite.width * 1.8 * pulse,
-            sprite.height * 1.8 * pulse
-          );
+          ctx.drawImage(sprite, pos.x - wide, pos.y - wide, wide * 2, wide * 2);
         }
       });
 

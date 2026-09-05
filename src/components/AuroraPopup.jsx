@@ -64,6 +64,71 @@ function DataAge({ ts, stale, t }) {
   );
 }
 
+const DIR_KEYS = ["dir.n", "dir.ne", "dir.e", "dir.se", "dir.s", "dir.sw", "dir.w", "dir.nw"];
+
+/* Suunta lasketaan täällä eikä lueta workerin chase.dir-kentästä.
+   Worker muodostaa sen bearingLabelilla, jonka oletuskieli on suomi, joten
+   englanninkielinen käyttöliittymä näyttäisi suomenkielisen sanan. Samasta
+   syystä chaseSummary ja safetyNote jätetään käyttämättä — ne ovat valmiiksi
+   muotoiltuja suomenkielisiä lauseita Dify-agenttia varten. */
+function bearingKey(fromLat, fromLon, toLat, toLon) {
+  const rad = Math.PI / 180;
+  const dLon = (toLon - fromLon) * rad;
+  const y = Math.sin(dLon) * Math.cos(toLat * rad);
+  const x = Math.cos(fromLat * rad) * Math.sin(toLat * rad) -
+            Math.sin(fromLat * rad) * Math.cos(toLat * rad) * Math.cos(dLon);
+  const deg = (Math.atan2(y, x) / rad + 360) % 360;
+  return DIR_KEYS[Math.round(deg / 45) % 8];
+}
+
+/* Ajosuositus.
+ *
+ * Worker laskee tämän vain kun se on oikeasti toiminnallinen: sijainnissa on
+ * pilvistä, aktiivisuus riittäisi näkymiseen ja on pimeää. Muulloin chase on
+ * null eikä ajamista ehdoteta. Kenttä on ollut vastauksessa alusta asti mutta
+ * jäänyt näyttämättä.
+ *
+ * Tulee kahdessa paikassa vastausmuodosta riippuen: /api/aurora/forecast
+ * liittää sen current-lohkoon, /api/aurora/calc ylimmälle tasolle. */
+function ChaseTip({ fromLat, fromLng, chase, t }) {
+  if (!chase || chase.lat == null || chase.lon == null) return null;
+
+  const dir = t(bearingKey(fromLat, fromLng, chase.lat, chase.lon));
+
+  return (
+    <div className="ap-chase">
+      <div className="ap-chase-head">
+        🚗 {t("chase.title", "Clearer skies nearby")}
+      </div>
+
+      <div className="ap-chase-place">
+        <strong>{chase.name}</strong>
+        <span>
+          {chase.roadKm} km {dir} · ~{chase.driveMin} min
+        </span>
+      </div>
+
+      <div className="ap-chase-stats">
+        {t("chase.there", "There")} <strong>{chase.probability}%</strong>
+        {chase.clouds != null && <> · {t("row.clouds", "Clouds")} {chase.clouds}%</>}
+      </div>
+
+      {chase.mapsUrl && (
+        <a
+          className="ap-chase-link"
+          href={chase.mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {t("chase.route", "Directions")} →
+        </a>
+      )}
+
+      <div className="ap-chase-note">{t("chase.safety", "An estimate, not a certainty.")}</div>
+    </div>
+  );
+}
+
 export default function AuroraPopup({
   lat,
   lng,
@@ -112,6 +177,7 @@ export default function AuroraPopup({
   const kp = isPremium ? (currentSlot?.kp ?? null) : currentKp;
   const probability = isPremium ? (currentSlot?.probability ?? null) : null;
   const clouds = isPremium ? (currentSlot?.clouds ?? null) : (data?.clouds ?? null);
+  const chase = data?.current?.chase ?? data?.chase ?? null;
   const bz = data?.current?.bz ?? data?.bz ?? null;
   const speed = data?.current?.speed ?? data?.speed ?? null;
   const density = data?.current?.density ?? data?.density ?? null;
@@ -216,6 +282,8 @@ export default function AuroraPopup({
               )}
             </div>
           )}
+
+          <ChaseTip fromLat={lat} fromLng={lng} chase={chase} t={t} />
 
           {/* Quick stats */}
           <div className="ap-quick">

@@ -251,6 +251,72 @@ a.ap-toggle {
 }
 
 /* ========================================
+   AJOSUOSITUS
+======================================== */
+
+/* Worker palauttaa tämän vain kun ajaminen kannattaa — olet pilven alla,
+   aktiivisuus riittäisi ja on pimeää. Se on siis harvinainen ja kohdallaan
+   kun se näkyy, joten se saa erottua omalla värillään. */
+.ap-chase {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(125, 95, 255, 0.10);
+  border: 1px solid rgba(125, 95, 255, 0.28);
+}
+
+.ap-chase-head {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-2);
+  margin-bottom: 8px;
+}
+
+.ap-chase-place {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  color: var(--fg);
+}
+
+.ap-chase-place span {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.ap-chase-stats {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.ap-chase-stats strong {
+  color: var(--fg);
+}
+
+.ap-chase-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.ap-chase-link:hover {
+  text-decoration: underline;
+}
+
+.ap-chase-note {
+  margin-top: 8px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--fg-dim);
+}
+
+/* ========================================
    DESCRIPTION
 ======================================== */
 
@@ -330,6 +396,8 @@ a.ap-toggle {
   .ap-details > div { font-size: 12px; }
   .ap-desc { font-size: 12px; margin-top: 12px; }
   .ap-age { font-size: 9px; margin-bottom: 12px; }
+  .ap-chase { padding: 10px 12px; }
+  .ap-chase-place { font-size: 13px; }
   .leaflet-popup-close-button { top: 8px !important; right: 8px !important; font-size: 16px !important; }
 }
 
