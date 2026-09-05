@@ -98,6 +98,16 @@ function buildSprites() {
   sprites.red = make("255, 60, 130");
 }
 
+/* Spriten läpinäkyvyys etäisyyden funktiona, x = etäisyys / säde.
+   Samat pysäytyskohdat kuin buildSpritesin gradientissa. Tarvitaan jotta
+   yhden solun sisällä voidaan laskea sama kertymä jonka päällekkäiset
+   läiskät tuottaisivat — muuten haarojen välille jää näkyvä hyppäys. */
+function spriteFalloff(x) {
+  if (x >= 1) return 0;
+  if (x <= 0.4) return 0.9 + ((0.22 - 0.9) * x) / 0.4;
+  return 0.22 * (1 - (x - 0.4) / 0.6);
+}
+
 function pickSprite(intensity) {
   if (intensity > 70) return sprites.red;
   if (intensity > 35) return sprites.yellow;
@@ -152,17 +162,69 @@ function createLayer() {
       this._draw();
     },
 
-    /* Näkymän keskipisteen intensiteetti lähimmästä ruudukkopisteestä.
-       Haku on lineaarinen 65 000 pisteen yli, joten se ei kuulu 10 kertaa
-       sekunnissa pyörivään piirtosilmukkaan — arvo muuttuu vasta kun kartta
-       liikkuu tai data päivittyy, ja se päivitetään niissä kohdissa. */
+    /* Näkymän keskipisteen hehku, kun ollaan yhden ruudukkosolun sisällä.
+
+       EI riitä ottaa lähimmän pisteen intensiteettiä. Piirtohaara levittää
+       jokaisen pisteen BLOB_DEG:n säteelle ja yhdistelee ne screen-tilassa,
+       joten näkyvä hehku on kymmenien päällekkäisten läiskien kertymä. Yksi
+       piste 4 %:n peitolla on käytännössä näkymätön, mutta kolmekymmentä
+       päällekkäin on selvästi näkyvä usva. Jos tässä otettaisiin vain lähin
+       arvo, kerros himmenisi rajusti juuri sillä zoom-tasolla jolla haara
+       vaihtuu — sama oire kuin alkuperäisessä bugissa, lievempänä.
+
+       Lasketaan siis sama kertymä kuin piirtohaara tuottaisi. Haku käy koko
+       65 000 pisteen taulukon läpi, joten se ei kuulu 10 kertaa sekunnissa
+       pyörivään piirtosilmukkaan — arvo muuttuu vasta kun kartta liikkuu tai
+       data päivittyy, ja se päivitetään niissä kohdissa. */
     _sampleCenter() {
-      if (!this._map || !latestData) {
-        this._sample = 0;
-        return;
-      }
+      this._sample = 0;
+      this._sampleAlpha = 0;
+
+      if (!this._map || !latestData || !Array.isArray(latestData.coordinates)) return;
+
       const c = this._map.getCenter();
-      this._sample = getAuroraIntensity(c.lat - LAT_SHIFT, c.lng);
+      const lat = c.lat - LAT_SHIFT;
+      const lon = c.lng < 0 ? c.lng + 360 : c.lng;
+      /* Sprite on ympyrä RUUDULLA, ei maantieteellisesti. Web Mercator
+         venyttää leveysasteita, joten ruudulla pyöreä läiskä kattaa
+         leveyssuunnassa vain cos(lat) verran siitä mitä pituussuunnassa —
+         71. leveyspiirillä noin kolmasosan. Etäisyys on siis skaalattava
+         leveyssuunnassa ylös, ei pituussuunnassa alas. Väärinpäin laskettuna
+         mukaan tuli moninkertainen määrä pisteitä ja kertymä yliarvioi
+         hehkun noin 13-kertaiseksi. */
+      const cosLat = Math.cos((c.lat * Math.PI) / 180);
+      const reach = BLOB_DEG * 1.8; // laajemman toisen piirron säde
+
+      let maxI = 0;
+      let acc = 0;
+
+      for (const p of latestData.coordinates) {
+        const intensity = p[2];
+        if (intensity < 4 || p[1] < 45) continue;
+
+        const dLat = p[1] - lat;
+        if (dLat > reach || dLat < -reach) continue;
+
+        let dLon = p[0] - lon;
+        if (dLon > 180) dLon -= 360;
+        else if (dLon < -180) dLon += 360;
+
+        const d = Math.hypot(dLat / cosLat, dLon);
+        if (d > reach) continue;
+
+        if (intensity > maxI) maxI = intensity;
+
+        // Sama kaksoispiirto kuin piirtohaarassa zoomilla > 8.
+        const base = Math.min(0.6, intensity / 100);
+        const a =
+          base * spriteFalloff(d / BLOB_DEG) +
+          base * 0.4 * spriteFalloff(d / reach);
+
+        if (a > 0) acc = acc + a - acc * a;
+      }
+
+      this._sample = maxI;
+      this._sampleAlpha = Math.min(1, acc);
     },
 
     _reset() {
@@ -245,7 +307,9 @@ function createLayer() {
          keskipisteestä. Kustannus on samalla vakio zoomista riippumatta. */
       if (pxPerDeg * GRID_DEG > cv.width / 2) {
         const intensity = this._sample || 0;
-        if (intensity < 4) {
+        const alpha = this._sampleAlpha || 0;
+
+        if (intensity < 4 || alpha < 0.01) {
           ctx.globalAlpha = 1;
           ctx.globalCompositeOperation = "source-over";
           return;
@@ -254,10 +318,14 @@ function createLayer() {
         const sprite = pickSprite(intensity);
         if (!sprite) return;
 
-        const r = Math.max(cv.width, cv.height) * 1.4;
+        /* Sprite piirretään ruutua suurempana, jotta gradientin jyrkin osa
+           jää reunojen ulkopuolelle ja näkyviin jää loiva vinjetti. 0.9 on
+           gradientin arvo keskellä — jaetaan sillä, jotta keskikohdan peitto
+           vastaa laskettua kertymää. */
+        const r = Math.max(cv.width, cv.height) * 2;
         const pulse = 0.9 + Math.sin(t) * 0.1;
 
-        ctx.globalAlpha = Math.min(0.6, intensity / 100) * pulse;
+        ctx.globalAlpha = Math.min(1, (alpha / 0.9) * pulse);
         ctx.drawImage(
           sprite,
           cv.width / 2 - r,
@@ -275,7 +343,11 @@ function createLayer() {
          näkyy yhtä isona alueena riippumatta siitä miten lähelle on
          zoomattu. Sprite on kiinteä tekstuuri, joka venytetään tähän
          kokoon — muistinkulutus ei riipu zoomista. */
-      const drawR = Math.max(24, BLOB_DEG * pxPerDeg);
+      /* Matalassa zoomissa maantieteellinen säde jäisi muutamaan
+         kymmeneen pikseliin, ja kerros näyttäisi haaleammalta kuin ennen.
+         zoom * 10 on alkuperäisen version koko matalille tasoille — pidetään
+         se alarajana, jotta uloszoomattu ilme säilyy ennallaan. */
+      const drawR = Math.max(zoom * 10, BLOB_DEG * pxPerDeg);
 
       /* Rajaus padataan hehkun säteellä, ei näkymän suhteellisella osuudella.
          Ruudun ulkopuolella oleva piste hehkuu yhä sisään, jos sen säde
