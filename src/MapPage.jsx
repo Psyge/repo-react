@@ -25,6 +25,7 @@ import { loadSightingsLayer } from "./utils/mapSightings";
 const BASE = process.env.REACT_APP_API_BASE || "";
 
 const PREMIUM_POINT_TTL_MS = 60 * 60 * 1000;
+const FREE_POINT_TTL_MS = 10 * 60 * 1000;
 const MAP_CLICK_DEBOUNCE_MS = 300;
 const SIGHTINGS_REFRESH_MS = 10 * 60 * 1000;
 
@@ -102,6 +103,35 @@ async function fetchPremiumAuroraPoint(lat, lon) {
   });
 }
 
+/* Ilmaisdata samasta päätepisteestä kuin 3D-globessa — Globeview valitsee
+   /api/aurora/calc kun deviceKeytä ei ole. Ilman tätä 2D-kartan popupilla
+   ei ole Kp:tä eikä pilvisyyttä lainkaan.
+
+   Worker päivittää välimuistinsa cronilla 10 min välein, joten sitä lyhyempi
+   TTL ei tuota uutta tietoa. 0,25° ruudutus osuttaa vierekkäiset klikkaukset
+   samaan välimuistiriviin: päätepisteellä ei ole KV-rajoitinta, joten turhat
+   kutsut kannattaa karsia täällä. */
+function freePointCacheKey(lat, lon) {
+  const latKey = roundCoord(lat, 0.25).toFixed(2);
+  const lonKey = roundCoord(lon, 0.25).toFixed(2);
+  return `aurora_session_cache:map:free-calc:${latKey}:${lonKey}:v1`;
+}
+
+async function fetchFreeAuroraPoint(lat, lon) {
+  return sessionCachedJson(freePointCacheKey(lat, lon), FREE_POINT_TTL_MS, async () => {
+    const res = await fetch(`${BASE}/api/aurora/calc`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lat, lon }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`calc ${res.status}: ${text.slice(0, 120)}`);
+    }
+    return res.json();
+  });
+}
+
 function buildFreePointData(lat, lon) {
   return { tier: "free", ovation: getAuroraIntensity(lat, lon) };
 }
@@ -113,6 +143,7 @@ export default function MapPage() {
   const clickTimerRef = useRef(null);
   const hintPopupRef  = useRef(null);
   const popupRootRef  = useRef(null);
+  const popupSeqRef   = useRef(0);
 
   const [searchParams] = useSearchParams();
   const initialLat = parseFloat(searchParams.get("lat")) || 67.5;
@@ -209,41 +240,44 @@ export default function MapPage() {
     const root = createRoot(container);
     popupRootRef.current = root;
 
-    root.render(
-      <AuroraPopup
-        lat={lat} lng={lng}
-        data={freeData}
-        premium={!!premium}
-        loading={!!premium}
-        onSunView={switchToSun}
-        onClose={handleClose}
-      />
-    );
+    /* Juokseva numero per avaus. Haku kestää satoja millisekunteja, ja sinä
+       aikana ehtii klikata muualle: tämä root on silloin jo purettu ja uusi
+       luotu. Ilman tarkistusta myöhästynyt vastaus renderöitäisiin kuolleeseen
+       rootiin ja päivitys katoaisi hiljaisesti. 300 ms debounce kaventaa
+       ikkunaa muttei sulje sitä — premium-haku kestää sitä kauemmin. */
+    const seq = ++popupSeqRef.current;
 
-    if (!premium) return;
+    const show = (props) => {
+      if (seq !== popupSeqRef.current) return;
+      root.render(
+        <AuroraPopup
+          lat={lat} lng={lng}
+          onSunView={switchToSun}
+          onClose={handleClose}
+          {...props}
+        />
+      );
+    };
+
+    show({ data: freeData, premium: !!premium, loading: true });
+
+    if (!premium) {
+      try {
+        const calc = await fetchFreeAuroraPoint(lat, lng);
+        show({ data: { ...freeData, ...calc } });
+      } catch (err) {
+        console.error("[aurora calc free]", err);
+        show({ data: freeData, error: true });
+      }
+      return;
+    }
 
     try {
       const premiumData = await fetchPremiumAuroraPoint(lat, lng);
-      root.render(
-        <AuroraPopup
-          lat={lat} lng={lng}
-          data={premiumData || freeData}
-          premium
-          onSunView={switchToSun}
-          onClose={handleClose}
-        />
-      );
+      show({ data: premiumData || freeData, premium: true });
     } catch (err) {
       console.error("[aurora calc]", err);
-      root.render(
-        <AuroraPopup
-          lat={lat} lng={lng}
-          data={freeData}
-          premium error
-          onSunView={switchToSun}
-          onClose={handleClose}
-        />
-      );
+      show({ data: freeData, premium: true, error: true });
     }
   }, []);
 
@@ -283,18 +317,34 @@ export default function MapPage() {
     }
 
     /* Leafletin oma attribuutiokontrolli hoitaa alareunan rivin — ei tarvita
-       omaa footeria. CARTO-tiilet vaativat OSM- ja CARTO-maininnan, FMI:n
-       avoin data CC BY 4.0 -maininnan. */
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
-        attribution:
-          '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> ' +
-          '© <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a> · ' +
-          'Data: <a href="https://en.ilmatieteenlaitos.fi/open-data" target="_blank" rel="noopener noreferrer">Ilmatieteen laitos</a> ' +
-          '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>) · NOAA SWPC',
-      }
-    ).addTo(map);
+       omaa footeria. Esri vaatii oman mainintansa, FMI:n avoin data
+       CC BY 4.0 -maininnan.
+
+       Oli aiemmin CARTO dark_all. CARTO alkoi vaatia API-avainta ja
+       vesileimasi laatat tekstillä "API KEY REQUIRED"; heidän
+       hinnoittelunsa on nykyään myyntineuvottelu ja 12 kk sopimus, eli
+       avaimen hankkiminen ei ollut realistinen vaihtoehto.
+
+       HUOM: Esrillä pohja ja nimistö ovat ERI tasoja. Pelkkä Base on
+       nimetön harmaa maasto — ilman Reference-tasoa kartalta katoavat
+       kaikki paikannimet. Jos joskus vaihdat pohjaa, muista tämä pari.
+
+       Polkujärjestys on {z}/{y}/{x}, ei {z}/{x}/{y} kuten CARTOlla.
+       maxZoom 16 on Esrin syvin taso; sitä pidemmälle zoomatessa
+       kartta menisi tyhjäksi. */
+    const ESRI_CANVAS = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas";
+
+    L.tileLayer(`${ESRI_CANVAS}/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`, {
+      maxZoom: 16,
+      attribution:
+        'Tiles © <a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a> · ' +
+        'Data: <a href="https://en.ilmatieteenlaitos.fi/open-data" target="_blank" rel="noopener noreferrer">Ilmatieteen laitos</a> ' +
+        '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>) · NOAA SWPC',
+    }).addTo(map);
+
+    L.tileLayer(`${ESRI_CANVAS}/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, {
+      maxZoom: 16,
+    }).addTo(map);
 
     const overlay = createAuroraOverlay();
     overlay.addTo(map);

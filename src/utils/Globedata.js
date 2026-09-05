@@ -30,11 +30,20 @@ export const ENABLE_DETAILED_TILES_BY_DEFAULT = false;
  * Ladataan vasta kun kerros kytketään päälle valikosta. */
 export const CLOUDS_IMG_URL = "https://clouds.matteason.co.uk/images/4096x2048/clouds-alpha.png";
 
-/* Lähizoomin karttatiilet: Carto dark (tiet + kaupunkien nimet, sama tyyli
- * kuin 2D-kartassa). Hystereesi estää vilkkumisen rajakorkeudella. */
+/* Lähizoomin karttatiilet: Esri Dark Gray (tiet ja vesistöt, sama pohja
+ * kuin 2D-kartassa). Hystereesi estää vilkkumisen rajakorkeudella.
+ *
+ * Oli aiemmin CARTO dark_all. CARTO alkoi vaatia API-avainta ja vesileimasi
+ * laatat tekstillä "API KEY REQUIRED" — myös täällä globen lähizoomissa,
+ * ei vain 2D-kartalla.
+ *
+ * HUOM: Esrillä nimistö on erillinen Reference-taso, eikä globeTileEngineUrl
+ * ota kuin yhden URL:n. Laattoihin ei siis tule paikannimiä. Se ei haittaa,
+ * koska globe piirtää omat kaupunkinimensä labelsData-kerroksesta — 2D-kartalla
+ * Reference-taso sen sijaan tarvitaan, siellä muuta nimistöä ei ole. */
 export const CLOSEUP_ENTER_ALT = 0.50;
 export const CLOSEUP_EXIT_ALT  = 0.62;
-export const CARTO_TILE_URL = (x, y, l) => `https://basemaps.cartocdn.com/dark_all/${l}/${x}/${y}.png`;
+export const DARK_TILE_URL = (x, y, l) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${l}/${y}/${x}`;
 export const ESRI_TILE_URL  = (x, y, l) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`;
 
 /* Paikkojen nimilaput vasta lähempää — kaukaa vain pisteet */

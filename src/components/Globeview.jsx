@@ -12,7 +12,7 @@ import AuroraPopup from "./AuroraPopup";
 import {
   BASE, DEFAULT_CALC_POINT, LOAD_TIMEOUT_MS,
   LAYERS_KEY, ENABLE_DETAILED_TILES_BY_DEFAULT,
-  CLOUDS_IMG_URL, CARTO_TILE_URL, ESRI_TILE_URL,
+  CLOUDS_IMG_URL, DARK_TILE_URL, ESRI_TILE_URL,
   CLOSEUP_ENTER_ALT, CLOSEUP_EXIT_ALT,
   PLACE_NAMES_ENTER_ALT, PLACE_NAMES_EXIT_ALT,
   readLayers, readDeviceKey, requestIdle, cancelIdle,
@@ -567,13 +567,13 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     }
   }, []);
 
-  /* Karttapohja: lähizoom → Carto dark; kaukana → Esri-tiilet (detailed)
+  /* Karttapohja: lähizoom → Esri Dark Gray; kaukana → Esri-satelliitti (detailed)
      tai kevyt blue-marble-tekstuuri (oletus).
      useMemo estää uuden olion syntymisen joka renderillä — ilman sitä spread
      antaisi Globelle joka kerta uudet propsi-identiteetit. */
   const tileProps = useMemo(() => (
     closeUp
-      ? { globeTileEngineUrl: CARTO_TILE_URL }
+      ? { globeTileEngineUrl: DARK_TILE_URL }
       : useDetailedTiles
         ? { globeTileEngineUrl: ESRI_TILE_URL }
         : {
@@ -729,7 +729,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       <div className="gv-attribution">
         {[
           closeUp
-            ? "© OpenStreetMap contributors © CARTO"
+            ? "Tiles © Esri"
             : (useDetailedTiles ? "Imagery © Esri, Maxar, Earthstar Geographics" : null),
           layers.clouds ? "Clouds © EUMETSAT" : null,
           "Data: Ilmatieteen laitos (CC BY 4.0)",

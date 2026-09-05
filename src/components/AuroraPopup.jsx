@@ -47,22 +47,27 @@ export default function AuroraPopup({
   const isPremium = data?.tier === "premium";
   const currentSlot = isPremium ? (data?.slots?.[0] ?? null) : null;
 
-  /* Mitattu Kp on julkista dataa ja tulee workerin current-lohkosta.
+  /* Worker palauttaa KAKSI eri muotoa, ja popup saa molempia:
    *
-   * HUOM: tässä luettiin aiemmin data.kp ja data.level, mutta workerin
-   * vastauksessa ei ole kumpaakaan ylimmällä tasolla — Kp siirtyi
-   * current-lohkoon kun haku siirrettiin frontendistä workeriin. Siksi
-   * ilmaisnäkymän popup näytti "Kp –" ja aina "Low". */
-  const currentKp = data?.current?.kp ?? null;
+   *   /api/aurora/forecast → { tier, slots, bestWindow, current: { kp, bz, … } }
+   *   /api/aurora/calc     → litteä { tier, kp, level, clouds, … }
+   *
+   * Globeview valitsee näiden väliltä deviceKeyn perusteella, eli
+   * ilmaiskäyttäjä saa aina litteän vastauksen. Pelkkä data.current.kp
+   * jäi siksi nulliksi ja popup näytti "Kp –" ja aina "Low" — täsmälleen
+   * sen oireen, joka tämän oli määrä korjata. Luetaan molemmat muodot. */
+  const currentKp = data?.current?.kp ?? data?.kp ?? null;
   const kp = isPremium ? (currentSlot?.kp ?? null) : currentKp;
   const probability = isPremium ? (currentSlot?.probability ?? null) : null;
   const clouds = isPremium ? (currentSlot?.clouds ?? null) : (data?.clouds ?? null);
-  const bz = data?.current?.bz ?? null;
-  const speed = data?.current?.speed ?? null;
-  const density = data?.current?.density ?? null;
+  const bz = data?.current?.bz ?? data?.bz ?? null;
+  const speed = data?.current?.speed ?? data?.speed ?? null;
+  const density = data?.current?.density ?? data?.density ?? null;
   const level = isPremium
     ? (currentSlot?.level ?? probabilityToLevel(probability))
-    : kpLevel(currentKp);
+    /* Workerin oma level huomioi pilvisyyden ja mitatun magnetometridatan,
+       kpLevel pelkän Kp:n. Käytetään workerin arviota kun se on mukana. */
+    : (data?.level ?? kpLevel(currentKp));
   const color = levelColor(level);
   const levelLabel = t(`probability.${level}`, level);
 
