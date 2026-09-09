@@ -5,13 +5,13 @@
 ======================================================================= */
 .ah-adrotator-slot {
   width: 100%;
-  margin: 1.25rem auto 0;
-  padding-top: 0.85rem;
+  margin: 0 auto;
+  padding-top: 0.55rem;
   border-top: 1px solid rgba(255, 255, 255, 0.10);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.2rem;
 }
 
 .ah-adrotator-label {
@@ -39,7 +39,7 @@
   position: relative;
   width: 100%;
   max-width: 600px;
-  height: 100px; /* Säädä mainosten korkeuden mukaan */
+  height: 84px; /* Säädä mainosten korkeuden mukaan */
   margin: 0 auto;
 }
 

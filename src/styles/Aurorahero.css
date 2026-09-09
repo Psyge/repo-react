@@ -693,7 +693,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.25rem;
 }
 
 .ah-dash-top {
@@ -701,7 +701,7 @@
   justify-content: flex-start;
   align-items: center;
   gap: clamp(2rem, 8vw, 6rem);
-  padding-bottom: 48px;
+  padding-bottom: 24px;
 }
 
 .ah-dash-headline {
