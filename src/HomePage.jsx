@@ -131,6 +131,19 @@ export default function HomePage() {
   const [articles, setArticles] = useState([]);
   const { t, currentLanguage } = useTranslation();
 
+    const homeSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://repotracker.fi/#website",
+    "url": "https://repotracker.fi/",
+    "name": "RepoTracker",
+    "description":
+      currentLanguage === "en"
+        ? "Live Northern Lights forecast, Kp index, solar wind and aurora map for Finland and Lapland."
+        : "Suomen ja Lapin revontuliennuste, Kp-indeksi, aurinkotuuli ja revontulikartta reaaliajassa.",
+    "inLanguage": currentLanguage === "en" ? "en" : "fi",
+  };
+
   useEffect(() => {
   const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 2500));
   idle(() => import("./components/Globeview").then((m) => m.preloadGlobeAssets()));
@@ -218,6 +231,7 @@ export default function HomePage() {
   image="https://repotracker.fi/images/og-default.jpg"
   language={currentLanguage === "en" ? "en" : "fi"}
   locale={currentLanguage === "en" ? "en_US" : "fi_FI"}
+  schema={homeSchema}
 />
 
       <Header />

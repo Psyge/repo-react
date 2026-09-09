@@ -4,9 +4,22 @@
    Heron osalta (ks. Aurorahero.css). Vain pieni väli eyebrow-riviin.
 ======================================================================= */
 .ah-adrotator-slot {
-  margin-bottom: 1.5rem;
+  width: 100%;
+  margin: 1.25rem auto 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ah-adrotator-label {
+  color: #7d8aa0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 560px) {

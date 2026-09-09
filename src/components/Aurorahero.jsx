@@ -642,9 +642,8 @@ export default function AuroraHero({ forecast, children }) {
       <div className="ah-ambient" aria-hidden="true" />
 
       <div className="ah-dash">
-        <div className="ah-adrotator-slot">
-          <AdRotator />
-        </div>
+        
+        
 
         {/* Ylärivi: iso Kp + tila vasemmalla, globe oikealla */}
         <HeroTop
@@ -660,7 +659,15 @@ export default function AuroraHero({ forecast, children }) {
           t={t}
           trh={trh}
         />
-
+        <aside
+  className="ah-adrotator-slot"
+  aria-label={trh("hero.sponsored", "Mainos", "Sponsored")}
+>
+  <span className="ah-adrotator-label">
+    {trh("hero.sponsored", "Mainos", "Sponsored")}
+  </span>
+  <AdRotator />
+</aside>
         {/* Alarivi: vasen palsta (mittarit → graafi → toimintarivi),
             oikea palsta (paikat) */}
         <div className="ah-dash-grid">

@@ -21,7 +21,18 @@ const QUESTIONS = [
 
 export default function FaqPage() {
   const { t } = useTranslation();
-
+const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": QUESTIONS.map(({ q, body, list }) => ({
+      "@type": "Question",
+      "name": t(q),
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": [...body, ...(list || [])].map((key) => t(key)).join(" "),
+      },
+    })),
+  };
   useEffect(() => {
     document.title = t('faq.pagetitle');
   }, [t]);
@@ -32,6 +43,7 @@ export default function FaqPage() {
   title="Northern Lights FAQ Finland | Aurora Questions"
   description="Frequently asked questions about Northern Lights in Finland and Lapland. Learn the best viewing times, KP index, weather conditions and aurora forecasts."
   canonical="https://repotracker.fi/faq"
+  schema={faqSchema}
 />
       <Header />
     <main className="container page-main" style={{ maxWidth: 860, margin: '0 auto' }}>
