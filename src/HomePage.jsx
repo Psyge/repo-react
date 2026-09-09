@@ -215,7 +215,7 @@ export default function HomePage() {
       : "revontuliennuste Suomi, revontulet Lappi, KP-indeksi, revontulikartta"
   }
   canonical="https://repotracker.fi/"
-  image="https://repotracker.fi/images/reposet.png"
+  image="https://repotracker.fi/images/og-default.jpg"
   language={currentLanguage === "en" ? "en" : "fi"}
   locale={currentLanguage === "en" ? "en_US" : "fi_FI"}
 />
