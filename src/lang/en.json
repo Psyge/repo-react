@@ -253,7 +253,7 @@
   "faq.pagetitle": "Northern Lights FAQ — RepoTracker",
   "faq.title": "Frequently asked questions about the Northern Lights",
   "faq.intro": "Everything you need to know to chase the Northern Lights — from Kp values to what to wear at -25 °C.",
-  "faq.q.about": "About Tracker",
+  "faq.q.about": "About RepoTracker",
   "faq.a.about1": "The name RepoTracker comes from a Finnish belief that the Northern Lights are created when a magical fox, \"Repo\", strikes the snow with its tail, sending sparks into the sky.",
   "faq.a.about2": "Who is behind this project? RepoTracker is a solo project, designed and maintained by a single Northern Lights enthusiast. From coding the maps to tracking solar data — everything you see here is the result of one person's passion for the Northern Lights.",
   "faq.a.about3": "Because this is a one-person project, your feedback and support mean the world. Every coffee donated helps cover server costs and API fees that keep the real-time data running for everyone.",
@@ -311,7 +311,7 @@
   
   "privacy.a.cookies": "You can disable cookies through your browser settings at any time.",
   "privacy.q.contact": "Contact",
-  "privacy.a.contact": "If you have any questions about this policy, please contact:",
+  "privacy.a.contact": "If you have any questions about this policy, please email info.repotracker@gmail.com.",
   "privacy.q.terms": "Terms of Service",
   "privacy.a.terms1": "Acceptance of Terms. By accessing and using RepoTracker, you agree to be bound by these Terms of Service. If you do not agree, please do not use the service.",
   "privacy.a.terms2": "Use of Service. RepoTracker is a tool for tracking Northern Lights-related space weather data. You agree to use it only for lawful purposes and in a manner that does not infringe the rights of others.",
@@ -428,5 +428,15 @@
   "premium.trial.cta": "Haven't tried it yet? Try free for 6 hours first →",
   "premium.trial.used": "You've already used the free trial on this device.",
   "premium.trial.limit": "Trial limit reached for this device/network.",
-  "premium.trial.error": "Could not start trial."
+  "premium.trial.error": "Could not start trial.",
+  "about.title": "About RepoTracker",
+  "about.intro": "RepoTracker is a Northern Lights tracking service maintained by one person. It brings together space weather and cloud cover data to help you plan aurora watching.",
+  "about.q.story": "Where does the name RepoTracker come from?",
+  "about.a.story1": "The name RepoTracker comes from a Finnish belief that the Northern Lights are created when a magical fox, \"Repo\", strikes the snow with its tail, sending sparks into the sky.",
+  "about.a.story2": "RepoTracker combines this story with a practical tool: you can follow aurora conditions, explore the map and read guides to watching the Northern Lights.",
+  "about.q.whatwedo": "What does RepoTracker offer?",
+  "about.a.whatwedo1": "The service lets you follow the Kp index, solar wind, Bz and cloud cover. Space weather data comes from the NOAA Space Weather Prediction Center. Forecasts are estimates, not guarantees of seeing the Northern Lights. Cloud cover, sky darkness and your viewing location also affect what you can see.",
+  "about.q.who": "Who maintains the service?",
+  "about.a.who1": "RepoTracker is maintained by Matti Kenttä in Rovaniemi, Finland. It is a one-person project. You can send feedback and questions through the contact page or by email to info.repotracker@gmail.com.",
+  "about.cta.contact": "Contact us"
 }

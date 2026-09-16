@@ -309,7 +309,7 @@
   "privacy.q.cookies": "Evästeet",
   "privacy.a.cookies": "Voit poistaa evästeet käytöstä selaimesi asetuksista milloin tahansa.",
   "privacy.q.contact": "Yhteystiedot",
-  "privacy.a.contact": "Jos sinulla on kysyttävää tästä selosteesta, ota yhteyttä:",
+  "privacy.a.contact": "Jos sinulla on kysyttävää tästä selosteesta, ota yhteyttä sähköpostitse osoitteeseen info.repotracker@gmail.com.",
   "privacy.q.terms": "Käyttöehdot",
   "privacy.a.terms1": "Ehtojen hyväksyminen. Käyttämällä RepoTrackeria sitoudut näihin käyttöehtoihin. Jos et hyväksy ehtoja, älä käytä palvelua.",
   "privacy.a.terms2": "Palvelun käyttö. RepoTracker on työkalu revontuliin liittyvän avaruussäädatan seurantaan. Sitoudut käyttämään sitä vain laillisiin tarkoituksiin tavalla, joka ei loukkaa muiden oikeuksia.",
@@ -422,5 +422,15 @@
   "premium.trial.cta": "Et ole vielä kokeillut? Kokeile 6 h ilmaiseksi ensin →",
   "premium.trial.used": "Olet jo käyttänyt ilmaisen kokeilun tällä laitteella.",
   "premium.trial.limit": "Kokeilurajoitus saavutettu tälle laitteelle/verkolle.",
-  "premium.trial.error": "Kokeilun käynnistys epäonnistui."
+  "premium.trial.error": "Kokeilun käynnistys epäonnistui.",
+  "about.title": "Tietoja RepoTrackerista",
+  "about.intro": "RepoTracker on yhden tekijän ylläpitämä revontulien seurantapalvelu. Se kokoaa avaruussää- ja pilvisyystietoja revontulien tarkkailun suunnitteluun.",
+  "about.q.story": "Mistä RepoTrackerin nimi tulee?",
+  "about.a.story1": "RepoTracker-nimi tulee suomalaisesta uskomuksesta, jonka mukaan revontulet syntyvät, kun tulikettu eli \"repo\" lyö lumeen hännällään ja kipinät lentävät taivaalle.",
+  "about.a.story2": "RepoTracker yhdistää tämän tarinan käytännön työkaluun: voit seurata revontuliolosuhteita, tutkia karttaa ja lukea oppaita revontulien tarkkailuun.",
+  "about.q.whatwedo": "Mitä RepoTracker tarjoaa?",
+  "about.a.whatwedo1": "Palvelussa voit seurata Kp-indeksiä, aurinkotuulta, Bz-arvoa ja pilvisyyttä. Avaruussäätietojen lähteenä on NOAA Space Weather Prediction Center. Ennusteet ovat arvioita, eivät lupauksia revontulien näkymisestä. Myös pilvisyys, taivaan pimeys ja havaintopaikka vaikuttavat siihen, mitä voit nähdä.",
+  "about.q.who": "Kuka palvelua ylläpitää?",
+  "about.a.who1": "RepoTrackeria ylläpitää Matti Kenttä Rovaniemellä. Palvelu on yhden hengen projekti. Palautetta ja kysymyksiä voi lähettää yhteydenottosivun kautta tai sähköpostitse osoitteeseen info.repotracker@gmail.com.",
+  "about.cta.contact": "Ota yhteyttä"
 }

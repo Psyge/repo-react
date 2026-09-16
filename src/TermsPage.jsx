@@ -1,27 +1,13 @@
 import useTranslation from "./hooks/useTranslation";
-import { useEffect, useState } from "react";
 import Header from "./components/Header";
 
 import SEO from "./components/SEO";
 import Footer from "./components/Footer";
 
 function EmailLink() {
-  const [email, setEmail] = useState("");
+  const email = "info.repotracker@gmail.com";
 
-  useEffect(() => {
-    const user = "info.repotracker";
-    const domain = "gmail.com";
-
-    setEmail(`${user}@${domain}`);
-  }, []);
-
-  if (!email) return null;
-
-  return (
-    <a href={`mailto:${email}`}>
-      {email}
-    </a>
-  );
+  return <a href={`mailto:${email}`}>{email}</a>;
 }
 
 const SECTIONS = [
@@ -63,6 +49,7 @@ const SECTIONS = [
     body: [
       "terms.a.safety1",
       "terms.a.safety2",
+      "terms.a.safety3",
     ],
   },
 
@@ -78,17 +65,13 @@ const SECTIONS = [
 export default function TermsPage() {
   const { t } = useTranslation();
 
-  useEffect(() => {
-    document.title = `${t("terms.title")} — RepoTracker`;
-  }, [t]);
-
   return (
     <div>
       <SEO
-  title="Terms of Service | RepoTracker"
-  description="Terms and conditions for using RepoTracker services and forecasts."
-  canonical="https://repotracker.fi/terms"
-/>
+        title={`${t("terms.title")} | RepoTracker`}
+        description={t("terms.intro")}
+        canonical="https://repotracker.fi/terms"
+      />
       <Header />
 
       <main

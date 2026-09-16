@@ -1,5 +1,4 @@
 import useTranslation from "./hooks/useTranslation";
-import { useEffect } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { Link } from "react-router-dom";
@@ -23,15 +22,11 @@ const SECTIONS = [
 export default function AboutPage() {
   const { t } = useTranslation();
 
-  useEffect(() => {
-    document.title = `${t("about.title")} — RepoTracker`;
-  }, [t]);
-
   return (
     <div>
       <SEO
-        title="About Us | RepoTracker"
-        description="RepoTracker is a Finnish real-time aurora tracking and forecast site. Read our story and what drives us."
+        title={`${t("about.title")} | RepoTracker`}
+        description={t("about.intro")}
         canonical="https://repotracker.fi/about"
       />
       <Header />
