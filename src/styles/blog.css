@@ -130,6 +130,21 @@
   font-weight: 700;
 }
 
+/* Etusivun pysyvä esittelyteksti käyttää samaa korttityyliä kuin artikkelit. */
+.site-introduction-card {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.site-introduction-card p {
+  flex-grow: 0;
+}
+
+.site-introduction-links {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
 /* =========================
    SINGLE ARTICLE
 ========================= */
