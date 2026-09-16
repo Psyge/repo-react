@@ -25,11 +25,12 @@
   },
   "scripts": {
     "prebuild": "node src/scripts/generateSitemap.js",
-    "build": "react-scripts build",
+    "build": "node scripts/build.cjs",
     "postbuild": "node src/scripts/generateStaticMeta.js",
     "start": "react-scripts start",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "test:prerender": "node --test src/scripts/prerender.test.cjs"
   },
   "eslintConfig": {
     "extends": [
@@ -48,5 +49,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "engines": { "node": "22.x" },
+  "devDependencies": {
+    "esbuild": "0.28.2"
   }
 }

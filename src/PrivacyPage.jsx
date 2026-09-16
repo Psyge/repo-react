@@ -1,5 +1,4 @@
 import useTranslation from "./hooks/useTranslation";
-import { useEffect } from 'react';
 import Header from "./components/Header";
 import Footer from "./components/Footer"
 
@@ -137,15 +136,12 @@ const SECTIONS = [
 export default function PrivacyPage() {
   const { t } = useTranslation();
 
-  useEffect(() => {
-    document.title = t('privacy.pagetitle');
-  }, [t]);
 
   return (
     <div>
       <SEO
-  title="Privacy Policy | RepoTracker"
-  description="Privacy Policy for RepoTracker and information about data processing, cookies and user privacy."
+  title={t("privacy.pagetitle")}
+  description={t("privacy.intro")}
   canonical="https://repotracker.fi/privacy"
 />
       <Header />

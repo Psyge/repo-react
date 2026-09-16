@@ -1,6 +1,5 @@
 import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
-import { useEffect } from 'react';
 
 import SEO from "./components/SEO";
 import Footer from "./components/Footer"
@@ -16,7 +15,7 @@ const QUESTIONS = [
   { q: 'faq.q.bz', body: ['faq.a.bz'] },
   { q: 'faq.q.gear', body: ['faq.a.gear1', 'faq.a.gear2', 'faq.a.gear3', 'faq.a.gear4', 'faq.a.gear5'] },
   { q: 'faq.q.tips', body: ['faq.a.tips1', 'faq.a.tips2'] },
-  { q: 'faq.q.res', body: ['faq.a.res1', 'faq.a.res2', 'faq.a.res3'] },
+  { q: 'faq.q.res', body: ['faq.a.res1', 'faq.a.res2'] },
 ];
 
 export default function FaqPage() {
@@ -33,15 +32,12 @@ const faqSchema = {
       },
     })),
   };
-  useEffect(() => {
-    document.title = t('faq.pagetitle');
-  }, [t]);
 
   return (
     <div className="faq-page">
      <SEO
-  title="Northern Lights FAQ Finland | Aurora Questions"
-  description="Frequently asked questions about Northern Lights in Finland and Lapland. Learn the best viewing times, KP index, weather conditions and aurora forecasts."
+  title={t("faq.pagetitle")}
+  description={t("faq.intro")}
   canonical="https://repotracker.fi/faq"
   schema={faqSchema}
 />

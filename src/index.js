@@ -9,6 +9,10 @@ import { PremiumProvider } from './context/PremiumContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
+// The initial HTML contains real content. createRoot intentionally replaces
+// the static view; React then owns route metadata and interactive features.
+document.querySelectorAll('[data-prerender-seo]').forEach(node => node.remove());
+
 root.render(
   <React.StrictMode>
     <PremiumProvider>

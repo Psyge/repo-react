@@ -1,118 +1,66 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import useTranslation from "./hooks/useTranslation";
 import Header from "./components/Header";
 import SEO from "./components/SEO";
 import { client } from "./lib/contentfulClient";
+import { readPrerenderData, localizedField, findBySlug, fetchAllEntries } from "./lib/prerenderData";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from 'remark-gfm';
-import Footer from "./components/Footer"
+import remarkGfm from "remark-gfm";
+import Footer from "./components/Footer";
 
-export default function BlogPost() {
+export default function BlogPost({ initialEntries }) {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { currentLanguage, t } = useTranslation();
-  const [article, setArticle] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const lang = currentLanguage === "en" ? "en-US" : "fi-FI";
-
+  const [entries, setEntries] = useState(() => initialEntries || readPrerenderData().posts || []);
+  const [status, setStatus] = useState("loading");
+  const foundFields = findBySlug(entries, slug)?.fields;
+  const article = foundFields?.content ? foundFields : null;
+  const locale = currentLanguage === "en" ? "en-US" : "fi-FI";
+  const fi = currentLanguage === "fi";
   useEffect(() => {
-    setLoading(true);
-
-    // Haetaan withAllLocales jotta molemmat kielet saatavilla
-    // ja reagoidaan sekä slug- että kielimuutoksiin
-    client.withAllLocales
-      .getEntries({
-        content_type: "post",
-        limit: 100,
-      })
-      .then((response) => {
-        const found = response.items.find((item) => {
-          const s = item.fields.slug;
-          // slug voi tulla joko lokalisoituna objektina tai suorana stringinä
-          if (typeof s === "object") {
-            return s?.["fi-FI"] === slug || s?.["en-US"] === slug;
-          }
-          return s === slug;
-        });
-
-        setArticle(found?.fields ?? null);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Contentful error:", err);
-        setLoading(false);
-      });
-  }, [slug, currentLanguage]); // ← reagoi myös kielen vaihtoon
-
-  /* Myös lataus- ja virhetilat tarvitsevat page-mainin: nekin
-     renderöivät otsikkotason sisältöä kiinteän headerin alle.
-     Lataustilassa ei ole Headeriä, mutta luokka ei haittaa siellä. */
-  if (loading) {
-    return (
-      <div className="container page-main">
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
+    let cancelled = false;
+    fetchAllEntries(client, "post").then(items => {
+      if (!cancelled) { setEntries(items); setStatus("ready"); }
+    }).catch(() => { if (!cancelled) setStatus("error"); });
+    return () => { cancelled = true; };
+  }, []);
+  const localizedSlug = article ? localizedField(article.slug, locale) : "";
+  useEffect(() => {
+    if (localizedSlug && localizedSlug !== slug) navigate(`/blog/${localizedSlug}`, { replace: true });
+  }, [localizedSlug, slug, navigate]);
   if (!article) {
     return (
       <div>
         <Header />
-        <div className="container page-main">
-          <h1>Article not found</h1>
-          <p>
-            <Link to="/blog">Back to blog</Link>
-          </p>
-        </div>
+        {status !== "loading" && <SEO title={fi ? "Artikkelia ei löytynyt | RepoTracker" : "Article unavailable | RepoTracker"} noIndex />}
+        <main className="container page-main">
+          <h1>{status === "loading" ? t("common.loading") : fi ? "Artikkeli ei ole saatavilla" : "Article unavailable"}</h1>
+          <p><Link to="/blog">{t("blog.back")}</Link></p>
+        </main>
+        <Footer />
       </div>
     );
   }
-
-  // Puretaan oikea kieli — toimii sekä objektimuodossa { 'fi-FI': '...' }
-  // että suorana stringinä (jos Contentful palauttaa jo lokalisoituna)
-  function getField(field) {
-    if (!field) return "";
-    if (typeof field === "object" && !Array.isArray(field)) {
-      return field[lang] || field["fi-FI"] || "";
-    }
-    return field;
-  }
-
-  const title       = getField(article.title);
-  const content     = getField(article.content);
-  const description = getField(article.excerpt) || "RepoTracker Blog";
-
+  const title = localizedField(article.title, locale);
+  const description = localizedField(article.excerpt, locale) || "RepoTracker Blog";
+  const content = localizedField(article.content, locale);
+  const alternates = typeof article.slug === "object" ? Object.entries(article.slug)
+    .filter(([, value]) => value).map(([lang, value]) => ({ language: lang === "fi-FI" ? "fi" : "en", href: `https://repotracker.fi/blog/${value}` })) : [];
   return (
     <div>
-      <SEO
-        title={`${title} - RepoTracker Blog`}
-        description={description}
-        canonical={`https://repotracker.fi/blog/${slug}`}
-      />
+      <SEO title={`${title} | RepoTracker`} description={description}
+        canonical={`https://repotracker.fi/blog/${localizedSlug || slug}`}
+        language={currentLanguage} locale={fi ? "fi_FI" : "en_US"} type="article" alternates={alternates} />
       <Header />
-
-      {/* page-main varaa tilan kiinteän headerin alta --header-h:n
-          perusteella. Ilman sitä otsikko jää headerin alle mobiilissa. */}
-      <main
-        className="container article page-main"
-        style={{ maxWidth: "760px" }}
-      >
-        <p className="article-back">
-          <Link to="/blog">{t("blog.back")}</Link>
-        </p>
-
+      <main className="container article page-main" style={{ maxWidth: "760px" }}>
+        <p className="article-back"><Link to="/blog">{t("blog.back")}</Link></p>
         <h1>{title}</h1>
-
-        <div
-          className="article-content"
-          style={{ color: "#fff", marginTop: "20px", lineHeight: "1.6" }}
-        >
+        <div className="article-content" style={{ color: "#fff", marginTop: "20px", lineHeight: "1.6" }}>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         </div>
       </main>
-
       <Footer />
     </div>
   );

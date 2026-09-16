@@ -84,14 +84,14 @@ export default function Contact() {
   return (
   <div className="contact-page">
     <SEO
-  title="Contact | RepoTracker"
-  description="Contact RepoTracker for support, feedback and business inquiries."
+  title={`${t("contact.title")} | RepoTracker`}
+  description={t("contact.sub")}
   canonical="https://repotracker.fi/contact"
 />
     <Header />
 
     <div className="contact-wrap">
-      <h2>{t("contact.title") || "Contact us"}</h2>
+      <h1>{t("contact.title") || "Contact us"}</h1>
 
       <p>
         {t("contact.sub") ||

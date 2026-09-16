@@ -1,60 +1,18 @@
-/* ============================================================
- * SITEMAPIN GENEROINTI
- * ============================================================
- * Ajetaan ennen buildia (package.json: "prebuild").
- *
- * Reitit haetaan Contentfulista lib/contentfulRoutes.js:n kautta.
- * Aiemmin tässä oli käsin ylläpidetyt listat, ja ne olivat jäljessä:
- * sitemapissa oli kolme artikkelia yhdeksästä ja paikkoja joille ei
- * ollut lainkaan sisältöä. Nyt julkaistu sisältö päätyy sitemappiin
- * itsestään eikä listoja tarvitse muistaa päivittää.
- *
- * lastmod jätetään tarkoituksella pois: build-hetken päivämäärä ei
- * kerro milloin sisältö muuttui vaan milloin ajoit buildin. Jokainen
- * deploy merkitsisi kaikki sivut muuttuneiksi, ja juuri sellaisen
- * epäluotettavan lastmodin hakukoneet oppivat ohittamaan.
- * ============================================================ */
-
-const fs = require("fs");
-const path = require("path");
-const { getRoutes, SITE } = require("./lib/contentfulRoutes");
-
-function urlBlock(r) {
-  return [
-    "  <url>",
-    `    <loc>${SITE}${r.p}</loc>`,
-    `    <changefreq>${r.changefreq || "monthly"}</changefreq>`,
-    `    <priority>${r.priority || "0.5"}</priority>`,
-    "  </url>",
-  ].join("\n");
-}
+const fs = require("node:fs");
+const path = require("node:path");
+const { getRoutes, SITE, ROOT, SNAPSHOT } = require("./lib/contentfulRoutes");
+const esc = value => String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 async function main() {
-  const { routes, stats } = await getRoutes();
-
-  /* Mukaan vain indeksoitavat sivut. sitemap: false rajaa pois
-     /alerts- ja /premium-success-sivut, joilla ei ole arvoa hakijalle. */
-  const included = routes.filter((r) => r.sitemap !== false && !r.noindex);
-
-  const xml =
-    '<?xml version="1.0" encoding="UTF-8"?>\n' +
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-    included.map(urlBlock).join("\n") +
-    "\n</urlset>\n";
-
-  const out = path.join(__dirname, "..", "..", "public", "sitemap.xml");
-  fs.writeFileSync(out, xml, "utf8");
-
-  console.log(
-    `✓ sitemap.xml generoitu — ${included.length} osoitetta ` +
-      `(${stats.posts} artikkelia, ${stats.places} paikkaa)`
-  );
+  // Never leave a previous snapshot available after a failed fetch.
+  fs.rmSync(SNAPSHOT, { force: true });
+  const { data, routes, stats } = await getRoutes();
+  const included = routes.filter(route => route.sitemap !== false && !route.noindex);
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + included.map(route => `  <url><loc>${esc(SITE + route.p)}</loc></url>`).join("\n") + '\n</urlset>\n';
+  fs.writeFileSync(path.join(ROOT, "public/sitemap.xml"), xml);
+  fs.mkdirSync(path.dirname(SNAPSHOT), { recursive: true });
+  fs.writeFileSync(SNAPSHOT, JSON.stringify({ data, routes }));
+  console.log(`Content and sitemap ready: ${stats.posts} posts, ${stats.places} places, ${included.length} URLs.`);
 }
-
-main().catch((e) => {
-  /* Build EI kaadu jos Contentful ei vastaa. Vanha sitemap.xml jää
-     silloin paikalleen, mikä on parempi kuin keskeytynyt deploy —
-     mutta virhe tulostetaan, jotta se huomataan. */
-  console.error("✗ sitemapin generointi epäonnistui:", e.message);
-  console.error("  Vanha public/sitemap.xml jää käyttöön.");
-});
+if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
+module.exports = { main };

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { setLang } from "../utils/i18n"; // PALAUTETTU TÄMÄ TAKAISIN!
 import useTranslation from "../hooks/useTranslation";
 import { FaInstagram, FaTiktok } from "react-icons/fa";
 import { usePremium } from "../context/PremiumContext";
@@ -11,7 +10,6 @@ export default function Header() {
   // Luodaan oma väli-funktio kielen vaihtamiselle, joka hoitaa molemmat järjestelmät!
   const handleLanguageChange = (newLang) => {
     // 1. Päivitetään teidän oma i18n-moottori (vaihtaa nappien ja käännöstiedostojen kielet)
-    setLang(newLang);
     
     // 2. Päivitetään Reactin tila (laukaisee Contentful-haut uusiksi)
     if (typeof changeLanguage === "function") {

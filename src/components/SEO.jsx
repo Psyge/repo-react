@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import useTranslation from "../hooks/useTranslation";
 
 const SITE_NAME = "RepoTracker";
 /* reposet.png ei ole palvelimella — se palautti HTML-sivun eikä kuvaa,
@@ -13,16 +14,20 @@ export default function SEO({
   keywords,
   image = DEFAULT_IMAGE,
   canonical,
-  locale = "fi_FI",
-  language = "fi",
+  locale,
+  language,
   type = "website",
   noIndex = false,
   schema,
+  alternates = [],
 }) {
+  const { currentLanguage } = useTranslation();
+  const pageLanguage = language || currentLanguage;
+  const pageLocale = locale || (pageLanguage === "fi" ? "fi_FI" : "en_US");
   return (
     <Helmet>
       {/* Sivun kieli */}
-      <html lang={language} />
+      <html lang={pageLanguage} />
 
       {/* Basic SEO */}
       <title>{title}</title>
@@ -42,6 +47,9 @@ export default function SEO({
           "Objects are not valid as a React child (found: object with
           keys {canonical})" ja koko sivu jäi lataamatta. */}
       {canonical && <link rel="canonical" href={canonical} />}
+      {alternates.map(({ language: lang, href }) => (
+        <link key={lang} rel="alternate" hrefLang={lang} href={href} />
+      ))}
 
       {/* Open Graph */}
       <meta property="og:title" content={title} />
@@ -51,7 +59,7 @@ export default function SEO({
       {canonical && <meta property="og:url" content={canonical} />}
       <meta property="og:type" content={type} />
       <meta property="og:site_name" content={SITE_NAME} />
-      <meta property="og:locale" content={locale} />
+      <meta property="og:locale" content={pageLocale} />
 
       {/* Twitter / X */}
       <meta name="twitter:card" content="summary_large_image" />

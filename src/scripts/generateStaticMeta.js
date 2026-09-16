@@ -1,110 +1,70 @@
-/* ============================================================
- * STAATTISET METATIEDOT REITEILLE
- * ============================================================
- * Ajetaan buildin JÄLKEEN (package.json: "postbuild").
- *
- * MIKSI TÄMÄ ON OLEMASSA
- * Sivusto on Create React App: palvelin lähettää tyhjän index.html:n
- * ja JavaScript täyttää sisällön selaimessa. Sosiaalisen median
- * esikatselurobotit (Facebook, WhatsApp, Telegram, Signal, Discord,
- * Slack, X) eivät aja JavaScriptia, joten ne näkivät joka sivulta
- * saman geneerisen etusivun otsikon. Sama koskee useimpia AI-hakujen
- * robotteja.
- *
- * Tämä kopioi build/index.html:n jokaiselle reitille omaksi
- * tiedostokseen ja kirjoittaa siihen reitin omat metatiedot. Vercel
- * tarjoilee build/faq/index.html osoitteessa /faq automaattisesti.
- *
- * Sovellus toimii kuten ennenkin: jokainen tiedosto on sama
- * React-runko, ja React Router ottaa ohjat heti latauksen jälkeen.
- * SEO.jsx jää hoitamaan otsikot kun käyttäjä siirtyy sivulta toiselle
- * ilman uutta latausta.
- *
- * Otsikot ja kuvaukset tulevat Contentfulista, joten jokainen
- * artikkeli saa OMAN otsikkonsa ja excerptinsä — ei geneeristä
- * yhteistekstiä kuten aiemmassa käsin ylläpidetyssä versiossa.
- * ============================================================ */
+const fs = require("node:fs");
+const path = require("node:path");
+const { transformSync } = require("esbuild");
+const { loadDotEnv, ROOT, SNAPSHOT } = require("./lib/contentfulRoutes");
+const BUILD = path.join(ROOT, "build");
 
-const fs = require("fs");
-const path = require("path");
-const { getRoutes, SITE } = require("./lib/contentfulRoutes");
-
-const IMAGE = `${SITE}/images/hero-bg.jpg`;
-const BUILD = path.join(__dirname, "..", "..", "build");
-
-function esc(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+function safeJson(value) {
+  return JSON.stringify(value).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
 }
-
-function tagsFor(r) {
-  const t = esc(r.title);
-  const d = esc(r.desc);
-  const canonical = SITE + r.p;
-
-  return [
-    `<link rel="canonical" href="${canonical}">`,
-    `<meta property="og:title" content="${t}">`,
-    `<meta property="og:description" content="${d}">`,
-    `<meta property="og:url" content="${canonical}">`,
-    `<meta property="og:image" content="${IMAGE}">`,
-    `<meta property="og:image:alt" content="${t}">`,
-    `<meta property="og:type" content="${r.p.startsWith("/blog/") ? "article" : "website"}">`,
-    `<meta property="og:site_name" content="RepoTracker">`,
-    `<meta name="twitter:card" content="summary_large_image">`,
-    `<meta name="twitter:title" content="${t}">`,
-    `<meta name="twitter:description" content="${d}">`,
-    `<meta name="twitter:image" content="${IMAGE}">`,
-    r.noindex
-      ? `<meta name="robots" content="noindex, nofollow">`
-      : `<meta name="robots" content="index, follow">`,
-  ].join("\n    ");
+function pageData(route, data) {
+  const summary = post => ({ sys: post.sys, fields: { slug: post.fields.slug, title: post.fields.title, excerpt: post.fields.excerpt } });
+  if (route.kind === "post") return { posts: data.posts.filter(item => item.sys.id === route.id) };
+  if (route.kind === "place") return { places: data.places.filter(item => item.sys.id === route.id) };
+  if (route.p === "/blog") return { posts: data.posts.map(summary) };
+  if (route.p === "/") return { posts: data.posts.slice(0, 3).map(summary) };
+  return {};
 }
-
+async function compileRenderer() {
+  // Transpile only our source files while loading the server entry. Packages
+  // retain Node's own loaders, including ReactMarkdown's ESM dependencies.
+  const originalJs = require.extensions[".js"];
+  const originalJsx = require.extensions[".jsx"];
+  const sourceRoot = path.join(ROOT, "src") + path.sep;
+  const loadSource = (module, filename) => {
+    if (!filename.startsWith(sourceRoot)) return originalJs(module, filename);
+    const result = transformSync(fs.readFileSync(filename, "utf8"), {
+      loader: "jsx", format: "cjs", jsx: "automatic", target: "node22", sourcefile: filename,
+    });
+    module._compile(result.code, filename);
+  };
+  require.extensions[".js"] = loadSource;
+  require.extensions[".jsx"] = loadSource;
+  try { return require("./prerenderEntry.jsx").renderPage; }
+  finally {
+    require.extensions[".js"] = originalJs;
+    if (originalJsx) require.extensions[".jsx"] = originalJsx;
+    else delete require.extensions[".jsx"];
+  }
+}
 async function main() {
+  loadDotEnv();
+  const { data, routes } = JSON.parse(fs.readFileSync(SNAPSHOT, "utf8"));
+  if (data.fixture && process.env.VERCEL) throw new Error("Refusing to deploy fixture content.");
   const indexPath = path.join(BUILD, "index.html");
-  if (!fs.existsSync(indexPath)) {
-    console.error("✗ build/index.html puuttuu — aja tämä vasta buildin jälkeen");
-    process.exit(1);
-  }
-
-  const { routes, stats } = await getRoutes();
   const template = fs.readFileSync(indexPath, "utf8");
-  let written = 0;
-
-  for (const r of routes) {
+  if (!/<div id="root"><\/div>/.test(template)) throw new Error("Expected fresh CRA HTML; run npm run build before prerendering.");
+  const renderPage = await compileRenderer();
+  for (const route of routes) {
+    const rendered = renderPage(route, data);
+    if (!rendered.body.includes("<h1")) throw new Error(`Prerender produced no heading: ${route.p}`);
+    let head = rendered.head;
+    if (data.fixture) head = head.replace(/content="index, follow"/g, 'content="noindex, nofollow"');
+    head = head.replace(/<(title|meta|link|script)\b/g, '<$1 data-prerender-seo="true"');
+    const payload = `<script id="repotracker-content" type="application/json">${safeJson(pageData(route, data))}</script>`;
     const html = template
-      .replace(/<title>[\s\S]*?<\/title>/i, `<title>${esc(r.title)}</title>`)
-      .replace(
-        /<meta\s+name="description"[^>]*>/i,
-        `<meta name="description" content="${esc(r.desc)}">`
-      )
-      .replace("</head>", `    ${tagsFor(r)}\n  </head>`);
-
-    /* Juuri kirjoitetaan suoraan build/index.html:ään, muut omiin
-       kansioihinsa muodossa build/<polku>/index.html. */
-    const outPath =
-      r.p === "/"
-        ? indexPath
-        : path.join(BUILD, ...r.p.split("/").filter(Boolean), "index.html");
-
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, html, "utf8");
-    written++;
+      .replace(/<html[^>]*>/, `<html lang="${route.language}"${route.kind ? ` data-route-language="${route.language}"` : ""}>`)
+      .replace(/<title>[\s\S]*?<\/title>/i, "")
+      .replace(/<meta\s+name="description"[^>]*>/i, "")
+      .replace("</head>", () => `${head}</head>`)
+      .replace('<div id="root"></div>', () => rendered.body + payload);
+    const output = route.p === "/" ? indexPath : route.p === "/404" ? path.join(BUILD, "404.html") : path.join(BUILD, ...route.p.split("/").filter(Boolean), "index.html");
+    const relative = path.relative(BUILD, output);
+    if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("Output path escapes build directory.");
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    fs.writeFileSync(output, html);
   }
-
-  console.log(
-    `✓ metatiedot kirjoitettu ${written} reitille ` +
-      `(${stats.posts} artikkelia, ${stats.places} paikkaa)`
-  );
+  console.log(`Prerendered body content and metadata for ${routes.length} routes (including localized article URLs).`);
 }
-
-main().catch((e) => {
-  /* Jos Contentful ei vastaa, build on jo valmis ja toimiva —
-     metatiedot jäävät vain geneerisiksi. Parempi kuin kaatunut deploy. */
-  console.error("✗ metatietojen kirjoitus epäonnistui:", e.message);
-  console.error("  Sivusto toimii, mutta metatiedot ovat geneerisiä.");
-});
+if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
+module.exports = { main, compileRenderer, pageData, safeJson };

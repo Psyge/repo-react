@@ -11,6 +11,8 @@ import useTranslation from "./hooks/useTranslation";
 
 import SEO from "./components/SEO";
 import { client } from "./lib/contentfulClient";
+import { readPrerenderData, localizedField } from "./lib/prerenderData";
+import SiteIntroduction from "./components/SiteIntroduction";
 
 
 const BASE = process.env.REACT_APP_API_BASE || "";
@@ -128,7 +130,7 @@ export default function HomePage() {
     tier: "free", slots: [], genAt: null, current: null,
     forecastUnavailable: false,
   });
-  const [articles, setArticles] = useState([]);
+  const [articles, setArticles] = useState(() => readPrerenderData().posts || []);
   const { t, currentLanguage } = useTranslation();
 
     const homeSchema = {
@@ -191,16 +193,7 @@ export default function HomePage() {
       .getEntries({ content_type: "post", limit: 3 })
       .then((response) => {
         if (cancelled) return;
-        const localized = response.items.map((item) => ({
-          ...item,
-          fields: {
-            ...item.fields,
-            title:   getField(item.fields.title,   lang),
-            excerpt: getField(item.fields.excerpt, lang),
-            slug:    getField(item.fields.slug,    lang),
-          },
-        }));
-        setArticles(localized);
+        setArticles(response.items);
       })
       .catch((err) =>
         console.error("Virhe etusivun artikkeleiden haussa:", err)
@@ -258,20 +251,21 @@ export default function HomePage() {
             </div>
 
             <div className="home-articles">
-              {articles.map((article) => (
+              {articles.slice(0, 3).map((article) => (
                 <Link
                   key={article.sys.id}
-                  to={`/blog/${article.fields.slug}`}
+                  to={`/blog/${localizedField(article.fields.slug, currentLanguage === "en" ? "en-US" : "fi-FI")}`}
                   className="blog-card"
                 >
-                  <h2>{article.fields.title}</h2>
-                  <p>{article.fields.excerpt}</p>
+                  <h2>{localizedField(article.fields.title, currentLanguage === "en" ? "en-US" : "fi-FI")}</h2>
+                  <p>{localizedField(article.fields.excerpt, currentLanguage === "en" ? "en-US" : "fi-FI")}</p>
                   <div className="blog-card-read">{t("blog.read")}</div>
                 </Link>
               ))}
             </div>
           </div>
         </section>
+        <SiteIntroduction />
       </main>
 
    <Footer showCoop />

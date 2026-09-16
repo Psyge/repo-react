@@ -29,7 +29,7 @@
   backdrop-filter: blur(14px);
 }
 
-.contact-wrap h2 {
+.contact-wrap h1 {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -152,7 +152,7 @@
     border-radius: 20px;
   }
 
-  .contact-wrap h2 {
+  .contact-wrap h1 {
     font-size: 22px;
   }
 
@@ -162,7 +162,7 @@
     text-align: center;
   }
 
-  .contact-wrap h2 {
+  .contact-wrap h1 {
     font-size: 22px;
   }
 

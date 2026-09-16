@@ -1,0 +1,25 @@
+{
+  "posts": [
+    {
+      "sys": {"id": "test-post", "updatedAt": "2026-01-01T00:00:00Z"},
+      "fields": {
+        "slug": {"en-US": "Aurora-test", "fi-FI": "revontuli-testi"},
+        "title": {"en-US": "Aurora test & forecast", "fi-FI": "Revontulitesti & ennuste"},
+        "excerpt": {"en-US": "Build verification article.", "fi-FI": "Buildin tarkistusartikkeli."},
+        "content": {"en-US": "## A visible article\n\nThis public test paragraph must appear in the initial HTML without JavaScript.\n\n- A real list\n- A second item\n\n[Read the FAQ](/faq)\n\n| One | Two |\n| --- | --- |\n| Value | Result |\n\nLiteral $& and </script><script>alert(1)</script> text.", "fi-FI": "## Näkyvä artikkeli\n\nTämän testikappaleen tulee näkyä suoraan HTML:ssä ilman JavaScriptiä.\n\n- Ensimmäinen kohta\n- Toinen kohta\n\n[Lue UKK](/faq)"}
+      }
+    }
+  ],
+  "places": [
+    {
+      "sys": {"id": "test-place"},
+      "fields": {
+        "slug": {"en-US": "Rovaniemi"},
+        "name": {"en-US": "Rovaniemi", "fi-FI": "Rovaniemi"},
+        "short": {"en-US": "Test place summary.", "fi-FI": "Testipaikan tiivistelmä."},
+        "description": {"en-US": "## Test location\n\nA place description visible without JavaScript.", "fi-FI": "## Testipaikka\n\nPaikan kuvaus näkyy ilman JavaScriptiä."},
+        "lat": {"en-US": 66.5}, "lon": {"en-US": 25.7}
+      }
+    }
+  ]
+}
