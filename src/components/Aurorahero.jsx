@@ -21,7 +21,6 @@ import AdRotator from "./AdRotator";
  * ja vanhentuneen datan ikämerkinnän. Yksi totuuden lähde. */
 const BASE = process.env.REACT_APP_API_BASE || "";
 const WEATHER_TTL_MS       = 60 * 60 * 1000;
-const THREE_LOAD_TIMEOUT_MS = 4000;
 
 /* Graafin mitat — pehmennykset reunoilla akseleita varten */
 const WAVE_W = 760;
@@ -116,23 +115,6 @@ async function fetchAllPlacesWeather(places) {
   })();
 
   return inflightWeather;
-}
-
-function shouldEnhanceWith3D() {
-  if (typeof window === "undefined") return false;
-  const rm = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-  if (rm && rm.matches) return false;
-  const conn = navigator.connection || navigator.webkitConnection || {};
-  if (conn.saveData) return false;
-  if (conn.effectiveType && !/4g/i.test(conn.effectiveType)) return false;
-  const cores = navigator.hardwareConcurrency;
-  if (cores && cores < 4) return false;
-  try {
-    const cv = document.createElement("canvas");
-    const gl = cv.getContext("webgl2") || cv.getContext("webgl");
-    if (!gl) return false;
-  } catch { return false; }
-  return true;
 }
 
 function nextAwakening(slots) {
@@ -273,7 +255,6 @@ export default function AuroraHero({ forecast, children }) {
      selaimessa NOAA:n feedistä, ja worker ei palauta niitä. Jos haluat ne
      takaisin, worker voisi laskea ne propagated-feedin ikkunasta ja
      palauttaa current.speedDelta / current.bzDelta. */
-  const [threeReady, setThreeReady] = useState(false);
 
   const [contentfulPlaces, setContentfulPlaces] = useState([]);
   const [placeWeather, setPlaceWeather] = useState({}); // { [id]: { clouds, temp } }
@@ -425,8 +406,6 @@ export default function AuroraHero({ forecast, children }) {
     [placesList, featuredIds]
   );
 
-  const canvasRef = useRef(null);
-  const skyRef    = useRef(null);
   const probRef   = useRef(null);
 
   /* Aurinkotuuli ja Bz workerin current-lohkosta.
@@ -522,13 +501,6 @@ export default function AuroraHero({ forecast, children }) {
     return 3;
   }, [kp]);
 
-  const targetIntensity = useMemo(() => {
-    if (kpStep === 0) return 0.0;
-    if (kpStep === 1) return 0.25;
-    if (kpStep === 2) return 0.60;
-    return 1.0;
-  }, [kpStep]);
-
   /* GPS → lähin piste aktiiviseksi.
      HUOM: pyydetään sijainti VAIN KERRAN (geoRequestedRef-vartija).
      Ilman tätä efekti käynnistäisi getCurrentPosition-kutsun uudelleen
@@ -564,32 +536,6 @@ export default function AuroraHero({ forecast, children }) {
       setActivePlace(closest);
     });
   }, [placesList]);
-
-  /* Three.js taivas */
-  useEffect(() => {
-    if (!shouldEnhanceWith3D()) return;
-    let cancelled = false;
-    let tooLate = false;
-    const timer = setTimeout(() => { tooLate = true; }, THREE_LOAD_TIMEOUT_MS);
-
-    import("../utils/auroraSky")
-      .then(({ createAuroraSky }) => {
-        if (cancelled || tooLate || !canvasRef.current) return;
-        skyRef.current = createAuroraSky(canvasRef.current, { intensity: targetIntensity });
-        setThreeReady(true);
-      })
-      .catch((e) => console.warn(e));
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-      if (skyRef.current) { skyRef.current.destroy(); skyRef.current = null; }
-    };
-  }, [targetIntensity]);
-
-  useEffect(() => {
-    if (skyRef.current) skyRef.current.setIntensity(targetIntensity);
-  }, [targetIntensity]);
 
   const calm = kpStep <= 1;
   const isActive = kpStep >= 2;
@@ -627,7 +573,7 @@ export default function AuroraHero({ forecast, children }) {
   const storm = kpStormLabel(kp);
 
   return (
-    <section className={`aurora-hero-container ah-hero--dash ${threeReady ? "three-active" : ""} ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
+    <section className={`aurora-hero-container ah-hero--dash ${isActive ? "is-active" : ""} kp-step-${kpStep}`}>
    <h1 className="sr-only">
   {currentLanguage === "en"
     ? "Northern Lights Forecast Finland"
@@ -635,7 +581,6 @@ export default function AuroraHero({ forecast, children }) {
 </h1>
       <div className="ah-sky-wrap">
         {kpStep > 0 && <div className="ah-sky--css" aria-hidden="true" />}
-        <canvas ref={canvasRef} className="ah-canvas" aria-hidden="true" />
       </div>
 
       {/* CSS-revontuliverhot + tähdet (aina näkyvissä, hienovaraiset) */}
@@ -658,6 +603,9 @@ export default function AuroraHero({ forecast, children }) {
           navigate={navigate}
           t={t}
           trh={trh}
+          activePlace={activePlace}
+          places={placesList}
+          onSelectPlace={(place) => { if (place) setActivePlace(place); }}
         />
         <aside
   className="ah-adrotator-slot"
@@ -720,24 +668,18 @@ export default function AuroraHero({ forecast, children }) {
                 unit="km/s"
                 deltaSuffix={wind == null && staleWind?.speed != null ? staleAgeText : null}
               >
-                <span className="ah-metric-second">
-                  Bz{" "}
-                  <strong>
-                    {bz != null ? bz.toFixed(1)
-                     : staleWind?.bz != null ? staleWind.bz.toFixed(1)
-                     : "–"}
-                  </strong>
-                  <small> nT</small>
-                  {bz == null && staleWind?.bz != null && staleAgeText && (
-                    <em className="ah-metric-age"> · {staleAgeText}</em>
-                  )}
-                </span>
               </MetricCard>
               <MetricCard
                 label={`${trh("hero.metric.clouds", "Pilvisyys", "Cloud Cover")}${activePlace ? ` · ${activePlace.name}` : ""}`}
                 value={activePlace?.currentClouds != null ? activePlace.currentClouds : "–"}
                 unit="%"
                 delta={null}
+              />
+              <MetricCard
+                label="Bz"
+                value={bz != null ? bz.toFixed(1) : staleWind?.bz != null ? staleWind.bz.toFixed(1) : "–"}
+                unit="nT"
+                deltaSuffix={bz == null && staleWind?.bz != null ? staleAgeText : null}
               />
 
               {/* Kp siirtyi tänne heron pääpaikalta: se on mittausarvo siinä

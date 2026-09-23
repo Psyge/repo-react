@@ -1,177 +1,43 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import useTranslation from "../hooks/useTranslation";
+import { Link } from "react-router-dom";
 import LiveCamSpotlight from "./LiveCamSpotlight";
 import SeasonNotice from "./SeasonNotice";
 
-/* ========================================================================
-   HeroPlaces — heron oikea palsta: kesäkortti, kamera, paikkalista ja
-   paikan popup.
-
-   Popupin tila (isPopupOpen) asuu täällä, koska mikään muu heron osa ei
-   tarvitse sitä.
-======================================================================= */
-
-export default function HeroPlaces({
-  featuredPlaces,
-  activePlace,
-  setActivePlace,
-  currentKp = null,
-  trh,
-}) {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-
+export default function HeroPlaces({ featuredPlaces, activePlace, setActivePlace, currentKp, trh }) {
   return (
-    <>
-      <aside className="ah-dash-side">
-        {/* Kesällä: kertoo miksi revontulia ei näy ja milloin kausi alkaa.
-            Kaudella: ei renderöi mitään ja LiveCam ottaa paikan. */}
-        <SeasonNotice />
-        <LiveCamSpotlight />
-
-        <div className="ah-places-panel">
-          {/* Kp näytetään kerran otsikkorivillä, ei joka paikan kohdalla:
-              se on planetaarinen indeksi eli sama luku koko maapallolle.
-              Riveillä toistettuna se näytti paikkakohtaiselta mittaukselta,
-              vaikka paikkojen ero syntyy pilvistä ja leveysasteesta. */}
-          <div className="ah-places-head">
-            <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
-            {currentKp != null && (
-              <span
-                className="ah-places-kp"
-                title={trh(
-                  "hero.kpGlobalHint",
-                  "Kp on planetaarinen indeksi — sama arvo kaikkialla",
-                  "Kp is a planetary index — the same value everywhere"
-                )}
+    <aside className="ah-dash-side">
+      <SeasonNotice />
+      <LiveCamSpotlight />
+      <div className="ah-places-panel">
+        <div className="ah-places-head">
+          <h2 className="ah-places-title">{trh("hero.places", "Paikat", "Places")}</h2>
+          {currentKp != null && <span className="ah-places-kp" title={trh("hero.kpGlobalHint", "Kp on planetaarinen indeksi — sama arvo kaikkialla", "Kp is a planetary index — the same value everywhere")}>Kp {currentKp.toFixed(1)}</span>}
+        </div>
+        <div className="ah-place-list">
+          {featuredPlaces.map((place) => {
+            const selected = activePlace?.id === place.id;
+            const chance = place.currentKp != null ? place.prob : null;
+            return (
+              <button
+                type="button"
+                key={place.id}
+                className={`ah-place-row ${selected ? "is-active-item" : ""}`}
+                onClick={() => setActivePlace(place)}
+                aria-pressed={selected}
               >
-                Kp {currentKp.toFixed(1)}
-              </span>
-            )}
-          </div>
-
-          <div className="ah-place-list">
-            {featuredPlaces.map((p) => {
-              const isSelected = activePlace && p.id === activePlace.id;
-              const prob = p.currentKp != null ? p.prob : null;
-
-              const barColor =
-                prob == null ? "#475569"
-                : prob >= 70 ? "#00ffc6"
-                : prob >= 40 ? "#fee440"
-                : "#f87171";
-
-              return (
-                <div
-                  key={p.id}
-                  className={`ah-place-row ${isSelected ? "is-active-item" : ""}`}
-                  onClick={() => {
-                    setActivePlace(p);
-                    setIsPopupOpen(true);
-                  }}
-                >
-                  <div className="ah-place-row-head">
-                    <span className="ah-place-row-name">
-                      <span
-                        className="ah-item-dot-indicator"
-                        style={
-                          isSelected
-                            ? { background: barColor, boxShadow: `0 0 8px ${barColor}` }
-                            : {}
-                        }
-                      />
-                      {p.name}
-                    </span>
-
-                    <span className="ah-place-row-prob" style={{ color: barColor }}>
-                      {prob != null ? `${prob}%` : "–"}
-                    </span>
-                  </div>
-
-                  {/* Kp on planetaarinen indeksi — sama luku joka paikassa.
-                      Sen toistaminen jokaisella rivillä ei kerro paikoista
-                      mitään; se näkyy kerran heron mittarikortissa. Rivillä
-                      näytetään vain se mikä oikeasti vaihtelee. */}
-                  <div className="ah-place-row-meta">
-                    <span>☁ {p.currentClouds != null ? `${p.currentClouds}%` : "–"}</span>
-                    <span>
-                      {p.currentTemp != null ? `${Math.round(p.currentTemp)}°C` : "–"}
-                    </span>
-                  </div>
-
-                  <div className="ah-place-bar-track">
-                    <div
-                      className="ah-place-bar-fill"
-                      style={{
-                        width: prob != null ? `${prob}%` : "0%",
-                        background: `linear-gradient(to right, ${barColor}80, ${barColor})`,
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                <span className="ah-place-row-head">
+                  <span className="ah-place-row-name"><span className="ah-item-dot-indicator" />{place.name}</span>
+                  <span className="ah-place-row-prob">{chance != null ? `${chance}%` : "–"}</span>
+                </span>
+                <span className="ah-place-row-meta">
+                  <span>☁ {place.currentClouds != null ? `${place.currentClouds}%` : "–"}</span>
+                  <span>{place.currentTemp != null ? `${Math.round(place.currentTemp)}°C` : "–"}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </aside>
-
-      {isPopupOpen && activePlace && (
-        <div className="ah-popup-backdrop" onClick={() => setIsPopupOpen(false)}>
-          <div className="ah-popup-card" onClick={(e) => e.stopPropagation()}>
-            <div className="ah-popup-drag-handle" onClick={() => setIsPopupOpen(false)} />
-
-            <h3>📍 {activePlace.name}</h3>
-
-            <div className="ah-popup-metrics">
-              <span>
-                ☁ {activePlace.currentClouds != null ? `${activePlace.currentClouds}%` : "--"}
-              </span>
-              <span>
-                {activePlace.currentTemp != null
-                  ? `${Math.round(activePlace.currentTemp)}°C`
-                  : "--"}
-              </span>
-              <span>{activePlace.prob}%</span>
-            </div>
-
-            {activePlace.description ? (
-              <div className="ah-popup-content">
-                <p>{activePlace.description}</p>
-                <button
-                  className="ah-popup-readmore-btn"
-                  onClick={() => {
-                    setIsPopupOpen(false);
-                    navigate(`/places/${activePlace.slug}`);
-                  }}
-                >
-                  ✨ {t("places.readMore")}
-                </button>
-              </div>
-            ) : (
-              <p className="ah-popup-empty">
-                {trh(
-                  "places.noDescription",
-                  "Ei kuvausta saatavilla valitulla kielellä.",
-                  "No description available in this language."
-                )}
-              </p>
-            )}
-
-            <button
-              className="ah-popup-map-btn"
-              onClick={() => {
-                setIsPopupOpen(false);
-                navigate(`/map?lat=${activePlace.lat}&lon=${activePlace.lon}`);
-              }}
-            >
-              {t("places.viewAuroraMap")} 🗺️
-            </button>
-          </div>
-        </div>
-      )}
-    </>
+        {activePlace?.slug && <Link className="ah-place-more" to={`/places/${activePlace.slug}`}>{trh("places.readMore", "Tutustu valittuun paikkaan", "Explore this place")} →</Link>}
+      </div>
+    </aside>
   );
 }

@@ -1,0 +1,372 @@
+/* Shared aurora design. Forecast, CMS content and SEO markup stay in their
+   existing components; this layer changes presentation and map layout. */
+:root {
+  --bg: #071713;
+  --bg-elevated: #10241f;
+  --fg: #f3fff9;
+  --fg-muted: #b2c9c0;
+  --fg-dim: #86a59a;
+  --accent: #9af4c7;
+  --accent-2: #af9bea;
+  --border: #31564a;
+  --border-soft: rgba(195, 255, 223, .15);
+  --radius: 18px;
+  --gradient-aurora: linear-gradient(115deg, #e5fff1, #94f2bd 48%, #7adbc6);
+  --space-md: 20px;
+  --space-xl: 55px;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  color: var(--fg);
+  background: linear-gradient(180deg, rgba(6, 20, 18, .88), #081915 700px),
+    radial-gradient(ellipse at 75% 4%, rgba(74, 167, 140, .4), transparent 48%),
+    url("../images/revontulet.png") center top / cover fixed,
+    #071713;
+}
+a { color: inherit; }
+button, input, select { font: inherit; }
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible {
+  outline: 3px solid #a8ffd2;
+  outline-offset: 3px;
+}
+
+/* Common navigation */
+.header {
+  background: rgba(4, 22, 20, .9);
+  border-bottom: 1px solid rgba(166, 255, 215, .2);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, .22);
+}
+.header-inner { max-width: 1320px; padding-left: 28px; padding-right: 28px; }
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  background: none;
+  color: #effff7;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -.055em;
+}
+.brand::before {
+  content: "";
+  width: 17px;
+  height: 17px;
+  flex: none;
+  border-radius: 4px 80% 4px 80%;
+  background: linear-gradient(135deg, #e2ffe4, #5debaf 58%, #927ce2);
+  transform: rotate(-18deg);
+  box-shadow: 0 0 22px rgba(113, 244, 178, .4);
+}
+.main-nav { gap: clamp(10px, 2vw, 30px); }
+.main-nav a {
+  position: relative;
+  padding: 9px 2px;
+  color: #bed6ca;
+  font-weight: 650;
+}
+.main-nav a:hover, .main-nav a.active { color: #f2fff7; }
+.main-nav a.active::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 1px;
+  height: 2px;
+  border-radius: 2px;
+  background: #9bf7c3;
+  box-shadow: 0 0 12px #75ecb0;
+}
+.header-socials a, .lang-switcher button { border-color: rgba(185, 255, 217, .22); }
+
+/* Home: the photograph remains visible even when motion is unavailable. */
+.aurora-hero-container.ah-hero--dash {
+  min-height: 820px;
+  display: block;
+  padding: calc(var(--header-h) + 96px) 28px 94px;
+  background: linear-gradient(90deg, rgba(3, 17, 16, .84), rgba(3, 17, 16, .4) 52%, rgba(4, 18, 20, .5)),
+    linear-gradient(180deg, rgba(3, 18, 16, .15) 0%, rgba(4, 18, 16, .32) 46%, #081b18 95%),
+    url("../images/revontulet.png") center 33% / cover no-repeat;
+}
+.aurora-hero-container::before {
+  background: radial-gradient(ellipse at 68% 19%, rgba(154, 255, 172, .12), transparent 46%);
+  opacity: 1;
+}
+.ah-ambient {
+  inset: -5% -4% 35%;
+  opacity: .75;
+  background: linear-gradient(110deg, transparent 36%, rgba(114, 254, 179, .1) 48%, rgba(178, 138, 244, .09) 60%, transparent 72%);
+  animation-duration: 29s;
+}
+.ah-dash {
+  max-width: 1300px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(360px, .88fr);
+  column-gap: clamp(26px, 5vw, 72px);
+  row-gap: 32px;
+  align-items: start;
+}
+.ah-dash-grid, .ah-dash-main { display: contents; }
+.ah-dash-top { grid-column: 1; grid-row: 1; padding: 0; display: block; }
+.ah-dash-headline { max-width: 740px; }
+.ah-metrics { grid-column: 2; grid-row: 1; align-self: end; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.ah-wave { grid-column: 1; grid-row: 2; }
+.ah-dash-side { grid-column: 2; grid-row: 2; }
+.ah-see-strip { grid-column: 1; grid-row: 3; }
+.ah-adrotator-slot { grid-column: 2; grid-row: 3; }
+.ah-eyebrow { color: #c4ffdc; text-shadow: 0 0 22px rgba(117, 243, 171, .4); }
+.ah-eyebrow-dot { background: #b1f8c8; box-shadow: 0 0 18px #85f9ac; }
+.ah-place-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 18px 0 22px;
+  color: #e9fff2;
+}
+.ah-place-header label { font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+.ah-place-header select {
+  appearance: none;
+  min-width: 188px;
+  padding: 9px 35px 9px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(182, 255, 207, .65);
+  color: #f7fff9;
+  background: rgba(9, 35, 31, .84);
+  cursor: pointer;
+}
+.ah-place-header select option { color: #071713; }
+.ah-city-name { color: #f4fff7; font-size: clamp(19px, 2.5vw, 30px); font-weight: 780; letter-spacing: -.035em; }
+.ah-verdict {
+  max-width: 12ch;
+  margin: 3px 0 17px;
+  font-size: clamp(42px, 5.25vw, 78px);
+  line-height: 1.07;
+  letter-spacing: -.06em;
+  color: #b7ffd9;
+  text-shadow: 0 6px 42px rgba(0, 0, 0, .48);
+}
+.ah-verdict-sub { color: #e7fff2; font-weight: 750; }
+.ah-dash-desc { max-width: 58ch; margin-top: 15px; color: #e2f1ea; }
+.ah-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 11px; margin-top: 20px; }
+.ah-map-link-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: #b4f8d8;
+  color: #08251f;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 11px 28px rgba(3, 25, 19, .3);
+}
+.ah-probability-box { margin: 0; }
+.ah-premium-link-btn {
+  background: rgba(6, 28, 27, .83);
+  border: 1px solid rgba(199, 255, 223, .42);
+  border-radius: 12px;
+  color: #f3fff7;
+  min-height: 45px;
+  box-shadow: none;
+  padding: 11px 15px;
+  text-decoration: none;
+}
+.ah-premium-subtext { display: none; }
+.ah-photo-note { margin-top: 14px; color: #bdd6c9; font-size: 11px; line-height: 1.5; }
+.ah-metric {
+  min-height: 118px;
+  border-radius: 17px;
+  border-color: rgba(192, 255, 220, .32);
+  padding: 17px 19px;
+  background: linear-gradient(145deg, rgba(8, 32, 28, .83), rgba(12, 30, 32, .66));
+  box-shadow: inset 0 1px rgba(243, 255, 247, .1), 0 20px 40px rgba(0, 0, 0, .14);
+}
+.ah-metric-label { color: #bbdacb; white-space: normal; }
+.ah-metric-value { color: #f4fff7; font-size: 26px; }
+.ah-metric:nth-child(3) .ah-metric-value { color: #c0ffdf; }
+.ah-wave-panel, .ah-places-panel, .ah-see-strip {
+  border: 1px solid rgba(171, 249, 207, .25);
+  border-radius: 22px;
+  background: rgba(8, 29, 29, .87);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, .2);
+}
+.ah-wave-panel { padding: 24px; }
+.ah-places-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+  background: linear-gradient(180deg, rgba(5, 22, 21, .92), rgba(7, 29, 26, .91)), url("../images/revontulet.png") center / cover;
+}
+.ah-places-title { color: #e8fff1; }
+.ah-place-row {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(179, 255, 213, .13);
+  border-radius: 0;
+  text-align: left;
+  cursor: pointer;
+  color: #ecfff4;
+  background: transparent;
+}
+.ah-place-row:hover, .ah-place-row.is-active-item { background: rgba(118, 237, 170, .13); }
+.ah-place-row-prob { color: #b3ffd1; }
+.ah-place-more { display: inline-block; margin-top: 17px; color: #aeffd0; font-weight: 750; }
+.ah-see-strip button { animation: none; }
+
+/* Real map and its fixed place details */
+.rt-map-page { min-height: 100vh; background: #081915; }
+.rt-map-main {
+  width: min(1340px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: calc(var(--header-h) + 36px) 0 56px;
+}
+.rt-map-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 20px;
+}
+.rt-kicker { color: #aaf5c8; font-size: 11px; font-weight: 800; letter-spacing: .18em; }
+.rt-map-heading h2 { margin: 5px 0 7px; font-size: clamp(31px, 3.1vw, 51px); line-height: 1.1; letter-spacing: -.055em; }
+.rt-map-heading p { color: #b6cbc2; max-width: 60ch; }
+.rt-map-tabs { display: flex; flex: none; gap: 4px; padding: 5px; border: 1px solid var(--border-soft); border-radius: 13px; background: #102b27; }
+.rt-map-tabs button { border: 0; border-radius: 9px; padding: 10px 16px; color: #c0d7c9; background: transparent; cursor: pointer; font-weight: 700; }
+.rt-map-tabs button.is-active { color: #08231e; background: #aff5d2; }
+.rt-map-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(285px, 340px); gap: 15px; align-items: stretch; }
+.rt-map-stage {
+  position: relative;
+  min-height: 690px;
+  border: 1px solid rgba(174, 252, 206, .26);
+  border-radius: 22px;
+  overflow: hidden;
+  background: #112e31;
+}
+.rt-map-page #map.rt-map-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.rt-map-page #map.rt-map-hidden { visibility: hidden; pointer-events: none; }
+.rt-map-page .leaflet-top.leaflet-left { top: 12px; left: 12px; }
+.rt-map-page .leaflet-control-zoom a { background: #102a29; color: #dfffee; border-color: #42695b; }
+.rt-map-page .leaflet-control-attribution { background: rgba(6, 25, 23, .7); color: #ccded3; }
+.rt-map-page .leaflet-control-attribution a { color: #bdf8d3; }
+.rt-selected-marker { filter: drop-shadow(0 0 12px #8bf6ba); }
+.rt-map-caption { position: absolute; left: 18px; bottom: 26px; z-index: 500; padding: 8px 12px; border-radius: 10px; background: rgba(4, 27, 24, .88); color: #e3fff0; font-size: 12px; pointer-events: none; }
+.rt-sun-stage { position: absolute; inset: 0; z-index: 2; }
+.rt-sun-stage .midnight-v2 { height: 100%; }
+.rt-map-side {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid rgba(171, 249, 207, .26);
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(20, 51, 45, .98), rgba(8, 31, 29, .98));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .2);
+}
+.rt-map-side-head h3 { margin: 7px 0 2px; font-size: 27px; letter-spacing: -.045em; }
+.rt-map-side-head p { color: #a8cbbc; font-size: 12px; }
+.rt-search-block { margin: 22px 0; position: relative; }
+.rt-search-block label { display: block; margin-bottom: 8px; color: #d8ffeb; font-size: 12px; font-weight: 750; }
+.rt-map-page .map-search { position: relative; top: auto; left: auto; right: auto; width: 100%; transform: none; z-index: 700; }
+.rt-map-page .map-search-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid rgba(183, 254, 214, .33); border-radius: 10px; background: rgba(3, 21, 22, .7); box-shadow: none; }
+.rt-map-page .map-search-results { position: absolute; top: 46px; left: 0; right: 0; z-index: 800; max-height: 250px; overflow: auto; border-radius: 10px; background: #14342d; }
+.rt-detail { border-top: 1px solid rgba(174, 250, 208, .2); padding-top: 16px; }
+.rt-detail .aurora-popup { width: 100%; max-width: none; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.rt-detail .ap-name { color: #b4ddc7; }
+.rt-detail .ap-status-level { color: #b9f7d2; }
+.rt-detail .ap-toggle { display: block; margin-top: 15px; }
+.rt-sighting-info { display: flex; flex-direction: column; gap: 3px; margin: 0 0 15px; padding: 12px; border: 1px solid rgba(255, 135, 160, .36); border-radius: 11px; background: rgba(168, 45, 75, .13); font-size: 12px; }
+.rt-sighting-info span { color: #f5c7d2; }
+.rt-sun-help { margin: 12px 0; padding: 15px; border-radius: 12px; background: rgba(174, 255, 211, .08); color: #d2f7e0; line-height: 1.5; }
+.rt-nearby { margin-top: 22px; border-top: 1px solid rgba(174, 250, 208, .2); padding-top: 18px; }
+.rt-nearby h4 { font-size: 13px; margin-bottom: 10px; color: #dbffe9; }
+.rt-nearby-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.rt-nearby-list button { display: flex; justify-content: space-between; gap: 4px; border: 1px solid transparent; border-radius: 8px; padding: 8px; background: rgba(174, 255, 211, .07); color: #e8fff0; cursor: pointer; text-align: left; font-size: 12px; }
+.rt-nearby-list button:hover, .rt-nearby-list button.is-active { border-color: rgba(153, 243, 191, .5); background: rgba(130, 232, 173, .17); }
+
+/* The same night palette on content, guide and purchase pages. */
+.container { max-width: 1220px; }
+main.page-main { position: relative; }
+main.page-main h1, .section-head h2 { color: #effff4; letter-spacing: -.045em; }
+.premium-page { display: flex; flex-direction: column; max-width: 1220px; }
+.premium-hero {
+  order: 1;
+  text-align: left;
+  margin-bottom: 25px;
+  padding: 58px clamp(22px, 5vw, 65px);
+  border: 1px solid rgba(171, 249, 207, .26);
+  border-radius: 25px;
+  background: linear-gradient(90deg, rgba(4, 22, 20, .9), rgba(4, 22, 20, .47)),
+    url("../images/revontulet.png") center 42% / cover;
+}
+.premium-hero h1 { max-width: 15ch; color: #f3fff7; background: none; font-size: clamp(39px, 5vw, 65px); line-height: 1.06; }
+.premium-sub { margin-left: 0; color: #d9eee1; }
+.premium-consent-box { order: 2; margin: 0 0 18px; }
+.pricing-grid { order: 3; }
+.premium-included { order: 4; margin-top: 30px; }
+.premium-footer { order: 5; }
+.pricing-card, .premium-consent-box, .premium-included, .faq-item, .blog-card, .site-introduction-card {
+  border-color: rgba(171, 249, 207, .22);
+  background: linear-gradient(150deg, rgba(19, 49, 44, .93), rgba(8, 30, 30, .94));
+}
+.pricing-card.featured { border-color: #9cf5c4; box-shadow: 0 0 0 1px rgba(155, 245, 196, .25), 0 18px 44px rgba(0, 0, 0, .17); }
+.buy-btn.primary { background: #a8f5c9; color: #09251f; }
+.blog-card { overflow: hidden; }
+.home-articles .blog-card::before {
+  content: "";
+  display: block;
+  height: 150px;
+  margin: -24px -24px 5px;
+  background: linear-gradient(180deg, transparent, rgba(11, 31, 28, .35)),
+    url("../images/revontulet.png") center 35% / cover;
+}
+.home-articles .blog-card:nth-child(2)::before { background-position: center 60%; filter: hue-rotate(28deg); }
+.home-articles .blog-card:nth-child(3)::before { background-position: center 80%; filter: hue-rotate(-24deg); }
+.faq-page, .blog-page { padding-top: calc(var(--header-h) + 40px); }
+.contact-page { padding-top: calc(var(--header-h) + 40px); }
+.contact-wrap { border-color: rgba(171, 249, 207, .22); background: linear-gradient(150deg, rgba(19, 49, 44, .93), rgba(8, 30, 30, .94)); }
+footer { background: rgba(4, 20, 19, .8); border-color: rgba(171, 249, 207, .18); }
+
+@media (max-width: 950px) {
+  .ah-dash { grid-template-columns: minmax(0, 1fr) minmax(300px, .9fr); gap: 22px; }
+  .ah-verdict { font-size: clamp(38px, 5vw, 62px); }
+  .rt-map-layout { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+@media (max-width: 760px) {
+  .header-inner { padding: 8px 14px; }
+  .main-nav { overflow-x: auto; justify-content: flex-start; gap: 20px; scrollbar-width: none; }
+  .main-nav::-webkit-scrollbar { display: none; }
+  .aurora-hero-container.ah-hero--dash { padding: calc(var(--header-h) + 70px) 16px 50px; background-position: center top; background-size: auto 820px; }
+  .ah-dash { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 18px; }
+  .ah-dash-top, .ah-metrics, .ah-wave, .ah-dash-side, .ah-see-strip, .ah-adrotator-slot { grid-column: 1; grid-row: auto; }
+  .ah-dash-top { order: 1; }
+  .ah-metrics { order: 2; align-self: auto; }
+  .ah-wave { order: 3; }
+  .ah-dash-side { order: 4; }
+  .ah-see-strip { order: 5; }
+  .ah-adrotator-slot { order: 6; }
+  .ah-verdict { max-width: 13ch; font-size: clamp(37px, 9vw, 58px); }
+  .rt-map-main { width: calc(100% - 28px); padding-top: calc(var(--header-h) + 22px); }
+  .rt-map-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .rt-map-layout { grid-template-columns: 1fr; }
+  .rt-map-stage { min-height: 480px; }
+  .rt-map-stage--sun { min-height: 650px; }
+  .rt-map-side { padding: 19px; }
+  .rt-nearby-list { grid-template-columns: repeat(3, 1fr); }
+  .premium-hero { padding: 36px 24px; }
+}
+@media (max-width: 420px) {
+  .ah-metric { min-height: 103px; padding: 13px; }
+  .ah-metric-value { font-size: 22px; }
+  .ah-hero-actions { align-items: stretch; }
+  .ah-map-link-btn, .ah-probability-box, .ah-premium-link-btn { width: 100%; }
+  .rt-nearby-list { grid-template-columns: 1fr 1fr; }
+  .rt-map-stage { min-height: 410px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .ah-ambient, .ah-see-strip button { animation: none; }
+}

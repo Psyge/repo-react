@@ -67,7 +67,7 @@ async function fetchSightingsClusters({ force = false } = {}) {
   return data;
 }
 
-export async function loadSightingsLayer(layer, { force = false } = {}) {
+export async function loadSightingsLayer(layer, { force = false, onSelect = null } = {}) {
   try {
     const data = await fetchSightingsClusters({ force });
 
@@ -91,16 +91,21 @@ export async function loadSightingsLayer(layer, { force = false } = {}) {
 
           fillColor: "#ff4d6d",
           fillOpacity: 0.28,
+          bubblingMouseEvents: false,
         }
       );
 
-      marker.bindPopup(`
-        <div style="min-width:140px">
-          <strong>${c.region}</strong><br/>
-          ${c.count} reports<br/>
-          ${c.minutesAgo} min ago
-        </div>
-      `);
+      if (onSelect) {
+        marker.on("click", () => onSelect(c));
+      } else {
+        marker.bindPopup(`
+          <div style="min-width:140px">
+            <strong>${c.region}</strong><br/>
+            ${c.count} reports<br/>
+            ${c.minutesAgo} min ago
+          </div>
+        `);
+      }
 
       marker.addTo(layer);
     });

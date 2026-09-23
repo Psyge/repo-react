@@ -146,11 +146,6 @@ export default function HomePage() {
     "inLanguage": currentLanguage === "en" ? "en" : "fi",
   };
 
-  useEffect(() => {
-  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 2500));
-  idle(() => import("./components/Globeview").then((m) => m.preloadGlobeAssets()));
-}, []);
-
   // EFEKTI 1: Ennusteen lataus
   useEffect(() => {
     let cancelled = false;

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import useSearch from "../hooks/useSearch";
 import useTranslation from "../hooks/useTranslation";
 
-export default function SearchBox({ onSelect }) {
+export default function SearchBox({ onSelect, inputId }) {
   const [query, setQuery] = useState("");
 
   const {
@@ -74,6 +74,7 @@ export default function SearchBox({ onSelect }) {
       ref={boxRef}
     >
       <input
+        id={inputId}
         type="text"
         className="map-search-input"
         placeholder={t("search.placeholder")}

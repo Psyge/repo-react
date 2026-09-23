@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
 import { FaInstagram, FaTiktok } from "react-icons/fa";
 import { usePremium } from "../context/PremiumContext";
@@ -26,16 +26,16 @@ export default function Header() {
         </Link>
 
         <nav className="main-nav">
-          <Link to="/">{t("nav.home")}</Link>
-          <Link to="/map">{t("nav.map")}</Link>
-          <Link to="/blog">{t("nav.blog")}</Link>
-          <Link to="/faq">{t("nav.faq")}</Link>
-          <Link
+          <NavLink to="/" end>{t("nav.home")}</NavLink>
+          <NavLink to="/map">{t("nav.map")}</NavLink>
+          <NavLink to="/blog">{t("nav.blog")}</NavLink>
+          <NavLink to="/faq">{t("nav.faq")}</NavLink>
+          <NavLink
             to="/premium"
-            className={premium.active ? "premium-link active" : "premium-link"}
+            className={({ isActive }) => `premium-link${premium.active || isActive ? " active" : ""}`}
           >
             {premium.active ? "✨ Premium" : "Premium"}
-          </Link>
+          </NavLink>
         </nav>
 
         <div className="header-actions">
