@@ -509,14 +509,25 @@ footer { background: rgba(4, 20, 19, .8); border-color: rgba(171, 249, 207, .18)
   .ah-wave { grid-column: 1; grid-row: auto; order: 4; }
   .ah-dash-side { grid-column: 1; grid-row: auto; order: 5; }
   .ah-see-strip { grid-column: 1; grid-row: auto; order: 6; }
-  .ah-wave-panel, .ah-places-panel { height: auto; min-height: 340px; }
+  .ah-wave-panel, .ah-places-panel { height: auto; }
+  .ah-wave-panel { min-height: 0; }
+  .ah-places-panel { min-height: 340px; }
+  .ah-wave-svg { margin: 16px 0 10px; }
+  .ah-wave-note { margin: 8px 0 0; }
   .ah-sightings-bar { align-items: flex-start; flex-direction: column; }
   .ah-sb-actions { width: 100%; }
   .ah-sb-actions .report-actions { flex-wrap: wrap; }
 }
+@media (max-width: 560px) {
+  .ah-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+  .ah-metrics .ah-metric:last-child { grid-column: auto; }
+  .ah-metrics .ah-metric { min-height: 116px; padding: 15px; }
+  .ah-metric-label { font-size: 10px; letter-spacing: .1em; }
+}
 @media (max-width: 480px) {
   .ah-wave-panel, .ah-places-panel { padding: 20px; }
-  .ah-wave-head { flex-direction: column; }
+  .ah-wave-head { flex-direction: column; gap: 12px; margin-bottom: 8px; }
+  .ah-wave-svg { margin: 12px 0 8px; }
   .ah-wave-description, .ah-places-description { font-size: 12px; }
   .ah-sightings-bar { padding: 20px; }
   .ah-sb-actions .report-actions { display: grid; grid-template-columns: 1fr; width: 100%; }

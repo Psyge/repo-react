@@ -24,11 +24,19 @@ export default function HeroForecast({
     <div className="ah-wave">
       <div className="ah-wave-panel">
         <div className="ah-wave-head">
-          <span className="ah-wave-title">
+          <div className="ah-wave-intro">
+            <span className="ah-wave-kicker">
             {effectiveRange === "1d"
-              ? trh("forecast.waveTitle1d", "Kp-ennuste · seuraavat 24 h", "Kp forecast · next 24 h")
-              : trh("forecast.waveTitle3d", "Kp-ennuste · seuraavat 3 vrk", "Kp forecast · next 3 days")}
-          </span>
+              ? trh("forecast.next24h", "Seuraavat 24 tuntia", "Next 24 hours")
+              : trh("forecast.next3d", "Seuraavat 3 päivää", "Next 3 days")}
+            </span>
+            <h2 className="ah-wave-heading">
+              {trh("forecast.direction", "Kp-ennusteen suunta", "Kp forecast trend")}
+            </h2>
+            <p className="ah-wave-description">
+              {trh("forecast.localClouds", "Kp on kaikille paikoille sama. Paikallinen pilvisyys vaikuttaa näkyvyyteen.", "Kp is the same for every location. Local clouds affect visibility.")}
+            </p>
+          </div>
 
           <div className="ah-range">
             {[
@@ -157,6 +165,9 @@ export default function HeroForecast({
               : trh("forecast.loading", "Ladataan ennustetta…", "Loading forecast…")}
           </div>
         )}
+        <p className="ah-wave-note">
+          {trh("forecast.kpNote", "Kp kuvaa koko maapallon aktiivisuutta. Tarkista lisäksi oman paikkasi pilvisyys.", "Kp describes global activity. Also check cloud cover at your location.")}
+        </p>
       </div>
     </div>
   );

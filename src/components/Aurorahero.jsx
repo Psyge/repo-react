@@ -156,7 +156,7 @@ function smoothPath(pts) {
 }
 
 /* Rakentaa Kp-ennustegraafin datan valitulle aikaikkunalle. */
-function buildWave(slots, locale, horizonHours) {
+function buildWave(slots, locale, horizonHours, waveWidth = WAVE_W) {
   if (!Array.isArray(slots) || slots.length < 2) return null;
 
   const now = Date.now();
@@ -172,7 +172,7 @@ function buildWave(slots, locale, horizonHours) {
   const span = Math.max(1, t1 - t0);
   const maxKp = 9;
 
-  const innerW = WAVE_W - WAVE_PAD.l - WAVE_PAD.r;
+  const innerW = waveWidth - WAVE_PAD.l - WAVE_PAD.r;
   const innerH = WAVE_H - WAVE_PAD.t - WAVE_PAD.b;
   const x = (ms) => WAVE_PAD.l + ((ms - t0) / span) * innerW;
   const y = (kp) => WAVE_PAD.t + innerH - (Math.min(kp, maxKp) / maxKp) * innerH;
@@ -251,6 +251,14 @@ export default function AuroraHero({ forecast, children }) {
   const [kp, setKp]     = useState(null);
   const [wind, setWind] = useState(null);
   const [bz, setBz]     = useState(null);
+  const [compactChart, setCompactChart] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth <= 560
+  );
+  useEffect(() => {
+    const update = () => setCompactChart(window.innerWidth <= 560);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
   /* Delta-arvot (muutos tunnin yli) poistettu: ne laskettiin aiemmin
      selaimessa NOAA:n feedistä, ja worker ei palauta niitä. Jos haluat ne
      takaisin, worker voisi laskea ne propagated-feedin ikkunasta ja
@@ -489,9 +497,10 @@ export default function AuroraHero({ forecast, children }) {
   probRef.current = probability;
 
   const awakening = useMemo(() => nextAwakening(slots), [slots]);
+  const chartWidth = compactChart ? 360 : WAVE_W;
   const wave = useMemo(
-    () => buildWave(slots, locale, horizonHours),
-    [slots, locale, horizonHours]
+    () => buildWave(slots, locale, horizonHours, chartWidth),
+    [slots, locale, horizonHours, chartWidth]
   );
 
   const kpStep = useMemo(() => {
@@ -695,7 +704,7 @@ export default function AuroraHero({ forecast, children }) {
               isPremium={isPremium}
               selectRange={selectRange}
               trh={trh}
-              WAVE_W={WAVE_W}
+              WAVE_W={chartWidth}
               WAVE_H={WAVE_H}
               WAVE_PAD={WAVE_PAD}
             />
@@ -704,12 +713,6 @@ export default function AuroraHero({ forecast, children }) {
                 herättävä (tyylit .ah-see-strip) */}
             {children && (
               <div className="ah-see-strip">
-                {!isPremium && (
-                  <div className="ah-spin-teaser">
-                    🎰 {t("spin.teaser") ||
-                      "Spotted the lights? Report a sighting and spin to win free Premium."}
-                  </div>
-                )}
                 {children}
               </div>
             )}
