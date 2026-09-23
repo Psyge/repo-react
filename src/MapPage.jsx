@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Header from "./components/Header";
 import SearchBox from "./components/SearchBox";
 import MidnightSunV2 from "./components/MidnightSunV2";
+import GlobeView from "./components/Globeview";
 import AuroraPopup from "./components/AuroraPopup";
 import SEO from "./components/SEO";
 import useTranslation from "./hooks/useTranslation";
@@ -48,6 +49,7 @@ async function fetchPoint(lat, lon, premium) {
 }
 
 export default function MapPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { currentLanguage } = useTranslation();
   const fi = currentLanguage !== "en";
@@ -59,7 +61,7 @@ export default function MapPage() {
   const initialPoint = hasDirectCoords
     ? { lat: initialLat, lon: initialLon, name: places.find((p) => Math.abs(p.lat - initialLat) < 0.01 && Math.abs(p.lon - initialLon) < 0.01)?.name }
     : places[0];
-  const [view, setView] = useState(searchParams.get("view") === "sun" ? "sun" : "map");
+  const [view, setView] = useState(["sun", "globe"].includes(searchParams.get("view")) ? searchParams.get("view") : "map");
   const [selected, setSelected] = useState(initialPoint);
   const [pointData, setPointData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -108,6 +110,9 @@ export default function MapPage() {
     }, 250);
   }, []);
   selectRef.current = selectPoint;
+  const selectGlobePoint = useCallback((point) => selectPoint(point, false, true), [selectPoint]);
+  const fallbackToMap = useCallback(() => setView("map"), []);
+  const openPremium = useCallback(() => navigate("/premium"), [navigate]);
 
   useEffect(() => {
     if (mapInstance.current || !mapNode.current) return;
@@ -199,12 +204,14 @@ export default function MapPage() {
           </div>
           <div className="rt-map-tabs" role="tablist" aria-label={fi ? "Karttanäkymä" : "Map view"}>
             <button type="button" role="tab" aria-selected={view === "map"} className={view === "map" ? "is-active" : ""} onClick={() => setView("map")}>{fi ? "Revontulet" : "Aurora"}</button>
+            <button type="button" role="tab" aria-selected={view === "globe"} className={view === "globe" ? "is-active" : ""} onClick={() => setView("globe")}>{fi ? "3D-maapallo" : "3D globe"}</button>
             <button type="button" role="tab" aria-selected={view === "sun"} className={view === "sun" ? "is-active" : ""} onClick={() => setView("sun")}>{fi ? "Aurinko ja yö" : "Sun & night"}</button>
           </div>
         </div>
         <div className="rt-map-layout">
-          <div className={`rt-map-stage ${view === "sun" ? "rt-map-stage--sun" : ""}`}>
+          <div className={`rt-map-stage ${view === "sun" ? "rt-map-stage--sun" : ""} ${view === "globe" ? "rt-map-stage--globe" : ""}`}>
             <div id="map" ref={mapNode} className={`rt-map-canvas ${view !== "map" ? "rt-map-hidden" : ""}`} aria-label={fi ? "Suomen revontulikartta" : "Aurora map of Finland"} />
+            {view === "globe" && <GlobeView premium={!!readPremium()} onFallback={fallbackToMap} onUpgrade={openPremium} onSelectPoint={selectGlobePoint} />}
             {view === "sun" && <div className="rt-sun-stage"><MidnightSunV2 lat={selected?.lat} lon={selected?.lon} /></div>}
             {view === "map" && <div className="rt-map-caption">{fi ? "Klikkaa karttaa nähdäksesi paikan olosuhteet" : "Click the map to see local conditions"}</div>}
           </div>
@@ -216,9 +223,9 @@ export default function MapPage() {
             </div>
             <div className="rt-search-block">
               <label htmlFor="rt-map-search">{fi ? "Hae paikkakunta" : "Search for a place"}</label>
-              <SearchBox onSelect={(place) => selectPoint(place, view === "map", view === "sun")} inputId="rt-map-search" />
+              <SearchBox onSelect={(place) => selectPoint(place, view === "map", view !== "map")} inputId="rt-map-search" />
             </div>
-            {view === "map" ? <div className="rt-detail" key={`${selected?.lat}:${selected?.lon}`}>
+            {view !== "sun" ? <div className="rt-detail" key={`${selected?.lat}:${selected?.lon}`}>
               {sightingCluster && <div className="rt-sighting-info">
                 <strong>{fi ? "Viimeaikaisia havaintoja" : "Recent sightings"}</strong>
                 <span>{sightingCluster.count} {fi ? "ilmoitusta" : "reports"} · {sightingCluster.minutesAgo} min</span>
@@ -229,7 +236,7 @@ export default function MapPage() {
               <h4>{fi ? "Valitse paikkakunta" : "Choose a place"}</h4>
               <div className="rt-nearby-list">
                 {places.filter((p) => ["rovaniemi", "levi", "saariselka", "inari", "yllas", "utsjoki"].includes(p.id)).map((place) => (
-                  <button type="button" key={place.id} className={selected?.name === place.name ? "is-active" : ""} onClick={() => selectPoint(place, view === "map", view === "sun")}>
+                  <button type="button" key={place.id} className={selected?.name === place.name ? "is-active" : ""} onClick={() => selectPoint(place, view === "map", view !== "map")}>
                     <span>{place.name}</span><span aria-hidden="true">↗</span>
                   </button>
                 ))}

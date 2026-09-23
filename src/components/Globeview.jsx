@@ -84,7 +84,7 @@ function HudBadge({ label, value }) {
   );
 }
 
-export default function GlobeView({ premium = false, onFallback, onUpgrade, detailedGlobe = ENABLE_DETAILED_TILES_BY_DEFAULT }) {
+export default function GlobeView({ premium = false, onFallback, onUpgrade, onSelectPoint, detailedGlobe = ENABLE_DETAILED_TILES_BY_DEFAULT }) {
   const { t } = useTranslation();
   const globeEl = useRef(null);
   const readyRef = useRef(false);
@@ -220,6 +220,10 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
     dismissHint();
     setClickLabel(label);
     setClickPos({ lat: coords.lat, lng: coords.lng });
+    if (onSelectPoint) {
+      onSelectPoint({ lat: coords.lat, lon: coords.lng, name: label || "" });
+      return;
+    }
     setPopupData(null);
     setPopupError(null);
     if (event && event.clientX != null && wrapRef.current) {
@@ -229,7 +233,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       setPopupXY({ x: size.w / 2, y: size.h / 2 });
     }
     fetchPoint(coords.lat, coords.lng);
-  }, [fetchPoint, size.h, size.w, dismissHint]);
+  }, [fetchPoint, size.h, size.w, dismissHint, onSelectPoint]);
 
   const onGlobeClick = useCallback((coords, e) => handleGlobeClick(coords, e), [handleGlobeClick]);
   const onPolygonClick = useCallback((p, e, coords) => handleGlobeClick(coords, e), [handleGlobeClick]);
@@ -705,7 +709,7 @@ export default function GlobeView({ premium = false, onFallback, onUpgrade, deta
       )}
 
       {/* Klikatun pisteen popup — sama AuroraPopup kuin 2D-kartalla */}
-      {clickPos && popupXY && (
+      {!onSelectPoint && clickPos && popupXY && (
         <div ref={popupRef} className="gv-popup-wrap" style={{ left: popupXY.x, top: popupXY.y - 10 }}>
           <div className="gv-popup-card">
             {clickLabel && <div className="gv-popup-label">📍 {clickLabel}</div>}
