@@ -109,7 +109,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .ah-dash-grid, .ah-dash-main { display: contents; }
 .ah-dash-top { grid-column: 1; grid-row: 1; padding: 0; display: block; }
 .ah-dash-headline { max-width: 740px; }
-.ah-metrics { grid-column: 2; grid-row: 1; align-self: end; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.ah-metrics { grid-column: 2; grid-row: 1; align-self: center; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
 .ah-wave { grid-column: 1; grid-row: 2; }
 .ah-dash-side { grid-column: 2; grid-row: 2; }
 .ah-see-strip { grid-column: 1; grid-row: 3; }
