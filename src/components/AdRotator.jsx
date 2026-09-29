@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import useTranslation from "../hooks/useTranslation";
 import adRotator from "../data/adRotator";
+import { useConsent } from "../utils/consent";
 
 /* ========================================================================
    AdRotator — kiertää mainos-/kumppanibannereita samalla logiikalla kuin
@@ -23,9 +24,16 @@ export default function AdRotator({ intervalMs = 6000 }) {
   const { lang, currentLanguage } = useTranslation();
   const activeLang = lang || currentLanguage || "fi";
 
+  // Seurantapikselilliset affiliate-bannerit vasta suostumuksen jälkeen.
+  const consent = useConsent();
+  const trackingAllowed = consent === "accepted";
+
   const visibleAds = useMemo(
-    () => adRotator.filter((ad) => ad.lang === "all" || ad.lang === activeLang),
-    [activeLang]
+    () => adRotator.filter((ad) =>
+      (ad.lang === "all" || ad.lang === activeLang) &&
+      (!ad.tracking || trackingAllowed)
+    ),
+    [activeLang, trackingAllowed]
   );
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -35,7 +43,7 @@ export default function AdRotator({ intervalMs = 6000 }) {
   // activeIndex jää osoittamaan listan ulkopuolelle.
   useEffect(() => {
     setActiveIndex(0);
-  }, [activeLang]);
+  }, [activeLang, trackingAllowed]);
 
   useEffect(() => {
     if (visibleAds.length <= 1) return; // ei mitään kierrätettävää

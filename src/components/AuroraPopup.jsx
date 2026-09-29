@@ -1,5 +1,6 @@
 import { useState } from "react";
 import useTranslation from "../hooks/useTranslation";
+import { levelColor } from "../utils/auroraColors";
 
 /* Yhteinen sulkunappi — sama rasti samassa paikassa sekä 2D- että
  * 3D-kartalla. Näkyy vain jos onClose-callback on annettu. */
@@ -211,7 +212,7 @@ export default function AuroraPopup({
           </div>
           <div>
             <span>{t("row.clouds", "Clouds")}</span>
-            <strong>{clouds != null ? `${clouds}%` : "–"}</strong>
+            <strong>{clouds != null ? `${clouds}%` : t("nodata")}</strong>
           </div>
         </div>
 
@@ -293,7 +294,7 @@ export default function AuroraPopup({
             </div>
             <div>
               <span>{t("row.clouds", "Clouds")}</span>
-              <strong>{clouds != null ? `${clouds}%` : "–"}</strong>
+              <strong>{clouds != null ? `${clouds}%` : t("nodata")}</strong>
             </div>
             <div>
               <span>{t("bz.label", "Bz")}</span>
@@ -418,8 +419,4 @@ function probabilityToLevel(probability) {
   if (probability >= 50) return "high";
   if (probability >= 25) return "medium";
   return "low";
-}
-
-function levelColor(level) {
-  return { low: "#888", medium: "#ffe600", high: "#00ff88", veryhigh: "#ff3b7f" }[level] || "#888";
 }

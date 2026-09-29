@@ -1,4 +1,5 @@
 import L from "leaflet";
+import { AURORA_RGB } from "./auroraColors";
 
 const BASE = process.env.REACT_APP_API_BASE || "";
 
@@ -8,6 +9,8 @@ const AURORA_CACHE_KEY = "aurora_session_cache:ovation:v1";
 const AURORA_TTL_MS = 60 * 60 * 1000; // 1h
 
 let latestData = null;
+/* Piirrettävät pisteet esisuodatettuna (ks. preparePoints). */
+let latestPoints = [];
 let sprites = { green: null, yellow: null, red: null };
 
 /* Hehkun säde asteina. Revontuliovaali on maantieteellinen ilmiö, joten
@@ -29,6 +32,48 @@ const LAT_SHIFT = 1.4;
    per sprite ja kolme spriteä. Selain lakkasi varaamasta niitä ja kerros
    jäi tyhjäksi. */
 const SPRITE_R = 256;
+
+/* Animaation heilunta asteina (±). Tarvitaan myös näkyvyysrajauksessa. */
+const WOBBLE_DEG = 0.18;
+
+/* OVATION-data on 65 000 pistettä, joista piirretään vain pohjoiset
+   (lat ≥ 45) ja näkyvät (intensiteetti ≥ 4) — tyypillisesti muutama
+   tuhat. Aiemmin suodatus tehtiin joka ruudunpäivityksellä koko
+   taulukolle ja jokaiselle pisteelle luotiin uusi L.latLng-olio;
+   10 fps:llä se oli 650 000 kierrosta sekunnissa. Nyt suodatus tehdään
+   kerran datan saapuessa. */
+function preparePoints(data) {
+  const out = [];
+  const coords = data?.coordinates;
+  if (!Array.isArray(coords)) return out;
+
+  for (let i = 0; i < coords.length; i++) {
+    const p = coords[i];
+    const lat = p[1];
+    const intensity = p[2];
+    if (lat < 45 || intensity < 4) continue;
+
+    let lon = p[0];
+    if (lon > 180) lon -= 360;
+
+    // i säilytetään, jotta heilunnan vaihe pysyy samana kuin ennen.
+    out.push({ lat, lon, intensity, i });
+  }
+  return out;
+}
+
+function setLatest(data) {
+  latestData = data;
+  latestPoints = preparePoints(data);
+}
+
+function prefersReducedMotion() {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
 
 function readSessionCache(key, ttlMs) {
   if (typeof window === "undefined") return null;
@@ -93,9 +138,10 @@ function buildSprites() {
     return s;
   };
 
-  sprites.green = make("60, 255, 170");
-  sprites.yellow = make("200, 255, 0");
-  sprites.red = make("255, 60, 130");
+  // Samat sävyt kuin popupin tasoväreissä (utils/auroraColors.js)
+  sprites.green = make(AURORA_RGB.green);
+  sprites.yellow = make(AURORA_RGB.yellow);
+  sprites.red = make(AURORA_RGB.pink);
 }
 
 /* Spriten läpinäkyvyys etäisyyden funktiona, x = etäisyys / säde.
@@ -119,6 +165,11 @@ function createLayer() {
   const Layer = L.Layer.extend({
     onAdd(map) {
       this._map = map;
+      this._visible = [];
+      /* Käyttäjä on pyytänyt vähemmän liikettä → ei heiluntaa eikä
+         jatkuvaa silmukkaa. Kerros piirretään silti aina kun kartta
+         liikkuu tai data päivittyy (_reset). */
+      this._still = prefersReducedMotion();
 
       this._container = L.DomUtil.create(
         "div",
@@ -144,7 +195,7 @@ function createLayer() {
       map.on("moveend zoomend resize", this._reset, this);
 
       this._reset();
-      this._startAnim();
+      if (!this._still) this._startAnim();
     },
 
     onRemove(map) {
@@ -157,9 +208,8 @@ function createLayer() {
     },
 
     setData(data) {
-      latestData = data;
-      this._sampleCenter();
-      this._draw();
+      setLatest(data);
+      this._reset();
     },
 
     /* Näkymän keskipisteen hehku, kun ollaan yhden ruudukkosolun sisällä.
@@ -172,19 +222,19 @@ function createLayer() {
        arvo, kerros himmenisi rajusti juuri sillä zoom-tasolla jolla haara
        vaihtuu — sama oire kuin alkuperäisessä bugissa, lievempänä.
 
-       Lasketaan siis sama kertymä kuin piirtohaara tuottaisi. Haku käy koko
-       65 000 pisteen taulukon läpi, joten se ei kuulu 10 kertaa sekunnissa
+       Lasketaan siis sama kertymä kuin piirtohaara tuottaisi. Haku käy
+       esisuodatetut pisteet läpi, joten se ei kuulu 10 kertaa sekunnissa
        pyörivään piirtosilmukkaan — arvo muuttuu vasta kun kartta liikkuu tai
        data päivittyy, ja se päivitetään niissä kohdissa. */
     _sampleCenter() {
       this._sample = 0;
       this._sampleAlpha = 0;
 
-      if (!this._map || !latestData || !Array.isArray(latestData.coordinates)) return;
+      if (!this._map || !latestPoints.length) return;
 
       const c = this._map.getCenter();
       const lat = c.lat - LAT_SHIFT;
-      const lon = c.lng < 0 ? c.lng + 360 : c.lng;
+      const lon = c.lng;
       /* Sprite on ympyrä RUUDULLA, ei maantieteellisesti. Web Mercator
          venyttää leveysasteita, joten ruudulla pyöreä läiskä kattaa
          leveyssuunnassa vain cos(lat) verran siitä mitä pituussuunnassa —
@@ -198,14 +248,13 @@ function createLayer() {
       let maxI = 0;
       let acc = 0;
 
-      for (const p of latestData.coordinates) {
-        const intensity = p[2];
-        if (intensity < 4 || p[1] < 45) continue;
+      for (const p of latestPoints) {
+        const intensity = p.intensity;
 
-        const dLat = p[1] - lat;
+        const dLat = p.lat - lat;
         if (dLat > reach || dLat < -reach) continue;
 
-        let dLon = p[0] - lon;
+        let dLon = p.lon - lon;
         if (dLon > 180) dLon -= 360;
         else if (dLon < -180) dLon += 360;
 
@@ -244,7 +293,43 @@ function createLayer() {
       this._canvas.style.filter = `blur(${blur}px)`;
 
       this._sampleCenter();
+      this._cullVisible();
       this._draw();
+    },
+
+    /* Näkyvät pisteet lasketaan kerran per siirto/zoomaus, ei joka
+       ruudunpäivityksellä. Rajaus padataan hehkun säteellä ja heilunnan
+       verran: ruudun ulkopuolella oleva piste hehkuu yhä sisään, jos sen
+       säde yltää ruudulle — se on koko syy siihen että kerros pysyy
+       näkyvissä kun näkymä kaventuu. */
+    _cullVisible() {
+      this._visible = [];
+      if (!this._map || !latestPoints.length) return;
+
+      const b = this._map.getBounds();
+      const pad = BLOB_DEG + 0.5 + WOBBLE_DEG;
+      // Pisteet piirretään LAT_SHIFTin verran pohjoisemmaksi.
+      const south = b.getSouth() - pad - LAT_SHIFT;
+      const north = b.getNorth() + pad - LAT_SHIFT;
+      const west = b.getWest() - pad;
+      const east = b.getEast() + pad;
+
+      for (const p of latestPoints) {
+        if (p.lat < south || p.lat > north) continue;
+        if (p.lon < west || p.lon > east) continue;
+        this._visible.push(p);
+      }
+    },
+
+    /* Kannattaako animaatiota piirtää juuri nyt? Ei, jos välilehti on
+       taustalla tai kartta on piilotettu — MapPagen 3D-maapallo- ja
+       aurinkonäkymä piilottavat kartan visibility: hidden -tyylillä,
+       jolloin silmukka piirsi aiemmin näkymätöntä kerrosta jatkuvasti. */
+    _isShowing() {
+      if (typeof document !== "undefined" && document.hidden) return false;
+      const el = this._map?.getContainer();
+      if (!el || el.offsetWidth === 0) return false;
+      return getComputedStyle(el).visibility !== "hidden";
     },
 
     _startAnim() {
@@ -256,7 +341,7 @@ function createLayer() {
 
       const loop = (now) => {
         if (now - last > interval) {
-          this._draw();
+          if (this._isShowing()) this._draw();
           last = now;
         }
 
@@ -282,13 +367,14 @@ function createLayer() {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, cv.width, cv.height);
 
-      if (!latestData || !Array.isArray(latestData.coordinates)) {
+      if (!latestPoints.length) {
         return;
       }
 
       const map = this._map;
       const zoom = map.getZoom();
-      const t = Date.now() * 0.001;
+      // Vähemmän liikettä -asetuksella pysäytetty hetki: ei heiluntaa/sykettä.
+      const t = this._still ? 0 : Date.now() * 0.001;
 
       buildSprites();
       ctx.globalCompositeOperation = "screen";
@@ -348,40 +434,19 @@ function createLayer() {
          zoom * 10 on alkuperäisen version koko matalille tasoille — pidetään
          se alarajana, jotta uloszoomattu ilme säilyy ennallaan. */
       const drawR = Math.max(zoom * 10, BLOB_DEG * pxPerDeg);
+      const baseAlpha = zoom > 8 ? 0.6 : 0.45;
 
-      /* Rajaus padataan hehkun säteellä, ei näkymän suhteellisella osuudella.
-         Ruudun ulkopuolella oleva piste hehkuu yhä sisään, jos sen säde
-         yltää ruudulle — se on koko syy siihen että kerros pysyy näkyvissä
-         kun näkymä kaventuu. */
-      const b = map.getBounds();
-      const pad = BLOB_DEG + 0.5;
-      const bounds = L.latLngBounds(
-        [b.getSouth() - pad, b.getWest() - pad],
-        [b.getNorth() + pad, b.getEast() + pad]
-      );
+      // Rajaus on tehty valmiiksi _cullVisible-metodissa.
+      for (const p of this._visible) {
+        const { lat, lon, intensity, i } = p;
 
-      latestData.coordinates.forEach((p, i) => {
-        const lat = p[1];
-        const intensity = p[2];
+        const oLat = Math.sin(t + i) * WOBBLE_DEG;
+        const oLon = Math.cos(t * 0.8 + i) * WOBBLE_DEG;
 
-        if (lat < 45 || intensity < 4) return;
-
-        let lon = p[0];
-        if (lon > 180) lon -= 360;
-
-        const oLat = Math.sin(t + i) * 0.18;
-        const oLon = Math.cos(t * 0.8 + i) * 0.18;
-
-        const ll = L.latLng(lat + oLat + LAT_SHIFT, lon + oLon);
-
-        if (!bounds.contains(ll)) return;
-
-        const pos = map.latLngToContainerPoint(ll);
+        const pos = map.latLngToContainerPoint([lat + oLat + LAT_SHIFT, lon + oLon]);
         const sprite = pickSprite(intensity);
 
-        if (!sprite) return;
-
-        const baseAlpha = zoom > 8 ? 0.6 : 0.45;
+        if (!sprite) continue;
 
         ctx.globalAlpha = Math.min(baseAlpha, intensity / 100);
 
@@ -401,7 +466,7 @@ function createLayer() {
 
           ctx.drawImage(sprite, pos.x - wide, pos.y - wide, wide * 2, wide * 2);
         }
-      });
+      }
 
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";
@@ -417,7 +482,7 @@ export async function fetchAuroraData({ force = false } = {}) {
     const cached = readSessionCache(AURORA_CACHE_KEY, AURORA_TTL_MS);
 
     if (cached) {
-      latestData = cached;
+      setLatest(cached);
       return cached;
     }
   }
@@ -444,7 +509,7 @@ if (!data?.coordinates) {
   throw new Error("Invalid aurora data");
 }
 
-  latestData = data;
+  setLatest(data);
   writeSessionCache(AURORA_CACHE_KEY, data);
 
   return data;
@@ -461,16 +526,22 @@ export function getAuroraIntensity(lat, lon) {
   let best = 0;
   let minD = Infinity;
 
+  /* OVATIONin pituusasteet ovat 0–359, kartan −180…180. Erotus kierretään
+     välille −180…180 — muuten esim. 359° ja 0° olisivat 359 asteen päässä
+     toisistaan. Pituusero skaalataan cos(lat):lla, koska pohjoisessa
+     pituusaste on kilometreissä paljon lyhyempi kuin leveysaste. */
   const targetLon = lon < 0 ? lon + 360 : lon;
+  const cosLat = Math.max(0.1, Math.cos((lat * Math.PI) / 180));
 
   for (const p of latestData.coordinates) {
     const pLon = p[0];
     const pLat = p[1];
 
-    const d = Math.hypot(
-      pLat - lat,
-      Math.abs(pLon - targetLon)
-    );
+    let dLon = pLon - targetLon;
+    if (dLon > 180) dLon -= 360;
+    else if (dLon < -180) dLon += 360;
+
+    const d = Math.hypot(pLat - lat, dLon * cosLat);
 
     if (d < minD) {
       minD = d;

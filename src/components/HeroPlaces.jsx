@@ -29,8 +29,10 @@ export default function HeroPlaces({ featuredPlaces, activePlace, setActivePlace
                   <span className="ah-place-row-prob">{chance != null ? `${chance}%` : "–"}</span>
                 </span>
                 <span className="ah-place-row-meta">
-                  <span>☁ {place.currentClouds != null ? `${place.currentClouds}%` : "–"}</span>
-                  <span>{place.currentTemp != null ? `${Math.round(place.currentTemp)}°C` : "–"}</span>
+                  {/* Sää tulee samasta hausta — jos pilvisyys puuttuu, näytetään
+                      yksi "Ei tietoa" kahden irrallisen viivan sijaan. */}
+                  <span>☁ {place.currentClouds != null ? `${place.currentClouds}%` : trh("nodata", "Ei tietoa", "No data")}</span>
+                  {place.currentTemp != null && <span>{`${Math.round(place.currentTemp)}°C`}</span>}
                 </span>
               </button>
             );

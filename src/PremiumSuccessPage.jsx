@@ -18,6 +18,31 @@ import AuroraAlertsSetup from "./components/AuroraAlertsSetup";
  * erilleen.
  * ============================================================ */
 
+/* Aktivointitunnus ja Stripen session_id.
+ *
+ * public/index.html siirtää ne osoiteriviltä sessionStorageen ennen kuin
+ * Google Tag Manager latautuu (muuten token päätyisi Analyticsiin).
+ * Luetaan ensin sieltä; URL on varalla, jos sessionStorage on estetty.
+ * Token voi olla #-osassa (uudet sähköpostit) tai ?token= -muodossa
+ * (ennen muutosta lähetetyt linkit). */
+const ACTIVATION_KEY = "rt_activation";
+
+function readActivationParams() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(ACTIVATION_KEY) || "null");
+    if (saved && (saved.token || saved.sessionId)) {
+      return { token: saved.token || null, sessionId: saved.sessionId || null };
+    }
+  } catch { /* luetaan URL:sta */ }
+
+  const query = new URLSearchParams(window.location.search);
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const token = hash.get("token") || query.get("token");
+  const sessionId = query.get("session_id");
+  if (token || sessionId) window.history.replaceState(null, "", window.location.pathname);
+  return { token, sessionId };
+}
+
 export default function PremiumSuccessPage() {
   const { lang, t } = useTranslation();
   const fi = lang === "fi";
@@ -32,9 +57,8 @@ export default function PremiumSuccessPage() {
     let cancelled = false;
 
     (async function run() {
-      const params = new URLSearchParams(window.location.search);
-      let token = params.get("token");
-      const sessionId = params.get("session_id");
+      const { token: initialToken, sessionId } = readActivationParams();
+      let token = initialToken;
 
       try {
         // 1) Jos token puuttuu mutta session löytyy -> pollaa webhookin tulosta
@@ -72,6 +96,8 @@ export default function PremiumSuccessPage() {
         // 3) Aktivoi (installId menee mukana premium.js helperissa)
         const data = await activate(token);
         const days = Math.max(1, Math.ceil((data.expiresAt - Date.now()) / 86400000));
+        // Aktivoitu → tunnusta ei tarvita enää tässä välilehdessä
+        try { sessionStorage.removeItem(ACTIVATION_KEY); } catch { /* ei haittaa */ }
 
         if (cancelled) return;
         setState({ kind: "success", days });

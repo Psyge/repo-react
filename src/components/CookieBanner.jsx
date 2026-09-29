@@ -1,64 +1,45 @@
 import { useEffect, useState } from "react";
+import useTranslation from "../hooks/useTranslation";
+import {
+  getConsent,
+  setConsent,
+  applyStoredConsent,
+  onCookieSettingsOpen,
+} from "../utils/consent";
 
 export default function CookieBanner() {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("cookie-consent");
+    if (!getConsent()) setVisible(true);
+    else applyStoredConsent();
 
-    if (!consent) {
-      setVisible(true);
-    } else if (consent === "accepted") {
-      enableAnalytics();
-    }
+    // Footerin "Evästeasetukset" avaa bannerin uudelleen
+    return onCookieSettingsOpen(() => setVisible(true));
   }, []);
 
-  function enableAnalytics() {
-    if (window.gtag) {
-      window.gtag("consent", "update", {
-        analytics_storage: "granted",
-        ad_storage: "granted",
-        ad_user_data: "granted",
-        ad_personalization: "granted",
-      });
-    }
-  }
-
   function acceptCookies() {
-    localStorage.setItem("cookie-consent", "accepted");
-    enableAnalytics();
+    setConsent("accepted");
     setVisible(false);
   }
 
   function declineCookies() {
-    localStorage.setItem("cookie-consent", "declined");
-
-    if (window.gtag) {
-      window.gtag("consent", "update", {
-        analytics_storage: "denied",
-        ad_storage: "denied",
-        ad_user_data: "denied",
-        ad_personalization: "denied",
-      });
-    }
-
+    setConsent("declined");
     setVisible(false);
   }
 
   if (!visible) return null;
 
   return (
-    <div className="cookie-banner">
-      <h3>Cookies & Privacy</h3>
+    <div className="cookie-banner" role="dialog" aria-labelledby="cookie-banner-title">
+      <h3 id="cookie-banner-title">{t("cookie.title")}</h3>
 
-      <p>
-        RepoTracker uses analytics cookies to improve the service and
-        optional advertising cookies for personalized ads.
-      </p>
+      <p>{t("cookie.text")}</p>
 
       <div className="cookie-links">
-        <a href="/privacy">Privacy Policy</a>
-        <a href="/terms">Terms</a>
+        <a href="/privacy">{t("footer.privacy")}</a>
+        <a href="/terms">{t("footer.terms")}</a>
       </div>
 
       <div className="cookie-actions">
@@ -66,14 +47,14 @@ export default function CookieBanner() {
           className="cookie-btn cookie-btn-primary"
           onClick={acceptCookies}
         >
-          Accept
+          {t("cookie.accept")}
         </button>
 
         <button
           className="cookie-btn cookie-btn-secondary"
           onClick={declineCookies}
         >
-          Decline
+          {t("cookie.decline")}
         </button>
       </div>
     </div>

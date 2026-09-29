@@ -1,5 +1,15 @@
 import { Link } from "react-router-dom";
 import useTranslation from "../hooks/useTranslation";
+import { openCookieSettings } from "../utils/consent";
+
+/* Näyttää linkiltä, mutta on nappi: se ei navigoi vaan avaa evästebannerin. */
+function CookieSettingsLink({ label }) {
+  return (
+    <button type="button" className="footer-cookie-btn" onClick={openCookieSettings}>
+      {label}
+    </button>
+  );
+}
 
 /* ========================================================================
    Footer — jaettu kaikille sivuille.
@@ -46,6 +56,8 @@ export default function Footer({ showCoop = false }) {
             <Link to="/about">{t("footer.about")}</Link>
             {" - "}
             <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
+            {" - "}
+            <CookieSettingsLink label={t("footer.cookies")} />
           </div>
         </div>
       </footer>
@@ -69,6 +81,10 @@ export default function Footer({ showCoop = false }) {
       {" - "}
 
       <Link to="/contact">{t("footer.contact") || "Contact"}</Link>
+
+      {" - "}
+
+      <CookieSettingsLink label={t("footer.cookies")} />
     </footer>
   );
 }

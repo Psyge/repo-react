@@ -58,6 +58,11 @@ async function getContent() {
     places: places.map(item => publicEntry(item, ["slug", "name", "title", "short", "description", "lat", "lon"])),
   };
 }
+// Sitemapin <lastmod>: Contentfulin viimeisin muokkaus muodossa YYYY-MM-DD.
+function lastmod(item) {
+  const value = item?.sys?.updatedAt;
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : undefined;
+}
 function createRoutes({ posts, places }) {
   const en = require("../../lang/en.json");
   const routes = [
@@ -84,7 +89,7 @@ function createRoutes({ posts, places }) {
       const title = text(fields.title, locale);
       const content = text(fields.content, locale);
       if (!title || !content) throw new Error(`Post ${item.sys.id} lacks a title or Markdown content (${locale}).`);
-      routes.push({ p: `/blog/${slug}`, language, kind: "post", id: item.sys.id, title: `${title} | RepoTracker`, desc: text(fields.excerpt, locale), priority: "0.6" });
+      routes.push({ p: `/blog/${slug}`, language, kind: "post", id: item.sys.id, lastmod: lastmod(item), title: `${title} | RepoTracker`, desc: text(fields.excerpt, locale), priority: "0.6" });
     }
     if (!seen.size) throw new Error(`Post ${item.sys.id} has no slug.`);
   }
@@ -98,7 +103,7 @@ function createRoutes({ posts, places }) {
       const name = text(item.fields.name, locale) || text(item.fields.title, locale);
       const description = text(item.fields.description, locale) || text(item.fields.short, locale);
       if (!name || !description) throw new Error(`Place ${item.sys.id} has no localized name or description.`);
-      routes.push({ p: `/places/${slug}`, language, kind: "place", id: item.sys.id, title: `${name} | RepoTracker`, desc: text(item.fields.short, locale) || description, priority: "0.7" });
+      routes.push({ p: `/places/${slug}`, language, kind: "place", id: item.sys.id, lastmod: lastmod(item), title: `${name} | RepoTracker`, desc: text(item.fields.short, locale) || description, priority: "0.7" });
     }
   }
   const paths = routes.map(route => route.p);

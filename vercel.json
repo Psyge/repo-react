@@ -5,11 +5,15 @@
   "outputDirectory": "build",
   "installCommand": "npm ci",
   "trailingSlash": false,
-  
   "redirects": [
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "repo-react-sepia.vercel.app" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "repo-react-sepia.vercel.app"
+        }
+      ],
       "destination": "https://repotracker.fi/$1",
       "permanent": true
     },
@@ -31,6 +35,178 @@
     {
       "source": "/repobeetta",
       "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "levi"
+        }
+      ],
+      "destination": "/places/levi",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "rovaniemi"
+        }
+      ],
+      "destination": "/places/rovaniemi",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "yllas"
+        }
+      ],
+      "destination": "/places/yllas",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "saariselka"
+        }
+      ],
+      "destination": "/places/saariselka",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "pajakyla"
+        }
+      ],
+      "destination": "/places/santa-claus-village",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "ruka"
+        }
+      ],
+      "destination": "/map?lat=66.17&lon=29.14",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "apukka"
+        }
+      ],
+      "destination": "/map?lat=66.58&lon=26.01",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "sodankyla"
+        }
+      ],
+      "destination": "/map?lat=67.42&lon=26.59",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "city"
+        }
+      ],
+      "destination": "/map?lat=66.51&lon=25.73",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "olkka"
+        }
+      ],
+      "destination": "/map?lat=66.58&lon=26.02",
+      "permanent": true
+    },
+    {
+      "source": "/(index.html)?",
+      "has": [
+        {
+          "type": "query",
+          "key": "kohde",
+          "value": "oukku"
+        }
+      ],
+      "destination": "/map?lat=66.5&lon=25.79",
+      "permanent": true
+    },
+    {
+      "source": "/kohteet/levi.html",
+      "destination": "/places/levi",
+      "permanent": true
+    },
+    {
+      "source": "/kohteet/rovaniemi.html",
+      "destination": "/places/rovaniemi",
+      "permanent": true
+    },
+    {
+      "source": "/kohteet/yllas.html",
+      "destination": "/places/yllas",
+      "permanent": true
+    },
+    {
+      "source": "/kohteet/saariselka.html",
+      "destination": "/places/saariselka",
+      "permanent": true
+    },
+    {
+      "source": "/kohteet/ruka.html",
+      "destination": "/map?lat=66.17&lon=29.14",
+      "permanent": true
+    },
+    {
+      "source": "/faq.html",
+      "destination": "/faq",
+      "permanent": true
+    },
+    {
+      "source": "/contact.html",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/kartta.html",
+      "destination": "/map",
       "permanent": true
     },
     {

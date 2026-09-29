@@ -8,7 +8,7 @@ async function main() {
   fs.rmSync(SNAPSHOT, { force: true });
   const { data, routes, stats } = await getRoutes();
   const included = routes.filter(route => route.sitemap !== false && !route.noindex);
-  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + included.map(route => `  <url><loc>${esc(SITE + route.p)}</loc></url>`).join("\n") + '\n</urlset>\n';
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + included.map(route => `  <url><loc>${esc(SITE + route.p)}</loc>${route.lastmod ? `<lastmod>${route.lastmod}</lastmod>` : ""}</url>`).join("\n") + '\n</urlset>\n';
   fs.writeFileSync(path.join(ROOT, "public/sitemap.xml"), xml);
   fs.mkdirSync(path.dirname(SNAPSHOT), { recursive: true });
   fs.writeFileSync(SNAPSHOT, JSON.stringify({ data, routes }));

@@ -32,6 +32,23 @@ footer a:hover {
   color: var(--accent);
 }
 
+/* Evästeasetukset: nappi joka näyttää footerin linkiltä */
+.footer-cookie-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0 var(--space-sm);
+  font: inherit;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: color .15s ease;
+}
+
+.footer-cookie-btn:hover,
+.footer-cookie-btn:focus-visible {
+  color: var(--accent);
+}
+
 .footer-socials {
   display: flex;
 

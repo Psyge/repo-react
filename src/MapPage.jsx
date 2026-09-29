@@ -48,6 +48,12 @@ async function fetchPoint(lat, lon, premium) {
   return data;
 }
 
+/* 64.10° N · 21.90° W — ei "-21.90° E" läntisellä pallonpuoliskolla. */
+function formatCoord(value, pos, neg) {
+  if (!Number.isFinite(value)) return "";
+  return `${Math.abs(value).toFixed(2)}° ${value < 0 ? neg : pos}`;
+}
+
 export default function MapPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -219,7 +225,7 @@ export default function MapPage() {
             <div className="rt-map-side-head" aria-live="polite">
               <span className="rt-kicker">{fi ? "VALITTU PAIKKA" : "SELECTED PLACE"}</span>
               <h3>{selected?.name || (fi ? "Valittu piste" : "Selected point")}</h3>
-              <p>{selected?.lat?.toFixed(2)}° N · {selected?.lon?.toFixed(2)}° E</p>
+              <p>{formatCoord(selected?.lat, "N", "S")} · {formatCoord(selected?.lon, "E", "W")}</p>
             </div>
             <div className="rt-search-block">
               <label htmlFor="rt-map-search">{fi ? "Hae paikkakunta" : "Search for a place"}</label>

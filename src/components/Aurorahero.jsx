@@ -680,8 +680,8 @@ export default function AuroraHero({ forecast, children }) {
               </MetricCard>
               <MetricCard
                 label={`${trh("hero.metric.clouds", "Pilvisyys", "Cloud Cover")}${activePlace ? ` · ${activePlace.name}` : ""}`}
-                value={activePlace?.currentClouds != null ? activePlace.currentClouds : "–"}
-                unit="%"
+                value={activePlace?.currentClouds != null ? activePlace.currentClouds : <span className="ah-metric-nodata">{trh("nodata", "Ei tietoa", "No data")}</span>}
+                unit={activePlace?.currentClouds != null ? "%" : null}
                 delta={null}
               />
               <MetricCard

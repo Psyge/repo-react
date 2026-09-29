@@ -31,6 +31,28 @@
       name="description"
       content="Live Northern Lights forecast, Kp index, solar wind and aurora map for Finland and Lapland."
     />
+    <!-- Premium-aktivointi: token ja Stripen session_id pois osoiteriviltä
+         ENNEN kuin Google Tag Manager / AdSense latautuvat. Muuten ne
+         päätyisivät Analyticsin sivunäkymään (page_location), ja kuka tahansa
+         GA-raportteja katsova voisi aktivoida toisen ostaman premiumin.
+         Arvot siirretään sessionStorageen, josta PremiumSuccessPage lukee
+         ne — näin myös sivun päivitys toimii. Pidä tämä ensimmäisenä
+         skriptinä. -->
+    <script>
+      (function () {
+        try {
+          var l = window.location;
+          if (l.pathname.indexOf("/premium-success") !== 0) return;
+          var q = new URLSearchParams(l.search);
+          var h = new URLSearchParams(l.hash.replace(/^#/, ""));
+          var token = h.get("token") || q.get("token");
+          var sessionId = q.get("session_id");
+          if (!token && !sessionId) return;
+          sessionStorage.setItem("rt_activation", JSON.stringify({ token: token, sessionId: sessionId }));
+          history.replaceState(null, "", l.pathname);
+        } catch (e) { /* sessionStorage estetty → sivu lukee URL:n itse */ }
+      })();
+    </script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1393421309906207"
      crossorigin="anonymous"></script>
     <!-- Google Consent Mode -->

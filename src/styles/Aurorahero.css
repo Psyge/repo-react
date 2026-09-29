@@ -845,6 +845,13 @@
   margin-left: 4px;
 }
 
+/* Pilvisyys puuttuu → pienempi, himmeämpi teksti ison luvun paikalla */
+.ah-metric-nodata {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #7d8aa0;
+}
+
 .ah-metric-delta { font-size: 0.7rem; font-weight: 600; }
 .ah-metric-delta--up   { color: #4ade80; }
 .ah-metric-delta--down { color: #f87171; }

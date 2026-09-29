@@ -432,5 +432,11 @@
   "about.a.whatwedo1": "Palvelussa voit seurata Kp-indeksiä, aurinkotuulta, Bz-arvoa ja pilvisyyttä. Avaruussäätietojen lähteenä on NOAA Space Weather Prediction Center. Ennusteet ovat arvioita, eivät lupauksia revontulien näkymisestä. Myös pilvisyys, taivaan pimeys ja havaintopaikka vaikuttavat siihen, mitä voit nähdä.",
   "about.q.who": "Kuka palvelua ylläpitää?",
   "about.a.who1": "RepoTrackeria ylläpitää Matti Kenttä Rovaniemellä. Palvelu on yhden hengen projekti. Palautetta ja kysymyksiä voi lähettää yhteydenottosivun kautta tai sähköpostitse osoitteeseen info.repotracker@gmail.com.",
-  "about.cta.contact": "Ota yhteyttä"
+  "about.cta.contact": "Ota yhteyttä",
+  "cookie.title": "Evästeet ja yksityisyys",
+  "cookie.text": "RepoTracker käyttää analytiikkaevästeitä palvelun kehittämiseen sekä valinnaisia mainosevästeitä kohdennettuihin mainoksiin. Seurantaa käyttävät kumppanibannerit näytetään vain, jos hyväksyt.",
+  "cookie.accept": "Hyväksy",
+  "cookie.decline": "Hylkää",
+  "footer.cookies": "Evästeasetukset",
+  "nodata": "Ei tietoa"
 }

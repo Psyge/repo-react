@@ -1,8 +1,12 @@
 /* ========================================================================
    adRotator — mainosten/kumppanibannerien rotaatiolista.
 
-   Jokainen alkio: { html, lang }
+   Jokainen alkio: { html, lang, tracking? }
      html: valmis HTML-merkkijono (affiliate-koodi tai oma banneri)
+     tracking: true = banneri lataa kolmannen osapuolen seurantapikselin
+               (TradeTracker, CJ ym.). Näytetään VAIN jos käyttäjä on
+               hyväksynyt evästeet — muuten pikseli latautuisi ilman
+               suostumusta. Omat bannerit (/images/...) eivät seuraa.
      lang: "fi" | "en" | "all"
        "all" = näytetään kielestä riippumatta (esim. affiliate-banneri
                jossa ei ole omaa tekstiä, pelkkä mainostajan kuva/logo)
@@ -21,14 +25,17 @@ const adRotator = [
   {
     html: '<a href="https://tc.tradetracker.net/?c=2883&m=1421995&a=504001&r=&u=" target="_blank" rel="sponsored nofollow"><img src="https://ti.tradetracker.net/?c=2883&m=1421995&a=504001&r=&t=html" width="728" height="90" border="0" alt="" /></a>',
     lang: "all",
+    tracking: true,
   },
   {
     html: '<a href="https://www.jdoqocy.com/click-101584868-15640646" target="_top" rel="sponsored nofollow"><img src="https://www.ftjcfx.com/image-101584868-15640646" alt="Advertisement" /></a>',
     lang: "all",
+    tracking: true,
   },
   {
     html: '<a href="https://tc.tradetracker.net/?c=20048&m=1591382&a=504001&r=&u=" target="_blank" rel="sponsored nofollow"><img src="https://ti.tradetracker.net/?c=20048&m=1591382&a=504001&r=&t=html" width="728" height="90" border="0" alt="" /></a>',
     lang: "all",
+    tracking: true,
   },
 
   // --- Kaverin oma iOS-appi — bannerissa suomenkielinen teksti

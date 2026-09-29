@@ -438,5 +438,11 @@
   "about.a.whatwedo1": "The service lets you follow the Kp index, solar wind, Bz and cloud cover. Space weather data comes from the NOAA Space Weather Prediction Center. Forecasts are estimates, not guarantees of seeing the Northern Lights. Cloud cover, sky darkness and your viewing location also affect what you can see.",
   "about.q.who": "Who maintains the service?",
   "about.a.who1": "RepoTracker is maintained by Matti Kenttä in Rovaniemi, Finland. It is a one-person project. You can send feedback and questions through the contact page or by email to info.repotracker@gmail.com.",
-  "about.cta.contact": "Contact us"
+  "about.cta.contact": "Contact us",
+  "cookie.title": "Cookies & Privacy",
+  "cookie.text": "RepoTracker uses analytics cookies to improve the service and optional advertising cookies for personalized ads. Partner banners with tracking are shown only if you accept.",
+  "cookie.accept": "Accept",
+  "cookie.decline": "Decline",
+  "footer.cookies": "Cookie settings",
+  "nodata": "No data"
 }
