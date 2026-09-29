@@ -444,5 +444,6 @@
   "cookie.accept": "Accept",
   "cookie.decline": "Decline",
   "footer.cookies": "Cookie settings",
-  "nodata": "No data"
+  "nodata": "No data",
+  "hero.metric.measuredAt": "measured {t}"
 }

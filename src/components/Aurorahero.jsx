@@ -475,6 +475,23 @@ export default function AuroraHero({ forecast, children }) {
     return ageText(Math.round(ms / 3600000));
   }, [staleWind, currentLanguage]);   // eslint-disable-line react-hooks/exhaustive-deps
 
+  /* Tuoreen Bz-arvon mittausaika kellonaikana ("mitattu 16:06").
+   *
+   * Bz vaihtelee minuuteissa, mutta sivulla sama luku voi näkyä pitkään:
+   * worker hakee NOAA:lta 10 min välein ja etusivu päivittää 5 min välein.
+   * Ilman aikaa käyttäjä ei voi tietää, onko luku jumissa vai vain
+   * rauhallinen. Aika on mittaushetki L1-pisteessä — tuuli saapuu Maahan
+   * noin tunnin kuluttua, joten luku kertoo lähitulevaisuudesta.
+   *
+   * windTs tulee workerilta vain tuoreelle arvolle; vanhentuneelle
+   * näytetään staleAgeText ("5 h vanha") kuten ennenkin. */
+  const windTimeText = useMemo(() => {
+    const ts = forecast?.current?.windTs;
+    if (!ts || !Number.isFinite(ts)) return null;
+    const hhmm = new Date(ts).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+    return trh("hero.metric.measuredAt", `mitattu ${hhmm}`, `measured ${hhmm}`).replace("{t}", hhmm);
+  }, [forecast, currentLanguage]);   // eslint-disable-line react-hooks/exhaustive-deps
+
   /* Kp:n ikä. Kp on kolmen tunnin indeksi, joten tuorekin arvo on lähes
    * aina 0–3 h vanha — se on normaalia eikä sitä kannata korostaa. Merkintä
    * näytetään vasta kun arvo on yli 3 h vanha, jolloin jokin on pielessä.
@@ -688,7 +705,11 @@ export default function AuroraHero({ forecast, children }) {
                 label="Bz"
                 value={bz != null ? bz.toFixed(1) : staleWind?.bz != null ? staleWind.bz.toFixed(1) : "–"}
                 unit="nT"
-                deltaSuffix={bz == null && staleWind?.bz != null ? staleAgeText : null}
+                deltaSuffix={
+                  bz == null && staleWind?.bz != null ? staleAgeText
+                  : bz != null ? windTimeText
+                  : null
+                }
               />
 
               {/* Kp siirtyi tänne heron pääpaikalta: se on mittausarvo siinä

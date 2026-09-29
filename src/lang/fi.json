@@ -438,5 +438,6 @@
   "cookie.accept": "Hyväksy",
   "cookie.decline": "Hylkää",
   "footer.cookies": "Evästeasetukset",
-  "nodata": "Ei tietoa"
+  "nodata": "Ei tietoa",
+  "hero.metric.measuredAt": "mitattu {t}"
 }

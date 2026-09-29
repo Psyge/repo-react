@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -7,6 +7,7 @@ import Sightings from "./components/Sightings";
 
 
 import useTranslation from "./hooks/useTranslation";
+import usePolling from "./hooks/usePolling";
 
 
 import SEO from "./components/SEO";
@@ -20,7 +21,18 @@ const BASE = process.env.REACT_APP_API_BASE || "";
 /* NOAA-haku ja -jäsennys poistettu: ennuste tulee nyt workerilta, joka
    hoitaa varalähteet (GFZ) ja tuoreusvahdin. Ks. fetchFreeForecast. */
 const FREE_FORECAST_CACHE_KEY = "aurora_session_cache:home:forecast:free:v1";
-const FORECAST_TTL_MS = 15 * 60 * 1000;
+
+/* Etusivu päivittää ennusteen 5 min välein niin kauan kuin välilehti on
+   näkyvissä (usePolling). Aiemmin haku tehtiin vain kerran sivun
+   latautuessa ja välimuisti oli 15 min, joten auki jätetty sivu näytti
+   samaa Bz-arvoa loputtomiin. Worker itse päivittää aurinkotuulen
+   10 min välein, joten tiheämpi haku ei toisi tuoreempaa dataa.
+
+   TTL on hieman intervallia lyhyempi: välimuisti tallennetaan vasta kun
+   haku on valmis, joten tasan 5 min TTL olisi vielä voimassa seuraavalla
+   kierroksella ja päivitys venyisi 10 minuuttiin. */
+const FORECAST_POLL_MS = 5 * 60 * 1000;
+const FORECAST_TTL_MS = 4.5 * 60 * 1000;
 
 function readDeviceKey() {
   try {
@@ -146,36 +158,37 @@ export default function HomePage() {
     "inLanguage": currentLanguage === "en" ? "en" : "fi",
   };
 
-  // EFEKTI 1: Ennusteen lataus
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const deviceKey = readDeviceKey();
-        const data = deviceKey
-          ? await fetchPremiumForecast(deviceKey)
-          : await fetchFreeForecast();
-        if (cancelled) return;
-        setForecast({
-          tier:    data?.tier    || "free",
-          slots:   Array.isArray(data?.slots) ? data.slots : [],
-          genAt:   data?.genAt   || null,
-          current: data?.current || null,
-          forecastUnavailable: data?.forecastUnavailable === true,
-        });
-      } catch (e) {
-        console.error("FORECAST ERROR:", e);
-        if (cancelled) return;
-        setForecast((prev) =>
-          prev.slots.length
-            ? prev
-            : { tier: "free", slots: [], genAt: null, current: null, forecastUnavailable: true }
-        );
-      }
-    };
-    load();
-    return () => { cancelled = true; };
+  // EFEKTI 1: Ennusteen lataus + päivitys 5 min välein (vain kun välilehti näkyy)
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
+
+  const loadForecast = useCallback(async () => {
+    try {
+      const deviceKey = readDeviceKey();
+      const data = deviceKey
+        ? await fetchPremiumForecast(deviceKey)
+        : await fetchFreeForecast();
+      if (!mountedRef.current) return;
+      setForecast({
+        tier:    data?.tier    || "free",
+        slots:   Array.isArray(data?.slots) ? data.slots : [],
+        genAt:   data?.genAt   || null,
+        current: data?.current || null,
+        forecastUnavailable: data?.forecastUnavailable === true,
+      });
+    } catch (e) {
+      console.error("FORECAST ERROR:", e);
+      if (!mountedRef.current) return;
+      // Päivityksen epäonnistuessa pidetään edellinen data näkyvissä
+      setForecast((prev) =>
+        prev.slots.length || prev.current
+          ? prev
+          : { tier: "free", slots: [], genAt: null, current: null, forecastUnavailable: true }
+      );
+    }
   }, []);
+
+  usePolling(loadForecast, FORECAST_POLL_MS);
 
   // EFEKTI 2: Contentful-artikkeleiden lataus
   useEffect(() => {
