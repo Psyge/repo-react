@@ -21,7 +21,7 @@ body {
   color: var(--fg);
   background: linear-gradient(180deg, rgba(6, 20, 18, .88), #081915 700px),
     radial-gradient(ellipse at 75% 4%, rgba(74, 167, 140, .4), transparent 48%),
-    url("../images/revontulet.png") center top / cover fixed,
+    url("../images/revontulet.webp") center top / cover fixed,
     #071713;
 }
 a { color: inherit; }
@@ -86,7 +86,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   padding: calc(var(--header-h) + 96px) 28px 94px;
   background: linear-gradient(90deg, rgba(3, 17, 16, .84), rgba(3, 17, 16, .4) 52%, rgba(4, 18, 20, .5)),
     linear-gradient(180deg, rgba(3, 18, 16, .15) 0%, rgba(4, 18, 16, .32) 46%, #081b18 95%),
-    url("../images/revontulet.png") center 33% / cover no-repeat;
+    url("../images/revontulet.webp") center 33% / cover no-repeat;
 }
 .aurora-hero-container::before {
   background: radial-gradient(ellipse at 68% 19%, rgba(154, 255, 172, .12), transparent 46%);
@@ -194,7 +194,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   position: relative;
   overflow: hidden;
   padding: 24px;
-  background: linear-gradient(180deg, rgba(5, 22, 21, .92), rgba(7, 29, 26, .91)), url("../images/revontulet.png") center / cover;
+  background: linear-gradient(180deg, rgba(5, 22, 21, .92), rgba(7, 29, 26, .91)), url("../images/revontulet.webp") center / cover;
 }
 .ah-places-title { color: #e8fff1; }
 .ah-place-row {
@@ -300,7 +300,7 @@ main.page-main h1, .section-head h2 { color: #effff4; letter-spacing: -.045em; }
   border: 1px solid rgba(171, 249, 207, .26);
   border-radius: 25px;
   background: linear-gradient(90deg, rgba(4, 22, 20, .9), rgba(4, 22, 20, .47)),
-    url("../images/revontulet.png") center 42% / cover;
+    url("../images/revontulet.webp") center 42% / cover;
 }
 .premium-hero h1 { max-width: 15ch; color: #f3fff7; background: none; font-size: clamp(39px, 5vw, 65px); line-height: 1.06; }
 .premium-sub { margin-left: 0; color: #d9eee1; }
@@ -321,7 +321,7 @@ main.page-main h1, .section-head h2 { color: #effff4; letter-spacing: -.045em; }
   height: 150px;
   margin: -24px -24px 5px;
   background: linear-gradient(180deg, transparent, rgba(11, 31, 28, .35)),
-    url("../images/revontulet.png") center 35% / cover;
+    url("../images/revontulet.webp") center 35% / cover;
 }
 .home-articles .blog-card:nth-child(2)::before { background-position: center 60%; filter: hue-rotate(28deg); }
 .home-articles .blog-card:nth-child(3)::before { background-position: center 80%; filter: hue-rotate(-24deg); }
@@ -376,7 +376,7 @@ footer { background: rgba(4, 20, 19, .8); border-color: rgba(171, 249, 207, .18)
   min-height: 0;
   background:
     linear-gradient(180deg, rgba(3, 20, 18, .40) 0, rgba(3, 20, 18, .48) 340px, #071713 710px, #071713 100%),
-    url("../images/revontulet.png") center top / cover no-repeat,
+    url("../images/revontulet.webp") center top / cover no-repeat,
     #071713;
 }
 .ah-dash {
@@ -502,7 +502,7 @@ footer { background: rgba(4, 20, 19, .8); border-color: rgba(171, 249, 207, .18)
   .aurora-hero-container.ah-hero--dash {
     background:
       linear-gradient(180deg, rgba(3, 20, 18, .42) 0, rgba(3, 20, 18, .56) 350px, #071713 700px, #071713 100%),
-      url("../images/revontulet.png") center top / auto 760px no-repeat,
+      url("../images/revontulet.webp") center top / auto 760px no-repeat,
       #071713;
   }
   .ah-adrotator-slot { grid-column: 1; grid-row: auto; order: 3; margin-top: 18px; padding: 12px; }
@@ -564,7 +564,7 @@ footer { background: rgba(4, 20, 19, .8); border-color: rgba(171, 249, 207, .18)
   text-align: left;
   background:
     linear-gradient(95deg, rgba(4, 22, 20, .96), rgba(4, 22, 20, .72) 55%, rgba(4, 22, 20, .25)),
-    url("../images/revontulet.png") center 45% / cover;
+    url("../images/revontulet.webp") center 45% / cover;
 }
 .rt-premium-kicker {
   display: block;

@@ -51,7 +51,7 @@ const adRotator = [
     lang: "en",
   },
   {
-    html: '<a href="https://liftnumbers.com/en/" target="_blank" rel="noopener noreferrer"><img src="/images/lnlogo.png" width="728" height="90" alt="Gym Calculators" /></a>',
+    html: '<a href="https://liftnumbers.com/en/" target="_blank" rel="noopener noreferrer"><img src="/images/lnlogo.webp" width="728" height="90" alt="Gym Calculators" /></a>',
     lang: "all",
   },
 ];

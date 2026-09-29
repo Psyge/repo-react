@@ -2,10 +2,10 @@ import { Helmet } from "react-helmet-async";
 import useTranslation from "../hooks/useTranslation";
 
 const SITE_NAME = "RepoTracker";
-/* reposet.png ei ole palvelimella — se palautti HTML-sivun eikä kuvaa,
-   joten jakojen esikatselut jäivät ilman kuvaa. hero-bg.jpg on oma
-   revontulikuva ja toimii. Pidä tämä samana kuin middleware.js:n
-   DEFAULT_IMAGE, muuten robotti ja selain näkevät eri kuvan. */
+/* Jakokuva (1200 × 630). reposet.png ei ole palvelimella — se palautti
+   HTML-sivun eikä kuvaa, joten jakojen esikatselut jäivät ilman kuvaa.
+   Pidä tämä samana kuin middleware.js:n DEFAULT_IMAGE, muuten robotti ja
+   selain näkevät eri kuvan. */
 const DEFAULT_IMAGE = "https://repotracker.fi/images/og-default.jpg";
 
 export default function SEO({

@@ -3,21 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#07070d" />
 
     <!--
-      HUOM: nämä kolme OVAT link-tageja, eivät pelkkiä osoitteita.
-      Jos tagit poistaa ja jättää pelkän "%PUBLIC_URL%/iconi.png" -rivin,
-      selain tulkitsee sen tekstisisällöksi, sulkee <head>:n siihen kohtaan
-      ja aloittaa <body>:n — jolloin title, meta-kuvaus ja skriptit valuvat
-      bodyyn ja favicon, apple-touch-icon sekä manifest katoavat.
+      HUOM: nämä OVAT link-tageja, eivät pelkkiä osoitteita.
+      Jos tagit poistaa ja jättää pelkän osoiterivin, selain tulkitsee sen
+      tekstisisällöksi, sulkee <head>:n siihen kohtaan ja aloittaa <body>:n
+      — jolloin title, meta-kuvaus ja skriptit valuvat bodyyn ja favicon,
+      apple-touch-icon sekä manifest katoavat.
+
+      Kuvakkeet: favicon.ico (16/32/48 px) selainvälilehdelle, 192 px PNG
+      tarkkoja näyttöjä varten, 180 px apple-touch-icon iPhonen kotinäytölle.
+      192/512 px ja maskable-versio ovat manifest.json:ssa (Android, asennus).
     -->
-    <link rel="icon" href="%PUBLIC_URL%/iconi.png" />
-    <!-- Osoitti aiemmin logo192.png:ään, joka on yhä Create React Appin
-         oletuslogo (Reactin atomi) — kotinäytölle lisätty RepoTracker näytti
-         siis Reactin logoa. Vaihda tämä oikeaan 180x180 px kuvakkeeseen kun
-         sellainen on tehty. -->
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/iconi.png" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="%PUBLIC_URL%/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
     <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin />

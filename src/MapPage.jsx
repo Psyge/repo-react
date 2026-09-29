@@ -189,7 +189,7 @@ export default function MapPage() {
   description="Explore current northern lights conditions across Finland with RepoTracker's interactive aurora forecast map."
   keywords="northern lights map Finland, aurora map Finland, aurora forecast Finland"
   canonical="https://repotracker.fi/map"
-  image="https://repotracker.fi/images/reposet.png"
+  image="https://repotracker.fi/images/og-default.jpg"
   language="en"
   locale="en_US"
 />
